@@ -5,6 +5,7 @@ import SidebarLayout from './SidebarLayout';
     const [activeTab, setActiveTab] = useState("general");
 
     const navItems = [
+        { icon: 'home', label: 'Home', to: '/' },
         { icon: 'dashboard', label: 'Dashboard', to: '/admin/dashboard' },
         { icon: 'people', label: 'Users', to: '/admin/users' },
         { icon: 'school', label: 'Courses', to: '/admin/courses' },

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import api from '../api/axios';
 
 export default function Registration() {
@@ -36,6 +36,13 @@ export default function Registration() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="w-full max-w-md p-8 bg-surface-container rounded-lg border">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-2 text-primary hover:underline mb-6 text-sm font-medium"
+        >
+          <span className="material-symbols-outlined text-base">arrow_back</span>
+          Back to Home
+        </Link>
         <h2 className="text-2xl font-bold mb-4">Register</h2>
         {error && <div className="text-sm text-error mb-4">{JSON.stringify(error)}</div>}
         {success ? (

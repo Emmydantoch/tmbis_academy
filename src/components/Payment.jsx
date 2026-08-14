@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../api/axios'; // make sure this path is correct
 
 export default function Payment() {
@@ -409,16 +410,24 @@ export default function Payment() {
   );
 }
 
-function NavItem({ icon, label, active = false }) {
+function NavItem({ to, icon, label, active = false }) {
+  const className = `flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+    active
+      ? 'bg-primary text-on-primary'
+      : 'hover:bg-surface-container text-on-surface-variant'
+  }`;
+
+  if (to) {
+    return (
+      <Link to={to} className={className}>
+        <span className="material-symbols-outlined">{icon}</span>
+        <span>{label}</span>
+      </Link>
+    );
+  }
+
   return (
-    <a
-      href="#"
-      className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-        active
-          ? 'bg-primary text-on-primary'
-          : 'hover:bg-surface-container text-on-surface-variant'
-      }`}
-    >
+    <a href="#" className={className}>
       <span className="material-symbols-outlined">{icon}</span>
       <span>{label}</span>
     </a>

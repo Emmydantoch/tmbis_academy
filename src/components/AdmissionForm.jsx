@@ -88,20 +88,14 @@ export default function AdmissionForm() {
         </div>
 
         <div className="flex-1 space-y-1">
-            <Link to="/" className="flex items-center gap-3 p-3 rounded-lg hover:sm-surface-container-low">    
+            <Link to="/" className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-surface-container text-on-surface-variant transition-all">
+            <span className="material-symbols-outlined">home</span>
             <span>Landing Page</span>
             </Link>
-            <Link to="/contact" className="flex items-center gap-3 p-3 rounded-lg hover:sm-surface-container-low">
-            <span className="">contact_support</span>       
+            <Link to="/contact" className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-surface-container text-on-surface-variant transition-all">
+            <span className="material-symbols-outlined">contact_support</span>
+            <span>Contact Us</span>
             </Link>
-            {/*<Link to="/apply" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-container-low">
-            <span className="material-symbols-outlined">description</span>
-            <span>Apply Now</span>
-            </Link>
-            <Link to="/library" className="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-container-low">
-            <span className="material-symbols-outlined">library_books</span>
-            <span>Library</span>
-            </Link> */}
         </div>
         </nav>
 

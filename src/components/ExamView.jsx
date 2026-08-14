@@ -99,6 +99,13 @@ export default function ExamView() {
       {/* Header */}
       <header className="h-16 bg-surface border-b border-outline-variant flex items-center px-6 shrink-0">
         <div className="flex-1 flex items-center gap-4">
+          <Link
+            to="/"
+            className="flex items-center gap-2 text-primary hover:bg-surface-container p-2 rounded-xl transition-all"
+            title="Back to Home"
+          >
+            <span className="material-symbols-outlined">home</span>
+          </Link>
           <span className="font-headline-md font-bold text-primary">TMBIS Academy</span>
           <h1 className="font-headline-sm text-on-surface hidden md:block">Final Exam: Design Thinking</h1>
         </div>

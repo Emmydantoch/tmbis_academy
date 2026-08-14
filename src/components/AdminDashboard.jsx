@@ -5,6 +5,7 @@ export default function AdminDashboard() {
     const [timeRange, setTimeRange] = useState("Last 30 Days");
 
     const navItems = [
+        { icon: 'home', label: 'Home', to: '/' },
         { icon: 'dashboard', label: 'Overview', to: '/admin/dashboard' },
         { icon: 'people', label: 'Users', to: '/admin/users' },
         { icon: 'school', label: 'Courses', to: '/admin/courses' },
