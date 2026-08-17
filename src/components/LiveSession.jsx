@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import api from '../api/axios';
 
 export default function LiveSessions() {
@@ -51,132 +50,99 @@ export default function LiveSessions() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-on-surface flex">
-      {/* Sidebar */}
-      <nav className="hidden md:flex w-64 flex-col h-screen bg-surface-container-low border-r border-outline-variant fixed left-0 top-0 z-20 p-4">
-        <div className="mb-8 px-2">
-          <h1 className="font-headline-lg font-bold text-primary">TMBIS Academy</h1>
-          <p className="text-on-surface-variant text-sm">Student Portal</p>
+    <div className="p-6 md:p-10 max-w-5xl mx-auto">
+      <div className="mb-8">
+        <h2 className="text-3xl font-bold text-primary">Live Sessions</h2>
+        <p className="text-on-surface-variant mt-1">Join live classes and catch up on recordings.</p>
+      </div>
+
+      {loading && (
+        <p className="text-on-surface-variant">Loading sessions...</p>
+      )}
+
+      {error && (
+        <div className="mb-6 rounded-xl bg-error/10 border border-error/30 px-4 py-3 text-sm text-error">
+          {error}
         </div>
-        <div className="flex-1 space-y-1">
-          <NavItem to="/dashboard" icon="dashboard" label="Dashboard" />
-          <NavItem to="/courses" icon="school" label="My Courses" />
-          <NavItem to="/live-sessions" icon="videocam" label="Live Sessions" active />
-          <NavItem to="/payments" icon="account_balance_wallet" label="Payments" />
+      )}
+
+      {!loading && sessions.length === 0 && (
+        <div className="text-center py-20">
+          <span className="material-symbols-outlined text-6xl text-on-surface-variant mb-4">
+            videocam_off
+          </span>
+          <p className="text-on-surface-variant text-lg">
+            No live sessions scheduled yet.
+          </p>
         </div>
-      </nav>
+      )}
 
-      <div className="flex-1 md:ml-64">
-        <header className="h-16 bg-surface border-b border-outline-variant flex items-center px-6 sticky top-0 z-10">
-          <h1 className="font-headline-md font-bold text-primary">Live Sessions</h1>
-        </header>
-
-        <main className="p-6 md:p-10 max-w-5xl mx-auto">
-          {loading && (
-            <p className="text-on-surface-variant">Loading sessions...</p>
-          )}
-
-          {error && (
-            <div className="mb-6 rounded-xl bg-error/10 border border-error/30 px-4 py-3 text-sm text-error">
-              {error}
-            </div>
-          )}
-
-          {!loading && sessions.length === 0 && (
-            <div className="text-center py-20">
-              <span className="material-symbols-outlined text-6xl text-on-surface-variant mb-4">
-                videocam_off
-              </span>
-              <p className="text-on-surface-variant text-lg">
-                No live sessions scheduled yet.
-              </p>
-            </div>
-          )}
-
-          <div className="space-y-6">
-            {sessions.map((session) => (
-              <div
-                key={session.id}
-                className="bg-surface-container rounded-2xl border border-outline-variant p-6 md:p-8"
-              >
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-3 mb-2">
-                      {getStatusBadge(session.status)}
-                      {session.starts_in && (
-                        <span className="text-sm text-on-surface-variant">
-                          {session.starts_in}
-                        </span>
-                      )}
-                    </div>
-
-                    <h2 className="text-xl font-bold text-primary mb-1">
-                      {session.title}
-                    </h2>
-                    <p className="text-on-surface-variant mb-1">
-                      with {session.lecturer_name}
-                    </p>
-                    <p className="text-sm text-on-surface-variant">
-                      {new Date(session.start_time).toLocaleString()} –{' '}
-                      {new Date(session.end_time).toLocaleTimeString()}
-                    </p>
-                    {session.description && (
-                      <p className="mt-3 text-sm text-on-surface-variant">
-                        {session.description}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    {session.status === 'live' ? (
-                      <a
-                        href={session.meeting_link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-2xl font-bold transition-all"
-                      >
-                        <span className="material-symbols-outlined">videocam</span>
-                        Join Live Now
-                      </a>
-                    ) : session.status === 'upcoming' ? (
-                      <button
-                        disabled
-                        className="inline-flex items-center gap-2 bg-surface-container-high text-on-surface-variant px-8 py-4 rounded-2xl font-bold cursor-not-allowed"
-                      >
-                        <span className="material-symbols-outlined">schedule</span>
-                        Not Started Yet
-                      </button>
-                    ) : (
-                      <button
-                        disabled
-                        className="inline-flex items-center gap-2 bg-surface-container-high text-on-surface-variant px-8 py-4 rounded-2xl font-bold cursor-not-allowed"
-                      >
-                        Session Ended
-                      </button>
-                    )}
-                  </div>
+      <div className="space-y-6">
+        {sessions.map((session) => (
+          <div
+            key={session.id}
+            className="bg-surface-container rounded-2xl border border-outline-variant p-6 md:p-8"
+          >
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  {getStatusBadge(session.status)}
+                  {session.starts_in && (
+                    <span className="text-sm text-on-surface-variant">
+                      {session.starts_in}
+                    </span>
+                  )}
                 </div>
+
+                <h2 className="text-xl font-bold text-primary mb-1">
+                  {session.title}
+                </h2>
+                <p className="text-on-surface-variant mb-1">
+                  with {session.lecturer_name}
+                </p>
+                <p className="text-sm text-on-surface-variant">
+                  {new Date(session.start_time).toLocaleString()} –{' '}
+                  {new Date(session.end_time).toLocaleTimeString()}
+                </p>
+                {session.description && (
+                  <p className="mt-3 text-sm text-on-surface-variant">
+                    {session.description}
+                  </p>
+                )}
               </div>
-            ))}
+
+              <div>
+                {session.status === 'live' ? (
+                  <a
+                    href={session.meeting_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-2xl font-bold transition-all"
+                  >
+                    <span className="material-symbols-outlined">videocam</span>
+                    Join Live Now
+                  </a>
+                ) : session.status === 'upcoming' ? (
+                  <button
+                    disabled
+                    className="inline-flex items-center gap-2 bg-surface-container-high text-on-surface-variant px-8 py-4 rounded-2xl font-bold cursor-not-allowed"
+                  >
+                    <span className="material-symbols-outlined">schedule</span>
+                    Not Started Yet
+                  </button>
+                ) : (
+                  <button
+                    disabled
+                    className="inline-flex items-center gap-2 bg-surface-container-high text-on-surface-variant px-8 py-4 rounded-2xl font-bold cursor-not-allowed"
+                  >
+                    Session Ended
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
-        </main>
+        ))}
       </div>
     </div>
-  );
-}
-
-function NavItem({ to, icon, label, active = false }) {
-  return (
-    <Link
-      to={to}
-      className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-        active
-          ? 'bg-primary text-on-primary'
-          : 'hover:bg-surface-container text-on-surface-variant'
-      }`}
-    >
-      <span className="material-symbols-outlined">{icon}</span>
-      <span>{label}</span>
-    </Link>
   );
 }

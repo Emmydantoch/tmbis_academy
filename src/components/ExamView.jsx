@@ -95,19 +95,18 @@ export default function ExamView() {
   const currentQuestion = questions[currentIndex];
 
   return (
-    <div className="min-h-screen bg-background text-on-surface flex flex-col h-screen overflow-hidden">
-      {/* Header */}
-      <header className="h-16 bg-surface border-b border-outline-variant flex items-center px-6 shrink-0">
-        <div className="flex-1 flex items-center gap-4">
+    <div className="flex flex-col" style={{ height: 'calc(100vh - 4rem)' }}>
+      {/* Exam Info Bar */}
+      <div className="bg-surface border-b border-outline-variant flex items-center justify-between px-6 py-3 shrink-0">
+        <div className="flex items-center gap-4">
           <Link
-            to="/"
+            to="/dashboard"
             className="flex items-center gap-2 text-primary hover:bg-surface-container p-2 rounded-xl transition-all"
-            title="Back to Home"
+            title="Back to Dashboard"
           >
-            <span className="material-symbols-outlined">home</span>
+            <span className="material-symbols-outlined">arrow_back</span>
           </Link>
-          <span className="font-headline-md font-bold text-primary">TMBIS Academy</span>
-          <h1 className="font-headline-sm text-on-surface hidden md:block">Final Exam: Design Thinking</h1>
+          <h1 className="font-headline-sm text-on-surface font-bold">Final Exam: Design Thinking</h1>
         </div>
 
         <div className="flex items-center gap-6">
@@ -121,10 +120,10 @@ export default function ExamView() {
             </span>
           </div>
         </div>
-      </header>
+      </div>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto p-6 md:p-10">
+      <div className="flex-1 overflow-auto p-6 md:p-10">
         <div className="max-w-3xl mx-auto">
           <div className="bg-surface border border-outline-variant rounded-2xl p-8 md:p-12">
             {lastSaved && (
@@ -164,10 +163,10 @@ export default function ExamView() {
             </div>
           </div>
         </div>
-      </main>
+      </div>
 
       {/* Bottom Navigation */}
-      <footer className="bg-surface border-t border-outline-variant p-6 shrink-0">
+      <div className="bg-surface border-t border-outline-variant p-6 shrink-0">
         <div className="max-w-3xl mx-auto flex justify-between items-center">
           <button 
             onClick={goToPrevious}
@@ -196,7 +195,7 @@ export default function ExamView() {
             </button>
           </div>
         </div>
-      </footer>
+      </div>
 
       {/* Submit Confirmation Modal */}
       {showSubmitModal && (

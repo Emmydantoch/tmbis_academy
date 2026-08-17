@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 import LandingPage from './components/LandingPage';
 import Login from './components/Login';
+import DashboardLayout from './components/DashboardLayout';
 import Dashboard from './components/Dashboard';
 import LiveSession from './components/LiveSession';
 import Payment from './components/Payment';
@@ -23,23 +24,30 @@ function App() {
   return (
     <Router>
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Login />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/live-session" element={<LiveSession />} />
-        <Route path="/payment" element={<Payment />} />
-        <Route path="/payment-success" element={<PaymentSuccess />} />
         <Route path="/registration" element={<Registration />} />
-        <Route path="/exam" element={<ExamView  />} />
-        <Route path="/resources" element={<Resources />} />
-        <Route path="/library" element={<Library />} />
-        <Route path="/faculty" element={<Faculty />} />
-        <Route path="/contact" element={<Contact />} />
+        <Route path="/apply" element={<AdmissionForm />} />
+        <Route path="/payment-success" element={<PaymentSuccess />} />
+
+        {/* Dashboard Routes — nested under DashboardLayout */}
+        <Route path="/dashboard" element={<DashboardLayout />}>
+          <Route index element={<Dashboard />} />
+          <Route path="live-session" element={<LiveSession />} />
+          <Route path="payment" element={<Payment />} />
+          <Route path="exam" element={<ExamView />} />
+          <Route path="resources" element={<Resources />} />
+          <Route path="library" element={<Library />} />
+          <Route path="faculty" element={<Faculty />} />
+          <Route path="contact" element={<Contact />} />
+        </Route>
+
+        {/* Admin Routes */}
         <Route path="/admin/dashboard" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>} />
         <Route path="/admin/payments" element={<ProtectedAdminRoute><AdminPayments /></ProtectedAdminRoute>} />
         <Route path="/admin/settings" element={<ProtectedAdminRoute><AdminSettings /></ProtectedAdminRoute>} />
-        <Route path="/apply" element={<AdmissionForm />} />
       </Routes>
     </Router>
   );
