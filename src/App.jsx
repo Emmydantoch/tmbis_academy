@@ -17,6 +17,7 @@ import AdminPayments from './components/AdminPayments';
 import AdminSettings from './components/AdminSettings';
 import AdmissionForm from './components/AdmissionForm';
 import Registration from './components/Registration';
+import ProtectedAdminRoute from './components/ProtectedAdminRoute';
 
 function App() {
   return (
@@ -35,9 +36,9 @@ function App() {
         <Route path="/library" element={<Library />} />
         <Route path="/faculty" element={<Faculty />} />
         <Route path="/contact" element={<Contact />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/payments" element={<AdminPayments />} />
-        <Route path="/admin/settings" element={<AdminSettings />} />
+        <Route path="/admin/dashboard" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>} />
+        <Route path="/admin/payments" element={<ProtectedAdminRoute><AdminPayments /></ProtectedAdminRoute>} />
+        <Route path="/admin/settings" element={<ProtectedAdminRoute><AdminSettings /></ProtectedAdminRoute>} />
         <Route path="/apply" element={<AdmissionForm />} />
       </Routes>
     </Router>

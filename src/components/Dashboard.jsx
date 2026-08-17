@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 export default function Dashboard({ userRole = "student", userName: propUserName }) {
   const [userName, setUserName] = useState(propUserName || 'Alex');
   const [avatarUrl, setAvatarUrl] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [accessDeniedMsg, setAccessDeniedMsg] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     try {
@@ -18,11 +21,26 @@ export default function Dashboard({ userRole = "student", userName: propUserName
         if (u.avatar || u.profile_picture || u.avatar_url) {
           setAvatarUrl(u.avatar || u.profile_picture || u.avatar_url);
         }
+
+        // Detect admin role from common backend field conventions
+        const admin =
+          u.is_admin === true ||
+          u.is_staff === true ||
+          u.role === 'admin' ||
+          u.role === 'superuser';
+        setIsAdmin(admin);
       }
     } catch (e) {
       // ignore parse errors
     }
-  }, []);
+
+    // Show access-denied banner if redirected from a protected admin route
+    if (location.state?.accessDenied) {
+      setAccessDeniedMsg(true);
+      const t = setTimeout(() => setAccessDeniedMsg(false), 4000);
+      return () => clearTimeout(t);
+    }
+  }, [location.state]);
   // userRole can be "student" or "lecturer"
 
   useEffect(() => {
@@ -42,6 +60,18 @@ export default function Dashboard({ userRole = "student", userName: propUserName
 
   return (
     <div className="min-h-screen bg-background text-on-surface flex">
+
+      {/* Access Denied Banner */}
+      {accessDeniedMsg && (
+        <div
+          className="fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-error text-on-error px-6 py-3 rounded-2xl shadow-2xl animate-bounce-in"
+          role="alert"
+        >
+          <span className="material-symbols-outlined">lock</span>
+          <span className="font-medium">Access Denied — Admin privileges required.</span>
+        </div>
+      )}
+
       {/* Sidebar - Works for both Student & Lecturer */}
       <nav className="hidden md:flex flex-col h-screen w-64 bg-surface-container-low border-r border-outline-variant fixed left-0 top-0 z-20 p-4">
         <div className="mb-8 mt-6 flex flex-col items-center text-center">
@@ -77,7 +107,10 @@ export default function Dashboard({ userRole = "student", userName: propUserName
             </>
           )}
 
-          <NavItem icon="settings" label="Settings" />
+          {/* Settings is restricted to admins only — routes to Admin Dashboard */}
+          {isAdmin && (
+            <NavItem to="/admin/dashboard" icon="settings" label="Settings" />
+          )}
         </div>
 
         <div className="mt-auto pt-6 border-t border-outline-variant space-y-1">

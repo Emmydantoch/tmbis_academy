@@ -1,205 +1,163 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import api from '../api/axios';
 
-export default function LiveSession({
-  sessionTitle = "Live Coaching: User Research Methods",
-  lecturerName = "Dr. Sarah Chen",
-}) {
-  const videoRef = useRef(null);
-  const [isJoined, setIsJoined] = useState(false);
-  const [isCameraOn, setIsCameraOn] = useState(true);
-  const [isMicOn, setIsMicOn] = useState(true);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [stream, setStream] = useState(null);
-  const [liveTime, setLiveTime] = useState(0);
+export default function LiveSessions() {
+  const [sessions, setSessions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Start Live Session
-  const joinSession = async () => {
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
+  useEffect(() => {
+    const fetchSessions = async () => {
+      try {
+        const res = await api.get('live-sessions/');
+        setSessions(res.data);
+      } catch (err) {
+        setError('Failed to load live sessions');
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
-      
-      setStream(mediaStream);
-      setIsJoined(true);
-      
-      // Start live timer
-      const interval = setInterval(() => {
-        setLiveTime(prev => prev + 1);
-      }, 1000);
-      
-      // Save interval ID for cleanup
-      videoRef.current.dataset.intervalId = interval;
-      
-    } catch (err) {
-      alert("Unable to access camera/microphone. Please allow permissions.");
-      console.error(err);
-    }
-  };
+    };
 
-  // Leave Session
-  const leaveSession = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-    }
-    if (videoRef.current && videoRef.current.dataset.intervalId) {
-      clearInterval(videoRef.current.dataset.intervalId);
-    }
-    setIsJoined(false);
-    setLiveTime(0);
-    setStream(null);
-  };
+    fetchSessions();
 
-  // Toggle Camera
-  const toggleCamera = () => {
-    if (stream) {
-      const videoTrack = stream.getVideoTracks()[0];
-      if (videoTrack) {
-        videoTrack.enabled = !videoTrack.enabled;
-        setIsCameraOn(!isCameraOn);
-      }
-    }
-  };
+    // Refresh every 60 seconds so status updates automatically
+    const interval = setInterval(fetchSessions, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
-  // Toggle Microphone
-  const toggleMic = () => {
-    if (stream) {
-      const audioTrack = stream.getAudioTracks()[0];
-      if (audioTrack) {
-        audioTrack.enabled = !audioTrack.enabled;
-        setIsMicOn(!isMicOn);
-      }
+  const getStatusBadge = (status) => {
+    if (status === 'live') {
+      return (
+        <span className="bg-red-600 text-white text-xs px-3 py-1 rounded-full flex items-center gap-1">
+          <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+          LIVE NOW
+        </span>
+      );
     }
-  };
-
-  // Toggle Fullscreen
-  const toggleFullscreen = () => {
-    const element = document.getElementById('live-video-container');
-    if (!document.fullscreenElement) {
-      element.requestFullscreen();
-      setIsFullscreen(true);
-    } else {
-      document.exitFullscreen();
-      setIsFullscreen(false);
+    if (status === 'upcoming') {
+      return (
+        <span className="bg-primary/20 text-primary text-xs px-3 py-1 rounded-full">
+          Upcoming
+        </span>
+      );
     }
-  };
-
-  // Format live time
-  const formatLiveTime = (seconds) => {
-    const min = Math.floor(seconds / 60);
-    const sec = seconds % 60;
-    return `${min}:${sec < 10 ? '0' : ''}${sec}`;
+    return (
+      <span className="bg-surface-container-high text-on-surface-variant text-xs px-3 py-1 rounded-full">
+        Ended
+      </span>
+    );
   };
 
   return (
     <div className="min-h-screen bg-background text-on-surface flex">
-      {/* Sidebar (same as before) */}
+      {/* Sidebar */}
       <nav className="hidden md:flex w-64 flex-col h-screen bg-surface-container-low border-r border-outline-variant fixed left-0 top-0 z-20 p-4">
-        {/* ... Sidebar content ... */}
-      <div className="mb-8 px-2">
+        <div className="mb-8 px-2">
           <h1 className="font-headline-lg font-bold text-primary">TMBIS Academy</h1>
           <p className="text-on-surface-variant text-sm">Student Portal</p>
-        </div>  
+        </div>
         <div className="flex-1 space-y-1">
-          <NavItem to="/" icon="" label="Landing Page" />
-      
-          <NavItem icon="account_balance_wallet" label="Live Sessions" active />
+          <NavItem to="/dashboard" icon="dashboard" label="Dashboard" />
+          <NavItem to="/courses" icon="school" label="My Courses" />
+          <NavItem to="/live-sessions" icon="videocam" label="Live Sessions" active />
+          <NavItem to="/payments" icon="account_balance_wallet" label="Payments" />
         </div>
       </nav>
 
-      <div className="flex-1 md:ml-64 flex flex-col h-screen">
-        <header className="h-16 bg-surface-container-lowest border-b border-outline-variant flex items-center px-6">
-          <h1 className="font-headline-md font-bold text-primary">TMBIS Academy - Live Session</h1>
+      <div className="flex-1 md:ml-64">
+        <header className="h-16 bg-surface border-b border-outline-variant flex items-center px-6 sticky top-0 z-10">
+          <h1 className="font-headline-md font-bold text-primary">Live Sessions</h1>
         </header>
 
-        <main className="flex-1 p-6 md:p-8 flex items-center justify-center bg-black">
-          <div id="live-video-container" className="w-full max-w-5xl bg-surface-container-low rounded-3xl overflow-hidden border border-outline-variant shadow-2xl relative">
-            
-            {!isJoined ? (
-              /* Waiting Screen */
-              <div className="aspect-video flex flex-col items-center justify-center text-center p-10">
-                <div className="w-28 h-28 rounded-3xl bg-primary/10 flex items-center justify-center mb-8">
-                  <span className="material-symbols-outlined text-7xl text-primary">videocam</span>
-                </div>
-                <h2 className="text-3xl font-bold mb-2">{sessionTitle}</h2>
-                <p className="text-on-surface-variant mb-8">with {lecturerName}</p>
-                
-                <button
-                  onClick={joinSession}
-                  className="bg-primary hover:bg-primary/90 text-on-primary px-12 py-5 rounded-2xl text-xl font-bold transition-all active:scale-95"
-                >
-                  Join Live Session
-                </button>
-              </div>
-            ) : (
-              /* Live Session Screen */
-              <div className="relative aspect-video bg-black">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="w-full h-full object-cover"
-                />
+        <main className="p-6 md:p-10 max-w-5xl mx-auto">
+          {loading && (
+            <p className="text-on-surface-variant">Loading sessions...</p>
+          )}
 
-                {/* Live Indicator */}
-                <div className="absolute top-6 left-6 bg-red-600 text-white text-sm px-4 py-1.5 rounded-full flex items-center gap-2 font-medium">
-                  <span className="relative flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
-                  </span>
-                  LIVE • {formatLiveTime(liveTime)}
-                </div>
+          {error && (
+            <div className="mb-6 rounded-xl bg-error/10 border border-error/30 px-4 py-3 text-sm text-error">
+              {error}
+            </div>
+          )}
 
-                {/* Controls Bar */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <button
-                        onClick={toggleMic}
-                        className={`p-4 rounded-2xl text-2xl transition-all ${isMicOn ? 'bg-white/20' : 'bg-red-600'}`}
-                      >
-                        <span className="material-symbols-outlined">{isMicOn ? 'mic' : 'mic_off'}</span>
-                      </button>
+          {!loading && sessions.length === 0 && (
+            <div className="text-center py-20">
+              <span className="material-symbols-outlined text-6xl text-on-surface-variant mb-4">
+                videocam_off
+              </span>
+              <p className="text-on-surface-variant text-lg">
+                No live sessions scheduled yet.
+              </p>
+            </div>
+          )}
 
-                      <button
-                        onClick={toggleCamera}
-                        className={`p-4 rounded-2xl text-2xl transition-all ${isCameraOn ? 'bg-white/20' : 'bg-red-600'}`}
-                      >
-                        <span className="material-symbols-outlined">{isCameraOn ? 'videocam' : 'videocam_off'}</span>
-                      </button>
-
-                      <button
-                        onClick={toggleFullscreen}
-                        className="p-4 rounded-2xl text-2xl bg-white/20 hover:bg-white/30 transition-all"
-                      >
-                        <span className="material-symbols-outlined">fullscreen</span>
-                      </button>
+          <div className="space-y-6">
+            {sessions.map((session) => (
+              <div
+                key={session.id}
+                className="bg-surface-container rounded-2xl border border-outline-variant p-6 md:p-8"
+              >
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-3 mb-2">
+                      {getStatusBadge(session.status)}
+                      {session.starts_in && (
+                        <span className="text-sm text-on-surface-variant">
+                          {session.starts_in}
+                        </span>
+                      )}
                     </div>
 
-                    <button
-                      onClick={leaveSession}
-                      className="bg-red-600 hover:bg-red-700 px-8 py-4 rounded-2xl font-bold flex items-center gap-2 text-white"
-                    >
-                      <span className="material-symbols-outlined">call_end</span>
-                      Leave Session
-                    </button>
+                    <h2 className="text-xl font-bold text-primary mb-1">
+                      {session.title}
+                    </h2>
+                    <p className="text-on-surface-variant mb-1">
+                      with {session.lecturer_name}
+                    </p>
+                    <p className="text-sm text-on-surface-variant">
+                      {new Date(session.start_time).toLocaleString()} –{' '}
+                      {new Date(session.end_time).toLocaleTimeString()}
+                    </p>
+                    {session.description && (
+                      <p className="mt-3 text-sm text-on-surface-variant">
+                        {session.description}
+                      </p>
+                    )}
                   </div>
-                </div>
 
-                {/* Lecturer / Peer Video Overlay */}
-                <div className="absolute bottom-24 right-6 w-56 aspect-video bg-surface-container-high rounded-2xl overflow-hidden border-2 border-primary/50">
-                  <div className="w-full h-full bg-gradient-to-br from-purple-900 to-blue-900 flex items-center justify-center text-white text-sm">
-                    Dr. {lecturerName}
+                  <div>
+                    {session.status === 'live' ? (
+                      <a
+                        href={session.meeting_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-2xl font-bold transition-all"
+                      >
+                        <span className="material-symbols-outlined">videocam</span>
+                        Join Live Now
+                      </a>
+                    ) : session.status === 'upcoming' ? (
+                      <button
+                        disabled
+                        className="inline-flex items-center gap-2 bg-surface-container-high text-on-surface-variant px-8 py-4 rounded-2xl font-bold cursor-not-allowed"
+                      >
+                        <span className="material-symbols-outlined">schedule</span>
+                        Not Started Yet
+                      </button>
+                    ) : (
+                      <button
+                        disabled
+                        className="inline-flex items-center gap-2 bg-surface-container-high text-on-surface-variant px-8 py-4 rounded-2xl font-bold cursor-not-allowed"
+                      >
+                        Session Ended
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
-            )}
+            ))}
           </div>
         </main>
       </div>
@@ -208,25 +166,17 @@ export default function LiveSession({
 }
 
 function NavItem({ to, icon, label, active = false }) {
-  const className = `flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-    active
-      ? 'bg-primary text-on-primary'
-      : 'hover:bg-surface-container text-on-surface-variant'
-  }`;
-
-  if (to) {
-    return (
-      <Link to={to} className={className}>
-        <span className="material-symbols-outlined">{icon}</span>
-        <span>{label}</span>
-      </Link>
-    );
-  }
-
   return (
-    <a href="#" className={className}>
+    <Link
+      to={to}
+      className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+        active
+          ? 'bg-primary text-on-primary'
+          : 'hover:bg-surface-container text-on-surface-variant'
+      }`}
+    >
       <span className="material-symbols-outlined">{icon}</span>
       <span>{label}</span>
-    </a>
+    </Link>
   );
 }

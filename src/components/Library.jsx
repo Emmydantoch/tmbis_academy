@@ -12,11 +12,32 @@ export default function Library() {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
+  const [canUpload, setCanUpload] = useState(false);
 
   const filters = ["All Materials", "Textbooks", "Lecture Notes", "Research Papers", "Case Studies"];
 
   useEffect(() => {
     fetchMaterials();
+
+    // Determine upload permission from stored user object
+    try {
+      const raw = localStorage.getItem('user');
+      if (raw) {
+        const u = JSON.parse(raw);
+        const isAdmin =
+          u.is_admin === true ||
+          u.is_staff === true ||
+          u.role === 'admin' ||
+          u.role === 'superuser';
+        const isLecturer =
+          u.role === 'lecturer' ||
+          u.role === 'teacher' ||
+          u.role === 'instructor';
+        setCanUpload(isAdmin || isLecturer);
+      }
+    } catch {
+      setCanUpload(false);
+    }
   }, []);
 
   const fetchMaterials = async () => {
@@ -93,11 +114,14 @@ export default function Library() {
           <NavItem to="/library" icon="library_books" label="Library" active />
         </div>
 
-        <div className="mt-auto pt-8">
-          <button className="w-full py-3 bg-primary text-on-primary rounded-xl font-bold hover:brightness-110 transition-all">
-            Upload Material
-          </button>
-        </div>
+        {/* Sidebar upload button — admins & lecturers only */}
+        {canUpload && (
+          <div className="mt-auto pt-8">
+            <button className="w-full py-3 bg-primary text-on-primary rounded-xl font-bold hover:brightness-110 transition-all">
+              Upload Material
+            </button>
+          </div>
+        )}
       </nav>
 
       {/* Main Content */}
@@ -154,54 +178,56 @@ export default function Library() {
             ))}
           </div>
 
-          {/* Upload Section */}
-          <div className="bg-surface-container p-8 rounded-3xl border border-outline-variant mb-12">
-            <div className="flex items-center gap-4 mb-6">
-              <span className="material-symbols-outlined text-4xl text-primary">upload_file</span>
-              <div>
-                <h3 className="font-bold text-xl">Upload New Material</h3>
-                <p className="text-on-surface-variant text-sm">Share notes, slides, papers, and other files with students</p>
+          {/* Upload Section — restricted to admins and lecturers only */}
+          {canUpload ? (
+            <div className="bg-surface-container p-8 rounded-3xl border border-outline-variant mb-12">
+              <div className="flex items-center gap-4 mb-6">
+                <span className="material-symbols-outlined text-4xl text-primary">upload_file</span>
+                <div>
+                  <h3 className="font-bold text-xl">Upload New Material</h3>
+                  <p className="text-on-surface-variant text-sm">Share notes, slides, papers, and other files with students</p>
+                </div>
               </div>
-            </div>
 
-            <form onSubmit={handleUpload} className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Material title"
-                  className="w-full bg-surface-container-lowest border border-outline-variant rounded-2xl px-5 py-3"
+              <form onSubmit={handleUpload} className="space-y-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Material title"
+                    className="w-full bg-surface-container-lowest border border-outline-variant rounded-2xl px-5 py-3"
+                  />
+                  <input
+                    type="text"
+                    value={course}
+                    onChange={(e) => setCourse(e.target.value)}
+                    placeholder="Course or category"
+                    className="w-full bg-surface-container-lowest border border-outline-variant rounded-2xl px-5 py-3"
+                  />
+                </div>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Short description"
+                  className="w-full bg-surface-container-lowest border border-outline-variant rounded-2xl px-5 py-3 min-h-24"
                 />
                 <input
-                  type="text"
-                  value={course}
-                  onChange={(e) => setCourse(e.target.value)}
-                  placeholder="Course or category"
-                  className="w-full bg-surface-container-lowest border border-outline-variant rounded-2xl px-5 py-3"
+                  type="file"
+                  onChange={(e) => setFile(e.target.files?.[0] || null)}
+                  className="w-full rounded-2xl border border-dashed border-outline-variant p-4"
                 />
-              </div>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Short description"
-                className="w-full bg-surface-container-lowest border border-outline-variant rounded-2xl px-5 py-3 min-h-24"
-              />
-              <input
-                type="file"
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
-                className="w-full rounded-2xl border border-dashed border-outline-variant p-4"
-              />
-              {message ? <p className="text-sm text-primary">{message}</p> : null}
-              <button
-                type="submit"
-                disabled={uploading}
-                className="bg-primary text-on-primary px-6 py-3 rounded-2xl font-semibold disabled:opacity-70"
-              >
-                {uploading ? 'Uploading...' : 'Upload Material'}
-              </button>
-            </form>
-          </div>
+                {message ? <p className="text-sm text-primary">{message}</p> : null}
+                <button
+                  type="submit"
+                  disabled={uploading}
+                  className="bg-primary text-on-primary px-6 py-3 rounded-2xl font-semibold disabled:opacity-70"
+                >
+                  {uploading ? 'Uploading...' : 'Upload Material'}
+                </button>
+              </form>
+            </div>
+          ) : null}
 
           {/* Resources List */}
           <div className="space-y-4">
