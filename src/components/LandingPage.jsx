@@ -53,11 +53,11 @@ export default function LandingPage() {
           </div>
 
           <div className="flex items-center gap-md">
-            <Link to="/login" className="hidden font-body-md text-body-md text-on-surface-variant transition-colors hover:text-primary md:block">
-              Login
-            </Link>
-            <Link to="/apply" className="rounded-lg bg-primary-fixed px-md py-sm font-bold text-on-primary transition-all hover:brightness-110">
+            <Link to="/apply" className="hidden font-body-md text-body-md text-on-surface-variant transition-colors hover:text-primary md:block">
               Apply Now
+            </Link>
+            <Link to="/login" className="rounded-lg bg-primary-fixed px-md py-sm font-bold text-on-primary transition-all hover:brightness-110">
+              Login
             </Link>
           </div>
         </nav>

@@ -31,6 +31,10 @@ function App() {
         <Route path="/registration" element={<Registration />} />
         <Route path="/apply" element={<AdmissionForm />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/payment" element={<Payment />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/resources" element={<Contact />} />
+
 
         {/* Dashboard Routes — nested under DashboardLayout */}
         <Route path="/dashboard" element={<DashboardLayout />}>
