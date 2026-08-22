@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import api from '../api/axios'; // make sure this file exists
+import api from '../api/axios';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -35,7 +35,7 @@ export default function Login() {
       ...formData,
       [e.target.name]: e.target.value,
     });
-    setError(''); // clear error when user types
+    setError('');
   };
 
   const handleSubmit = async (e) => {
@@ -44,7 +44,6 @@ export default function Login() {
     setError('');
 
     try {
-      // Call your Django login endpoint
       const response = await api.post('auth/login/', {
         email: formData.email,
         password: formData.password,
@@ -55,8 +54,15 @@ export default function Login() {
       localStorage.setItem('refresh_token', response.data.refresh);
       localStorage.setItem('user', JSON.stringify(response.data.user));
 
-      // Redirect to dashboard after successful login
-      navigate('/dashboard');
+      // Redirect based on role
+      const user = response.data.user;
+
+      if (user.is_staff || user.is_superuser) {
+        navigate('/admin/dashboard');   // Admin Dashboard
+      } else {
+        navigate('/dashboard');         // Student Dashboard
+      }
+
     } catch (err) {
       console.error(err);
       setError(
@@ -106,7 +112,6 @@ export default function Login() {
       <main className="flex min-h-[calc(100vh-80px)] items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">
           <div className="bg-surface-container-low rounded-2xl border border-outline-variant/30 p-8 md:p-10 shadow-xl backdrop-blur-sm">
-            {/* Header */}
             <div className="mb-8 flex flex-col items-center text-center">
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20">
                 <span className="material-symbols-outlined text-5xl text-primary">school</span>
@@ -119,16 +124,13 @@ export default function Login() {
               </p>
             </div>
 
-            {/* Error Message */}
             {error && (
               <div className="mb-6 rounded-xl bg-error/10 border border-error/30 px-4 py-3 text-sm text-error">
                 {error}
               </div>
             )}
 
-            {/* Login Form */}
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Email Field */}
               <div className="space-y-2">
                 <label className="font-label-md text-label-md text-on-surface" htmlFor="email">
                   Email Address
@@ -150,11 +152,10 @@ export default function Login() {
                 </div>
               </div>
 
-              {/* Password Field */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="font-label-md text-label-md text-on-surface" htmlFor="password">
-                    Password
+                  Token 
                   </label>
                   <a href="#" className="font-label-md text-primary hover:underline transition-all">
                     Forgot Password?
@@ -170,14 +171,13 @@ export default function Login() {
                     type="password"
                     value={formData.password}
                     onChange={handleChange}
-                    placeholder="••••••••"
+                    placeholder="Password or Activation Token"
                     required
                     className="w-full rounded-xl border border-outline bg-surface-container pl-11 py-4 text-on-surface placeholder-on-surface-variant/60 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                 </div>
               </div>
 
-              {/* Login Button */}
               <button
                 type="submit"
                 disabled={isLoading}
@@ -194,14 +194,12 @@ export default function Login() {
               </button>
             </form>
 
-            {/* Divider */}
             <div className="my-8 flex items-center gap-4">
               <div className="flex-1 border-t border-outline-variant"></div>
               <span className="font-body-sm text-on-surface-variant">OR</span>
               <div className="flex-1 border-t border-outline-variant"></div>
             </div>
 
-            {/* Social Login */}
             <div className="grid grid-cols-2 gap-4">
               <button className="flex items-center justify-center gap-2 rounded-xl border border-outline py-3 hover:bg-surface-container transition-colors">
                 <span className="material-symbols-outlined">g_mobiledata</span>
@@ -213,7 +211,6 @@ export default function Login() {
               </button>
             </div>
 
-            {/* Sign Up Link */}
             <p className="mt-8 text-center font-body-md text-body-md text-on-surface-variant">
               New to TMBIS Academy?{' '}
               <Link to="/apply" className="text-primary hover:underline font-medium">
