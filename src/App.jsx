@@ -34,6 +34,7 @@ function App() {
         <Route path="/payment" element={<Payment />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/resources" element={<Contact />} />
+        <Route path="/exams/:examId" element={<ExamView />} />
         
 
 
@@ -41,8 +42,7 @@ function App() {
         <Route path="/dashboard" element={<DashboardLayout />}>
           <Route index element={<Dashboard />} />
           <Route path="live-session" element={<LiveSession />} />
-          <Route path="payment" element={<Payment />} />
-          <Route path="/exams/:examId" element={<ExamView />} />
+          <Route path="payment" element={<Payment />} />  
           <Route path="resources" element={<Resources />} />
           <Route path="library" element={<Library />} />
           <Route path="faculty" element={<Faculty />} />
