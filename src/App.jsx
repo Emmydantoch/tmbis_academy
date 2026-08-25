@@ -34,6 +34,7 @@ function App() {
         <Route path="/payment" element={<Payment />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/resources" element={<Contact />} />
+        
 
 
         {/* Dashboard Routes — nested under DashboardLayout */}
@@ -41,7 +42,7 @@ function App() {
           <Route index element={<Dashboard />} />
           <Route path="live-session" element={<LiveSession />} />
           <Route path="payment" element={<Payment />} />
-          <Route path="exam" element={<ExamView />} />
+          <Route path="/exams/:examId" element={<ExamView />} />
           <Route path="resources" element={<Resources />} />
           <Route path="library" element={<Library />} />
           <Route path="faculty" element={<Faculty />} />
