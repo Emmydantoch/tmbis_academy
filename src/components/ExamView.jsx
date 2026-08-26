@@ -4,7 +4,7 @@ import api from '../api/axios';
 
 export default function ExamView() {
   const navigate = useNavigate();
-  const { examId } = useParams(); // route: /exams/:examId
+  const { examId } = useParams(); // route: /exams/:examId 
 
   const [exam, setExam] = useState(null);
   const [questions, setQuestions] = useState([]);

@@ -59,7 +59,7 @@ export default function DashboardLayout() {
     { to: '/dashboard/faculty', icon: 'group', label: 'Faculty' },
     { to: '/dashboard/library', icon: 'library_books', label: 'Library' },
     { to: '/dashboard/live-session', icon: 'videocam', label: 'Live Sessions' },
-    { to: '/dashboard/exam', icon: 'quiz', label: 'Exams & Tests' },
+    { to: '/dashboard/exams/1', icon: 'quiz', label: 'Exams & Tests' },
     { to: '/dashboard/payment', icon: 'account_balance_wallet', label: 'Payments' },
     { to: '/dashboard/resources', icon: 'article', label: 'Resources' },
   ];
