@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 
 export default function Dashboard({ userRole = "student" }) {
   const [userName, setUserName] = useState('Alex');
   const [accessDeniedMsg, setAccessDeniedMsg] = useState(false);
+  const [needsPassword, setNeedsPassword] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -14,6 +15,11 @@ export default function Dashboard({ userRole = "student" }) {
         const name = [u.first_name, u.last_name].filter(Boolean).join(' ').trim();
         if (name) setUserName(name);
         else if (u.email) setUserName(u.email.split('@')[0]);
+
+        // Check if the student needs to set a password
+        if (u.has_usable_password === false) {
+          setNeedsPassword(true);
+        }
       }
     } catch (e) {
       // ignore parse errors
@@ -37,6 +43,23 @@ export default function Dashboard({ userRole = "student" }) {
         >
           <span className="material-symbols-outlined">lock</span>
           <span className="font-medium">Access Denied — Admin privileges required.</span>
+        </div>
+      )}
+
+      {/* Password Setup Banner */}
+      {needsPassword && (
+        <div
+          className="fixed top-5 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 bg-primary text-on-primary px-6 py-3 rounded-2xl shadow-2xl"
+          role="alert"
+        >
+          <span className="material-symbols-outlined">lock_open</span>
+          <span className="font-medium">You haven't set a password yet.</span>
+          <Link
+            to="/dashboard/change-password"
+            className="ml-2 underline font-bold hover:opacity-80 transition-opacity"
+          >
+            Set Password Now
+          </Link>
         </div>
       )}
 

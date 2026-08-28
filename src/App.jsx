@@ -19,6 +19,7 @@ import AdminSettings from './components/AdminSettings';
 import AdmissionForm from './components/AdmissionForm';
 import Registration from './components/Registration';
 import ProtectedAdminRoute from './components/ProtectedAdminRoute';
+import ChangePassword from './components/ChangePassword';
 
 function App() {
   return (
@@ -48,6 +49,7 @@ function App() {
           <Route path="library" element={<Library />} />
           <Route path="faculty" element={<Faculty />} />
           <Route path="contact" element={<Contact />} />
+          <Route path="change-password" element={<ChangePassword />} />
         </Route>
 
         {/* Admin Routes */}

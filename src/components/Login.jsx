@@ -56,9 +56,12 @@ export default function Login() {
 
       // Redirect based on role
       const user = response.data.user;
+      const justActivated = response.data.just_activated;
 
       if (user.is_staff || user.is_superuser) {
         navigate('/admin/dashboard');   // Admin Dashboard
+      } else if (justActivated) {
+        navigate('/dashboard/change-password');  // First login — set password
       } else {
         navigate('/dashboard');         // Student Dashboard
       }

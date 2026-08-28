@@ -148,6 +148,17 @@ export default function DashboardLayout() {
         {/* Footer Links */}
         <div className="mt-auto pt-6 border-t border-outline-variant space-y-1">
           <Link
+            to="/dashboard/change-password"
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+              location.pathname === '/dashboard/change-password'
+                ? 'bg-primary text-on-primary'
+                : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
+            }`}
+          >
+            <span className="material-symbols-outlined">lock_reset</span>
+            <span className="font-medium">Change Password</span>
+          </Link>
+          <Link
             to="/dashboard/contact"
             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
               location.pathname === '/dashboard/contact'
