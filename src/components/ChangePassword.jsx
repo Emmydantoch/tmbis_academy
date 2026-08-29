@@ -12,6 +12,8 @@ export default function ChangePassword() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isFirstLogin, setIsFirstLogin] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
     try {
@@ -148,14 +150,24 @@ export default function ChangePassword() {
               <input
                 id="new_password"
                 name="new_password"
-                type="password"
+                type={showNew ? 'text' : 'password'}
                 value={formData.new_password}
                 onChange={handleChange}
                 placeholder="Enter new password (min. 8 characters)"
                 required
                 minLength={8}
-                className="w-full rounded-xl border border-outline bg-surface-container pl-11 py-4 text-on-surface placeholder-on-surface-variant/60 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full rounded-xl border border-outline bg-surface-container pl-11 pr-12 py-4 text-on-surface placeholder-on-surface-variant/60 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
+              <button
+                type="button"
+                onClick={() => setShowNew(!showNew)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors focus:outline-none"
+                aria-label={showNew ? 'Hide password' : 'Show password'}
+              >
+                <span className="material-symbols-outlined text-xl">
+                  {showNew ? 'visibility_off' : 'visibility'}
+                </span>
+              </button>
             </div>
           </div>
 
@@ -170,14 +182,24 @@ export default function ChangePassword() {
               <input
                 id="confirm_password"
                 name="confirm_password"
-                type="password"
+                type={showConfirm ? 'text' : 'password'}
                 value={formData.confirm_password}
                 onChange={handleChange}
                 placeholder="Re-enter your new password"
                 required
                 minLength={8}
-                className="w-full rounded-xl border border-outline bg-surface-container pl-11 py-4 text-on-surface placeholder-on-surface-variant/60 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full rounded-xl border border-outline bg-surface-container pl-11 pr-12 py-4 text-on-surface placeholder-on-surface-variant/60 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
+              <button
+                type="button"
+                onClick={() => setShowConfirm(!showConfirm)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors focus:outline-none"
+                aria-label={showConfirm ? 'Hide password' : 'Show password'}
+              >
+                <span className="material-symbols-outlined text-xl">
+                  {showConfirm ? 'visibility_off' : 'visibility'}
+                </span>
+              </button>
             </div>
           </div>
 
