@@ -28,13 +28,13 @@ function App() {
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Login />} />
+        <Route path="/register" element={<Registration />} />
         <Route path="/registration" element={<Registration />} />
         <Route path="/apply" element={<AdmissionForm />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />
         <Route path="/payment" element={<Payment />} />
         <Route path="/contact" element={<Contact />} />
-        <Route path="/resources" element={<Contact />} />
+        <Route path="/resources" element={<Resources />} />
         
         
 

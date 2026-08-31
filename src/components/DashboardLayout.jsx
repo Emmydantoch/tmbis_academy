@@ -11,39 +11,46 @@ export default function DashboardLayout() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // ── Auth Guard: redirect to login if no valid session exists ──
+    const accessToken = localStorage.getItem('access_token');
+    const raw = localStorage.getItem('user');
+
+    if (!accessToken || accessToken === 'null' || accessToken === 'undefined' || !raw) {
+      navigate('/login');
+      return;
+    }
+
     try {
-      const raw = localStorage.getItem('user');
-      if (raw) {
-        const u = JSON.parse(raw);
-        const name = [u.first_name, u.last_name].filter(Boolean).join(' ').trim();
-        if (name) setUserName(name);
-        else if (u.email) setUserName(u.email.split('@')[0]);
+      const u = JSON.parse(raw);
+      const name = [u.first_name, u.last_name].filter(Boolean).join(' ').trim();
+      if (name) setUserName(name);
+      else if (u.email) setUserName(u.email.split('@')[0]);
 
-        if (u.avatar || u.profile_picture || u.avatar_url) {
-          setAvatarUrl(u.avatar || u.profile_picture || u.avatar_url);
-        }
+      if (u.avatar || u.profile_picture || u.avatar_url) {
+        setAvatarUrl(u.avatar || u.profile_picture || u.avatar_url);
+      }
 
-        const admin =
-          u.is_admin === true ||
-          u.is_staff === true ||
-          u.role === 'admin' ||
-          u.role === 'superuser';
-        setIsAdmin(admin);
+      const admin =
+        u.is_admin === true ||
+        u.is_staff === true ||
+        u.role === 'admin' ||
+        u.role === 'superuser';
+      setIsAdmin(admin);
 
-        if (u.role === 'lecturer' || u.role === 'teacher' || u.role === 'instructor') {
-          setUserRole('lecturer');
-        }
+      if (u.role === 'lecturer' || u.role === 'teacher' || u.role === 'instructor') {
+        setUserRole('lecturer');
       }
     } catch (e) {
-      // ignore parse errors
+      // Corrupted user data → force re-login
+      navigate('/login');
     }
-  }, []);
+  }, [navigate]);
 
   const handleLogout = () => {
+    // ── Clear all auth keys (matching exactly what Login.jsx saves) ──
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    localStorage.removeItem('access');
-    localStorage.removeItem('refresh');
     navigate('/login');
   };
 

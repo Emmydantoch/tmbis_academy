@@ -131,7 +131,7 @@ export default function LandingPage() {
                   We train the next generation of researchers, engineers, and innovators through immersive
                   programs, live coaching, and cutting-edge resources.
                 </p>
-
+ 
                 <div className="mt-md grid grid-cols-2 gap-gutter">
                   {[
                     ['50+', 'Global Partners'],

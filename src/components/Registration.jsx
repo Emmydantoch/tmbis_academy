@@ -26,7 +26,7 @@ export default function Registration() {
         guarantor_number: guarantor_number,
       });
       setSuccess(true);
-      setTimeout(() => navigate('/login'), 1200);
+      setTimeout(() => navigate('/payment'), 1500);
     } catch (err) {
       console.error(err);
       setError(err.response?.data || 'Registration failed');
@@ -46,7 +46,9 @@ export default function Registration() {
         <h2 className="text-2xl font-bold mb-4">Register</h2>
         {error && <div className="text-sm text-error mb-4">{JSON.stringify(error)}</div>}
         {success ? (
-          <div className="text-green-600">Registration saved. Proceed to login after payment.</div>
+        <div className="text-green-600 font-medium">
+            ✅ Details saved! Redirecting you to make payment...
+          </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
