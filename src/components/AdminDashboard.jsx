@@ -1,17 +1,50 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../api/axios';
 import SidebarLayout from './SidebarLayout';
+
+const defaultStats = {
+  total_revenue: 0,
+  active_students: 0,
+  completion_rate: 0,
+  pending_admissions: 0,
+  revenue_trend: [30, 45, 40, 60, 55, 80, 95],
+};
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [timeRange, setTimeRange] = useState("Last 30 Days");
+  const [stats, setStats] = useState(defaultStats);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Protect admin page – only staff/superuser can stay
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     if (!user.is_staff && !user.is_superuser) {
       navigate('/dashboard');
+      return;
     }
+
+    const fetchStats = async () => {
+      try {
+        const res = await api.get('admin-dashboard-stats/');
+        setStats({
+          ...defaultStats,
+          ...res.data,
+          revenue_trend: res.data.revenue_trend?.length ? res.data.revenue_trend.map((item) => item.value) : defaultStats.revenue_trend,
+        });
+        setError('');
+      } catch (err) {
+        console.error('Failed to load admin dashboard stats:', err);
+        setError('Unable to load live stats right now.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+    const intervalId = setInterval(fetchStats, 30000);
+    return () => clearInterval(intervalId);
   }, [navigate]);
 
   const navItems = [
@@ -43,12 +76,18 @@ export default function AdminDashboard() {
       }
     >
       <div className="p-6 md:p-10 max-w-7xl mx-auto">
+        {error && (
+          <div className="mb-6 rounded-2xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">
+            {error}
+          </div>
+        )}
+
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-          <KPICard title="Total Revenue" value="$1.2M" change="+12%" icon="payments" color="primary" />
-          <KPICard title="Active Students" value="1,240" change="+5.4%" icon="group" color="primary" />
-          <KPICard title="Avg. Completion Rate" value="88%" change="" icon="verified" color="primary" />
-          <KPICard title="Pending Tickets" value="14" change="4 high priority" icon="report_problem" color="error" />
+          <KPICard title="Total Revenue" value={formatCurrency(stats.total_revenue)} change="Live data" icon="payments" color="primary" loading={loading} />
+          <KPICard title="Active Students" value={formatNumber(stats.active_students)} change="Updated live" icon="group" color="primary" loading={loading} />
+          <KPICard title="Avg. Completion Rate" value={`${stats.completion_rate}%`} change="" icon="verified" color="primary" loading={loading} />
+          <KPICard title="Pending Admissions" value={formatNumber(stats.pending_admissions)} change="Needs review" icon="report_problem" color="error" loading={loading} />
         </div>
 
         {/* Main Grid */}
@@ -68,13 +107,13 @@ export default function AdminDashboard() {
               </select>
             </div>
 
-            {/* Fake Bar Chart */}
+            {/* Live Revenue Chart */}
             <div className="h-64 flex items-end gap-3 pt-8">
-              {[30, 45, 40, 60, 55, 80, 95].map((height, i) => (
+              {stats.revenue_trend.map((height, i) => (
                 <div key={i} className="flex-1 flex flex-col justify-end">
                   <div
                     className="bg-primary rounded-t transition-all hover:brightness-110"
-                    style={{ height: `${height}%` }}
+                    style={{ height: `${Math.max(height / 1.5, 12)}%` }}
                   ></div>
                 </div>
               ))}
@@ -137,17 +176,29 @@ export default function AdminDashboard() {
   );
 }
 
-function KPICard({ title, value, change, icon }) {
+function KPICard({ title, value, change, icon, loading }) {
   return (
     <div className="bg-surface-container p-8 rounded-3xl border-l-4 border-primary hover:scale-[1.02] transition-all">
       <div className="flex justify-between items-start mb-6">
         <span className="text-on-surface-variant uppercase tracking-widest text-sm font-medium">{title}</span>
         <span className="material-symbols-outlined text-3xl text-primary">{icon}</span>
       </div>
-      <div className="text-4xl font-bold text-primary mb-2">{value}</div>
+      <div className="text-4xl font-bold text-primary mb-2">{loading ? '…' : value}</div>
       {change && <p className="text-sm text-primary">{change}</p>}
     </div>
   );
+}
+
+function formatCurrency(value) {
+  return new Intl.NumberFormat('en-NG', {
+    style: 'currency',
+    currency: 'NGN',
+    maximumFractionDigits: 0,
+  }).format(Number(value || 0));
+}
+
+function formatNumber(value) {
+  return Number(value || 0).toLocaleString();
 }
 
 function ActivityItem({ icon, title, subtitle, time }) {

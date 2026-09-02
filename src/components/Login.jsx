@@ -97,7 +97,7 @@ export default function Login() {
 
           <div className="hidden items-center gap-xl md:flex">
             <Link to="/" className="font-body-md text-body-md text-on-surface-variant transition-colors hover:text-primary">
-              Programs
+              Home
             </Link>
           </div>
 

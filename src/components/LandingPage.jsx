@@ -42,7 +42,7 @@ export default function LandingPage() {
               About
             </a>
             <a className="font-body-md text-body-md text-on-surface-variant transition-colors hover:text-primary" href="#courses">
-              Programs
+              Courses
             </a>
             <a className="font-body-md text-body-md text-on-surface-variant transition-colors hover:text-primary" href="#admissions">
               Admissions
@@ -89,16 +89,16 @@ export default function LandingPage() {
                 <span className="material-symbols-outlined">arrow_forward</span>
               </Link>
               <Link
-                to="/payment"
-                className="w-full rounded-lg border border-[#64ffda] px-xl py-md text-lg font-bold text-[#64ffda] transition-all hover:bg-[#64ffda]/10 md:w-auto text-center"
-              >
-                Make Payments
-              </Link>
-              <Link
                 to="/registration"
                 className="w-full rounded-lg border border-[#64ffda] px-xl py-md text-lg font-bold text-[#64ffda] transition-all hover:bg-[#64ffda]/10 md:w-auto text-center"
               >
                 Register
+              </Link>
+              <Link
+                to="/payment"
+                className="rounded-lg border border-[#64ffda] px-10 py-3 text-lg font-bold text-[#64ffda] transition-all hover:bg-[#64ffda]/10"
+              >
+                Pay Fees
               </Link>
             </div>
           </div>

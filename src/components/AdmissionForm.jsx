@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/axios';   // the axios instance we created
 
 export default function AdmissionForm() {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -22,6 +23,16 @@ export default function AdmissionForm() {
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
+
+    // Auto-redirect to home after 4 seconds when application is submitted
+    useEffect(() => {
+        if (submitted) {
+            const timer = setTimeout(() => {
+                navigate('/');
+            }, 4000);
+            return () => clearTimeout(timer);
+        }
+    }, [submitted, navigate]);
 
     const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -60,18 +71,14 @@ export default function AdmissionForm() {
             <p className="text-on-surface-variant mb-8">
             Thank you for applying to TMBIS Academy. Our admissions team will review your application and contact you within 5–7 business days.
             </p>
+            <p className="text-sm text-on-surface-variant mb-6">
+            Redirecting to home page in a few seconds...
+            </p>
             <button
-            onClick={() => {
-                setSubmitted(false);
-                setFormData({
-                firstName: '', lastName: '', email: '', phone: '', dateOfBirth: '',
-                gender: '', nationality: '', program: '', level: '', previousEducation: '',
-                startTerm: '', motivation: '', howDidYouHear: '', agreeTerms: false
-                });
-            }}
+            onClick={() => navigate('/')}
             className="bg-primary text-on-primary px-10 py-4 rounded-2xl font-bold hover:brightness-110 transition-all"
             >
-            Submit Another Application
+            Go to Home Now
             </button>
         </div>
         </div>
@@ -89,8 +96,8 @@ export default function AdmissionForm() {
 
         <div className="flex-1 space-y-1">
             <Link to="/" className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-surface-container text-on-surface-variant transition-all">
-            <span className="material-symbols-outlined">home</span>
-            <span>Landing Page</span>
+            <span className="material-symbols-outlined">Home</span>
+            <span>Home</span>
             </Link>
             <Link to="/contact" className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-surface-container text-on-surface-variant transition-all">
             <span className="material-symbols-outlined">contact_support</span>
@@ -138,7 +145,7 @@ export default function AdmissionForm() {
                     value={formData.firstName}
                     onChange={handleChange}
                     className="w-full bg-surface-container-lowest border border-outline-variant rounded-2xl px-5 py-4 focus:border-primary focus:outline-none"
-                    placeholder="Alex"
+                    placeholder="Femi"
                     />
                 </div>
 
@@ -151,7 +158,7 @@ export default function AdmissionForm() {
                     value={formData.lastName}
                     onChange={handleChange}
                     className="w-full bg-surface-container-lowest border border-outline-variant rounded-2xl px-5 py-4 focus:border-primary focus:outline-none"
-                    placeholder="Rivera"
+                    placeholder="Adewale"
                     />
                 </div>
 
@@ -164,7 +171,7 @@ export default function AdmissionForm() {
                     value={formData.email}
                     onChange={handleChange}
                     className="w-full bg-surface-container-lowest border border-outline-variant rounded-2xl px-5 py-4 focus:border-primary focus:outline-none"
-                    placeholder="alex@email.com"
+                    placeholder="femi@email.com"
                     />
                 </div>
 

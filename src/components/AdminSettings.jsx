@@ -1,8 +1,46 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import api from '../api/axios';
 import SidebarLayout from './SidebarLayout';
 
-    export default function AdminSettings() {
-    const [activeTab, setActiveTab] = useState("general");
+const defaultSummary = {
+    total_revenue: 0,
+    active_students: 0,
+    pending_admissions: 0,
+    completion_rate: 0,
+};
+
+export default function AdminSettings() {
+    const [activeTab, setActiveTab] = useState('general');
+    const [stats, setStats] = useState(defaultSummary);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+
+    useEffect(() => {
+        const fetchLiveStats = async () => {
+            try {
+                const [dashboardRes, paymentRes] = await Promise.all([
+                    api.get('admin-dashboard-stats/'),
+                    api.get('payments/admin/'),
+                ]);
+
+                setStats({
+                    ...defaultSummary,
+                    ...dashboardRes.data,
+                    total_revenue: paymentRes.data.summary?.total_revenue ?? dashboardRes.data.total_revenue ?? 0,
+                });
+                setError('');
+            } catch (err) {
+                console.error('Failed to load live admin settings data:', err);
+                setError('Unable to load live system stats right now.');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchLiveStats();
+        const intervalId = setInterval(fetchLiveStats, 30000);
+        return () => clearInterval(intervalId);
+    }, []);
 
     const navItems = [
         { icon: 'home', label: 'Home', to: '/' },
@@ -25,54 +63,58 @@ import SidebarLayout from './SidebarLayout';
             }
         >
             <div className="flex flex-1 overflow-hidden">
-                {/* Left Navigation Tabs */}
                 <nav className="w-72 border-r border-outline-variant p-6 flex flex-col gap-2 overflow-y-auto bg-surface-container-low">
                 <p className="px-4 text-xs uppercase tracking-widest text-on-surface-variant mb-4">Configuration</p>
-                
-                <TabButton 
-                    icon="settings_suggest" 
-                    label="General Settings" 
-                    active={activeTab === "general"} 
-                    onClick={() => setActiveTab("general")} 
+
+                <TabButton
+                    icon="settings_suggest"
+                    label="General Settings"
+                    active={activeTab === 'general'}
+                    onClick={() => setActiveTab('general')}
                 />
-                <TabButton 
-                    icon="shield_lock" 
-                    label="Security & Authentication" 
-                    active={activeTab === "security"} 
-                    onClick={() => setActiveTab("security")} 
+                <TabButton
+                    icon="shield_lock"
+                    label="Security & Authentication"
+                    active={activeTab === 'security'}
+                    onClick={() => setActiveTab('security')}
                 />
-                <TabButton 
-                    icon="mail" 
-                    label="Notifications" 
-                    active={activeTab === "notifications"} 
-                    onClick={() => setActiveTab("notifications")} 
+                <TabButton
+                    icon="mail"
+                    label="Notifications"
+                    active={activeTab === 'notifications'}
+                    onClick={() => setActiveTab('notifications')}
                 />
-                <TabButton 
-                    icon="hub" 
-                    label="Integrations" 
-                    active={activeTab === "integrations"} 
-                    onClick={() => setActiveTab("integrations")} 
+                <TabButton
+                    icon="hub"
+                    label="Integrations"
+                    active={activeTab === 'integrations'}
+                    onClick={() => setActiveTab('integrations')}
                 />
-                <TabButton 
-                    icon="palette" 
-                    label="Appearance" 
-                    active={activeTab === "appearance"} 
-                    onClick={() => setActiveTab("appearance")} 
+                <TabButton
+                    icon="palette"
+                    label="Appearance"
+                    active={activeTab === 'appearance'}
+                    onClick={() => setActiveTab('appearance')}
                 />
                 </nav>
 
-                {/* Settings Content */}
                 <div className="flex-1 overflow-y-auto p-10">
-                {activeTab === "general" && <GeneralSettings />}
-                {activeTab === "security" && <SecuritySettings />}
-                {activeTab === "notifications" && <NotificationsSettings />}
-                {activeTab === "integrations" && <IntegrationsSettings />}
-                {activeTab === "appearance" && <AppearanceSettings />}
+                {error && (
+                    <div className="mb-6 rounded-2xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">
+                        {error}
+                    </div>
+                )}
+
+                {activeTab === 'general' && <GeneralSettings stats={stats} loading={loading} />}
+                {activeTab === 'security' && <SecuritySettings />}
+                {activeTab === 'notifications' && <NotificationsSettings />}
+                {activeTab === 'integrations' && <IntegrationsSettings />}
+                {activeTab === 'appearance' && <AppearanceSettings />}
                 </div>
             </div>
         </SidebarLayout>
     );
-    }
+}
 
     function TabButton({ icon, label, active, onClick }) {
     return (
@@ -87,12 +129,18 @@ import SidebarLayout from './SidebarLayout';
     }
 
     /* Tab Content Components */
-    function GeneralSettings() {
+    function GeneralSettings({ stats, loading }) {
     return (
         <div className="max-w-3xl space-y-10">
             <div>
             <h3 className="font-headline-lg text-headline-lg text-primary mb-2">General Settings</h3>
             <p className="text-on-surface-variant">Configure core institution identity and preferences.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <MiniStat label="Revenue" value={loading ? '…' : formatCurrency(stats.total_revenue)} />
+                <MiniStat label="Students" value={loading ? '…' : formatNumber(stats.active_students)} />
+                <MiniStat label="Completion" value={loading ? '…' : `${stats.completion_rate}%`} />
             </div>
 
             <div className="space-y-8">
@@ -174,6 +222,15 @@ import SidebarLayout from './SidebarLayout';
     }
 
     /* Reusable Components */
+    function MiniStat({ label, value }) {
+    return (
+        <div className="bg-surface-container p-5 rounded-2xl border border-outline-variant">
+            <p className="text-xs uppercase tracking-widest text-on-surface-variant">{label}</p>
+            <p className="mt-3 text-2xl font-bold text-primary">{value}</p>
+        </div>
+    );
+    }
+
     function NavItem({ icon, label, active = false }) {
     return (
     <a href="#" className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${active ? 'bg-primary text-on-primary' : 'hover:bg-surface-container text-on-surface-variant'}`}>
@@ -236,4 +293,16 @@ import SidebarLayout from './SidebarLayout';
         <p className="text-center mt-4 font-medium">{name}</p>
     </div>
     );
+}
+
+function formatCurrency(value) {
+    return new Intl.NumberFormat('en-NG', {
+        style: 'currency',
+        currency: 'NGN',
+        maximumFractionDigits: 0,
+    }).format(Number(value || 0));
+}
+
+function formatNumber(value) {
+    return Number(value || 0).toLocaleString();
 }
