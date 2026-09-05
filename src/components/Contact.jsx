@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../api/axios'; // make sure this path is correct
 
 export default function Contact() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -11,6 +13,16 @@ export default function Contact() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!showSuccess) return undefined;
+
+    const redirectTimer = window.setTimeout(() => {
+      navigate('/');
+    }, 4000);
+
+    return () => window.clearTimeout(redirectTimer);
+  }, [showSuccess, navigate]);
 
   const handleChange = (e) => {
     setFormData({
@@ -36,11 +48,6 @@ export default function Contact() {
       if (response.status === 201) {
         setShowSuccess(true);
         setFormData({ name: "", email: "", subject: "", message: "" });
-
-        // Hide success message after 4 seconds
-        setTimeout(() => {
-          setShowSuccess(false);
-        }, 4000);
       }
     } catch (err) {
       console.error(err);
