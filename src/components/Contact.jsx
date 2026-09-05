@@ -94,7 +94,7 @@ export default function Contact() {
                         onChange={handleChange}
                         required
                         className="w-full bg-surface-container-lowest border border-outline-variant rounded-2xl px-6 py-4 focus:border-primary focus:outline-none"
-                        placeholder="John Doe"
+                        placeholder="Femi Adewale"
                       />
                     </div>
                     <div>
@@ -199,7 +199,7 @@ export default function Contact() {
 
           {/* Map Placeholders */}
           <div className="space-y-6">
-            {/* San Francisco */}
+            {/* Nigeria */}
             <div className="bg-surface-container rounded-3xl overflow-hidden border border-outline-variant">
               <div className="h-48 bg-gradient-to-br from-blue-950 to-cyan-950 relative">
                 <div className="absolute inset-0 bg-[radial-gradient(#64ffda_1px,transparent_1px)] [background-size:20px_20px] opacity-10"></div>
@@ -207,39 +207,39 @@ export default function Contact() {
                   HEADQUARTERS
                 </div>
                 <div className="absolute bottom-4 right-4 text-white text-right">
-                  <p className="font-bold">San Francisco</p>
-                  <p className="text-xs opacity-75">The Silicon Reef</p>
+                  <p className="font-bold">Nigeria</p>
+                  <p className="text-xs opacity-75">Ado Academic Collage</p>
                 </div>
               </div>
               <div className="p-6">
                 <p className="text-on-surface-variant">
-                  450 Tech Avenue, Suite 100
+                  Ikere, International School
                   <br />
-                  San Francisco, CA 94105
+                  Ekiti, Nigeria
                 </p>
-                <p className="mt-4 text-primary font-medium">+1 (555) 012-9876</p>
+                <p className="mt-4 text-primary font-medium">+234 (8163) 7650-59</p>
               </div>
             </div>
 
-            {/* London */}
+            {/* Nigeria */}
             <div className="bg-surface-container rounded-3xl overflow-hidden border border-outline-variant">
               <div className="h-48 bg-gradient-to-br from-indigo-950 to-blue-950 relative">
                 <div className="absolute inset-0 bg-[radial-gradient(#64ffda_1px,transparent_1px)] [background-size:20px_20px] opacity-10"></div>
                 <div className="absolute top-4 left-4 bg-black/60 text-white text-xs px-3 py-1 rounded-full">
-                  EUROPEAN HUB
+                  AFRICAN HUB
                 </div>
                 <div className="absolute bottom-4 right-4 text-white text-right">
-                  <p className="font-bold">London</p>
-                  <p className="text-xs opacity-75">The Atlantic Trench</p>
+                  <p className="font-bold">Ado-Ekiti</p>
+                  <p className="text-xs opacity-75">Ado Academic Collage</p>
                 </div>
               </div>
               <div className="p-6">
                 <p className="text-on-surface-variant">
-                  12 High Street, Innovation Quarter
+                  Ilawe International, Secondary School 
                   <br />
-                  London, EC1V 2NX
+                  Ekiti, Nigeria
                 </p>
-                <p className="mt-4 text-primary font-medium">euro-desk@academiapro.com</p>
+                <p className="mt-4 text-primary font-medium">tmbepartners@gmail.com</p>
               </div>
             </div>
           </div>
