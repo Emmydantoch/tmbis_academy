@@ -45,6 +45,44 @@ body {
 }
 
 .glass-effect {
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   background: rgba(17, 34, 64, 0.8);
+}
+
+.reveal-on-scroll {
+  opacity: 0;
+  --reveal-delay: 0ms;
+  transition: opacity 700ms ease, transform 700ms cubic-bezier(0.2, 0.75, 0.25, 1);
+  transition-delay: var(--reveal-delay);
+  will-change: opacity, transform;
+}
+
+.reveal-slide-up {
+  transform: translateY(32px);
+}
+
+.reveal-slide-left {
+  transform: translateX(-42px);
+}
+
+.reveal-slide-right {
+  transform: translateX(42px);
+}
+
+.reveal-bounce {
+  transform: translateY(24px) scale(0.97);
+}
+
+.reveal-on-scroll.reveal-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-on-scroll {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }

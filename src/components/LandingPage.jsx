@@ -18,7 +18,25 @@ export default function LandingPage() {
     window.addEventListener('scroll', handleScroll)
     handleScroll()
 
-    return () => window.removeEventListener('scroll', handleScroll)
+    const revealItems = document.querySelectorAll('.reveal-on-scroll')
+    const revealObserver = new IntersectionObserver(
+      (entries, observer) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('reveal-visible')
+            observer.unobserve(entry.target)
+          }
+        })
+      },
+      { threshold: 0.14 },
+    )
+
+    revealItems.forEach((item) => revealObserver.observe(item))
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      revealObserver.disconnect()
+    }
   }, [])
 
   return (
@@ -65,7 +83,19 @@ export default function LandingPage() {
 
       <main>
         {/* Hero Section */}
-        <section className="relative flex min-h-[820px] items-center justify-center overflow-hidden">
+        <section className="relative flex min-h-[820px] items-center justify-center overflow-hidden bg-surface">
+          <div className="absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
+            <iframe
+              src="https://player.cloudinary.com/embed/?cloud_name=o68u6tlz&public_id=compressedPro_biwfkj&autoplay=true&loop=true&muted=true&controls=false"
+              title="TMBIS Academy introduction"
+              className="pointer-events-none absolute left-1/2 top-1/2 h-[56.25vw] min-h-full w-[177.78vh] min-w-full -translate-x-1/2 -translate-y-1/2 border-0"
+              allow="autoplay; fullscreen"
+              loading="eager"
+            />
+            <div className="absolute inset-0 bg-[#07122a]/65" />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#07122a]/35 via-transparent to-[#07122a]" />
+          </div>
+
           <div className="relative z-10 max-w-4xl px-margin-desktop text-center">
             <div className="mb-md inline-flex items-center gap-xs rounded-full border border-outline-variant/20 bg-surface-container-highest px-sm py-1">
               <span className="material-symbols-outlined text-sm text-primary-fixed">terminal</span>
@@ -108,7 +138,7 @@ export default function LandingPage() {
         <section id="about" className="overflow-hidden bg-surface-container-low py-xl">
           <div className="mx-auto max-w-7xl px-margin-desktop">
             <div className="grid grid-cols-1 items-center gap-xl lg:grid-cols-2">
-              <div className="group relative">
+              <div className="group relative reveal-on-scroll reveal-slide-left">
                 <div className="absolute -inset-2 rounded-2xl bg-primary-fixed/10 blur-xl transition-all group-hover:bg-primary-fixed/20"></div>
                 <img
                   className="relative h-[480px] w-full rounded-2xl object-cover grayscale transition-all duration-700 group-hover:grayscale-0"
@@ -117,7 +147,7 @@ export default function LandingPage() {
                 />
               </div>
 
-              <div className="flex flex-col gap-md">
+              <div className="flex flex-col gap-md reveal-on-scroll reveal-slide-right">
                 <span className="font-label-md text-primary-fixed uppercase tracking-widest">About TMBIS Academy</span>
                 <h2 className="font-headline-lg text-headline-lg text-primary">
                   Where Technical Precision Meets Vast Potential
@@ -139,7 +169,7 @@ export default function LandingPage() {
                     ['98%', 'Research Placement'],
                     ['12', 'Global Hubs'],
                   ].map(([value, label]) => (
-                    <div key={label} className="border-l-2 border-primary-fixed bg-surface-container/50 p-md">
+                    <div key={label} className="reveal-on-scroll reveal-bounce border-l-2 border-primary-fixed bg-surface-container/50 p-md" style={{ '--reveal-delay': `${(Number(value.replace(/\D/g, '')) % 4) * 90}ms` }}>
                       <span className="mb-xs block font-headline-lg text-4xl text-primary">{value}</span>
                       <span className="font-body-sm text-body-sm uppercase tracking-widest text-on-surface-variant">
                         {label}
@@ -154,7 +184,7 @@ export default function LandingPage() {
 
         {/* ==================== AVAILABLE COURSES ==================== */}
         <section id="courses" className="mx-auto max-w-7xl px-margin-desktop py-xl">
-          <div className="mb-xl text-center">
+          <div className="mb-xl text-center reveal-on-scroll reveal-slide-up">
             <span className="font-label-md text-primary-fixed uppercase tracking-widest">Our Programs</span>
             <h2 className="mt-2 font-headline-lg text-headline-lg text-primary">Available Courses</h2>
             <p className="mx-auto mt-3 max-w-2xl text-on-surface-variant">
@@ -209,7 +239,8 @@ export default function LandingPage() {
             ].map((course) => (
               <div
                 key={course.title}
-                className="flex flex-col gap-md rounded-2xl bg-surface-container p-md border border-outline-variant/20 hover:border-primary-fixed/40 transition-all"
+                className="reveal-on-scroll reveal-bounce flex flex-col gap-md rounded-2xl bg-surface-container p-md border border-outline-variant/20 hover:border-primary-fixed/40 transition-all"
+                style={{ '--reveal-delay': `${(course.title.length % 3) * 100}ms` }}
               >
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-surface-container-highest">
                   <span className="material-symbols-outlined text-primary-fixed text-3xl">{course.icon}</span>
@@ -233,7 +264,7 @@ export default function LandingPage() {
         {/* ==================== ADMISSIONS & SESSION DATES ==================== */}
         <section id="admissions" className="bg-surface-container-low py-xl">
           <div className="mx-auto max-w-7xl px-margin-desktop">
-            <div className="mb-xl text-center">
+            <div className="mb-xl text-center reveal-on-scroll reveal-slide-up">
               <span className="font-label-md text-primary-fixed uppercase tracking-widest">Admissions</span>
               <h2 className="mt-2 font-headline-lg text-headline-lg text-primary">Session Dates & Application Windows</h2>
               <p className="mx-auto mt-3 max-w-2xl text-on-surface-variant">
@@ -243,7 +274,7 @@ export default function LandingPage() {
 
             <div className="grid grid-cols-1 gap-gutter lg:grid-cols-3">
               {/* Next Session */}
-              <div className="rounded-2xl bg-surface-container border border-primary-fixed/30 p-md relative overflow-hidden">
+              <div className="reveal-on-scroll reveal-slide-left rounded-2xl bg-surface-container border border-primary-fixed/30 p-md relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-10">
                   <span className="material-symbols-outlined text-6xl">event</span>
                 </div>
@@ -265,7 +296,7 @@ export default function LandingPage() {
               </div>
 
               {/* Admission Form Sales */}
-              <div className="rounded-2xl bg-surface-container border border-outline-variant/20 p-md">
+              <div className="reveal-on-scroll reveal-slide-up rounded-2xl bg-surface-container border border-outline-variant/20 p-md">
                 <span className="inline-block rounded-full bg-primary-fixed/10 px-3 py-1 text-xs font-medium text-primary-fixed mb-4">
                   ADMISSION FORMS
                 </span>
@@ -290,7 +321,7 @@ export default function LandingPage() {
               </div>
 
               {/* Important Dates */}
-              <div className="rounded-2xl bg-surface-container border border-outline-variant/20 p-md">
+              <div className="reveal-on-scroll reveal-slide-right rounded-2xl bg-surface-container border border-outline-variant/20 p-md">
                 <span className="inline-block rounded-full bg-primary-fixed/10 px-3 py-1 text-xs font-medium text-primary-fixed mb-4">
                   KEY DATES
                 </span>
@@ -347,7 +378,7 @@ export default function LandingPage() {
 
         {/* Academic Bulletin (kept from original) */}
         <section className="mx-auto max-w-7xl px-margin-desktop py-xl">
-          <div className="mb-xl flex flex-col items-end justify-between gap-md md:flex-row">
+          <div className="mb-xl flex flex-col items-end justify-between gap-md md:flex-row reveal-on-scroll reveal-slide-up">
             <div className="max-w-2xl">
               <h2 className="mb-sm font-headline-lg text-headline-lg text-primary">Academic Bulletin</h2>
               <p className="font-body-md text-body-md text-on-surface-variant">
@@ -380,7 +411,7 @@ export default function LandingPage() {
                 icon: 'workspace_premium',
               },
             ].map((item) => (
-              <div key={item.title} className="bento-card flex flex-col gap-md rounded-xl bg-surface-container p-md">
+              <div key={item.title} className="bento-card reveal-on-scroll reveal-bounce flex flex-col gap-md rounded-xl bg-surface-container p-md" style={{ '--reveal-delay': `${(item.title.length % 3) * 100}ms` }}>
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-surface-container-highest">
                   <span className="material-symbols-outlined text-primary-fixed">{item.icon}</span>
                 </div>
@@ -400,7 +431,7 @@ export default function LandingPage() {
 
         {/* CTA Section */}
         <section id="contact" className="px-margin-desktop py-xl">
-          <div className="glass-effect relative mx-auto max-w-5xl overflow-hidden rounded-2xl border border-outline-variant/10 p-xl text-center">
+          <div className="glass-effect reveal-on-scroll reveal-slide-up relative mx-auto max-w-5xl overflow-hidden rounded-2xl border border-outline-variant/10 p-xl text-center">
             <h2 className="mb-sm font-headline-lg text-headline-lg text-primary">Secure Your Future</h2>
             <p className="mx-auto mb-xl max-w-xl font-body-md text-body-md text-on-surface-variant">
               Ready to join the next cohort? Complete your application or speak with an enrollment specialist.
