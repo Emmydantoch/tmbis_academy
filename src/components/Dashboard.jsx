@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 
 export default function Dashboard({ userRole = "student" }) {
-  const [userName, setUserName] = useState('Alex');
+  const [userName, setUserName] = useState('Femi');
   const [accessDeniedMsg, setAccessDeniedMsg] = useState(false);
   const [needsPassword, setNeedsPassword] = useState(false);
+  const [currentRole, setCurrentRole] = useState(userRole);
   const location = useLocation();
 
   useEffect(() => {
@@ -15,6 +16,9 @@ export default function Dashboard({ userRole = "student" }) {
         const name = [u.first_name, u.last_name].filter(Boolean).join(' ').trim();
         if (name) setUserName(name);
         else if (u.email) setUserName(u.email.split('@')[0]);
+        if (u.role === 'lecturer' || u.role === 'teacher' || u.role === 'instructor') {
+          setCurrentRole('lecturer');
+        }
 
         // Check if the student needs to set a password
         if (u.has_usable_password === false) {
@@ -70,7 +74,7 @@ export default function Dashboard({ userRole = "student" }) {
             Welcome back, {userName}!
           </h2>
           <p className="text-on-surface-variant mt-1">
-            {userRole === "student" 
+            {currentRole === "student"
               ? "You have 2 upcoming assignments and 1 live session today." 
               : "You have 3 classes and 47 students today."}
           </p>
@@ -81,7 +85,7 @@ export default function Dashboard({ userRole = "student" }) {
           <div className="lg:col-span-8 space-y-8">
             <div className="flex justify-between items-center">
               <h3 className="font-headline-sm text-xl text-on-surface">
-                {userRole === "student" ? "Active Courses" : "My Active Classes"}
+                {currentRole === "student" ? "Active Courses" : "My Active Classes"}
               </h3>
               <a href="#" className="text-primary hover:underline">View All</a>
             </div>
@@ -94,9 +98,15 @@ export default function Dashboard({ userRole = "student" }) {
                     style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/...')" }}>
                 </div>
                 <div className="p-5">
-                  <span className="text-xs font-medium bg-primary/10 text-primary px-3 py-1 rounded-full">Design</span>
-                  <h4 className="mt-3 font-semibold text-on-surface">Introduction to UX Design</h4>
-                  <p className="text-sm text-on-surface-variant mt-1">Module 3 • 45% Complete</p>
+                  <span className="text-xs font-medium bg-primary/10 text-primary px-3 py-1 rounded-full">
+                    {currentRole === "student" ? "Design" : "Teaching Assignment"}
+                  </span>
+                  <h4 className="mt-3 font-semibold text-on-surface">
+                    {currentRole === "student" ? "Introduction to UX Design" : "My Teaching Workspace"}
+                  </h4>
+                  <p className="text-sm text-on-surface-variant mt-1">
+                    {currentRole === "student" ? "Module 3 • 45% Complete" : "Manage classes, sessions, and grades"}
+                  </p>
                   <div className="mt-4 h-2 bg-surface-container-high rounded-full overflow-hidden">
                     <div className="h-full w-[45%] bg-primary rounded-full"></div>
                   </div>
@@ -115,9 +125,9 @@ export default function Dashboard({ userRole = "student" }) {
               </div>
               <h3 className="text-xl font-semibold">Data Structures Seminar</h3>
               <p className="text-sm text-on-surface-variant mt-2">Starts in 15 minutes</p>
-              <button className="mt-6 w-full bg-primary text-on-primary py-3.5 rounded-xl font-medium flex items-center justify-center gap-2 hover:brightness-110">
+              <Link to="/dashboard/live-session" className="mt-6 w-full bg-primary text-on-primary py-3.5 rounded-xl font-medium flex items-center justify-center gap-2 hover:brightness-110">
                 Join Live Session
-              </button>
+              </Link>
             </div>
 
             {/* Recent Activity / Grades */}

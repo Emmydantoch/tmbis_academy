@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 export default function SidebarLayout({
@@ -13,10 +14,22 @@ export default function SidebarLayout({
     profileImage = 'https://lh3.googleusercontent.com/aida-public/AB6AXuAXGuHtLxOFZHUj9y7PHjvU_PadOmMMsC_tkvCbxww2gR9O1Os1Y9GqpFw5zalhq4cevRlbBjuLwF69cZfWgBJDFamdsJS5G0Q6hVGsLomewqEA_ygtScFaULRWUFT7YB33Q-Wy-O83qUeHP-zJC-ljioQ6U6dwd3uL7MHzmtFYfQ9wD8azANMadX4WS5CPAFh_R3EfX6fdIr9Z_3FSHvZt5nP1l9lnD8R_6g7Ry_1TiAMeJDCk1In-Wl-8yNgiuZoTpRBT9PtxCQhJ',
     }) {
     const location = useLocation();
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+    useEffect(() => {
+        setMobileMenuOpen(false);
+    }, [location.pathname]);
 
     return (
     <div className="min-h-screen bg-background text-on-surface flex">
-        <nav className="hidden md:flex w-64 flex-col h-screen bg-surface-container-low border-r border-outline-variant fixed left-0 top-0 z-20 p-4">
+        {mobileMenuOpen && (
+            <div
+                className="fixed inset-0 z-30 bg-black/50 md:hidden"
+                onClick={() => setMobileMenuOpen(false)}
+            />
+        )}
+
+        <nav className={`${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed left-0 top-0 z-40 flex w-64 flex-col h-screen bg-surface-container-low border-r border-outline-variant p-4 transition-transform duration-300`}>
         <div className="mb-8 px-2">
             <h1 className="font-headline-lg font-bold text-primary">{title}</h1>
             <p className="text-on-surface-variant text-sm">{subtitle}</p>
@@ -61,7 +74,12 @@ export default function SidebarLayout({
         <div className="flex-1 md:ml-64">
         <header className="sticky top-0 z-10 flex h-16 items-center border-b border-outline-variant bg-surface px-6">
             <div className="flex flex-1 items-center gap-4">
-            <button className="rounded-full p-2 hover:bg-surface-container md:hidden">
+            <button
+                type="button"
+                aria-label="Open navigation menu"
+                className="rounded-full p-2 hover:bg-surface-container md:hidden"
+                onClick={() => setMobileMenuOpen(true)}
+            >
                 <span className="material-symbols-outlined">menu</span>
             </button>
             <h1 className="font-headline-md text-headline-md font-bold text-primary">{headerTitle}</h1>

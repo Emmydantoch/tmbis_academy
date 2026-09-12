@@ -59,12 +59,12 @@ export default function Login() {
       const user = response.data.user;
       const justActivated = response.data.just_activated;
 
-      if (user.is_staff || user.is_superuser) {
+      if (user.is_staff || user.is_superuser || user.role === 'admin') {
         navigate('/admin/dashboard');   // Admin Dashboard
       } else if (justActivated) {
         navigate('/dashboard/change-password');  // First login — set password
       } else {
-        navigate('/dashboard');         // Student Dashboard
+        navigate('/dashboard');         // Student or lecturer dashboard
       }
 
     } catch (err) {

@@ -23,6 +23,12 @@ import AdmissionForm from './components/AdmissionForm';
 import Registration from './components/Registration';
 import ProtectedAdminRoute from './components/ProtectedAdminRoute';
 import ChangePassword from './components/ChangePassword';
+import ProtectedLecturerRoute from './components/ProtectedLecturerRoute';
+import LecturerCourses from './components/LecturerCourses';
+import LecturerSchedule from './components/LecturerSchedule';
+import LecturerGrades from './components/LecturerGrades';
+import Journals from './components/Journals';
+import StudyStudio from './components/StudyStudio';
 
 function App() {
   return (
@@ -38,7 +44,7 @@ function App() {
         <Route path="/payment" element={<Payment />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/resources" element={<Resources />} />
-        
+        <Route path="/journals" element={<Journals />} />
         
 
 
@@ -50,9 +56,15 @@ function App() {
           <Route path="exams/:examId" element={<ExamView />} />
           <Route path="resources" element={<Resources />} />
           <Route path="library" element={<Library />} />
+          <Route path="study-studio" element={<StudyStudio />} />
+          <Route path="journals" element={<Journals />} />
+          <Route path="grades" element={<LecturerGrades />} />
           <Route path="faculty" element={<Faculty />} />
           <Route path="contact" element={<Contact />} />
           <Route path="change-password" element={<ChangePassword />} />
+          <Route path="my-courses" element={<ProtectedLecturerRoute><LecturerCourses /></ProtectedLecturerRoute>} />
+          <Route path="schedule" element={<ProtectedLecturerRoute><LecturerSchedule /></ProtectedLecturerRoute>} />
+          <Route path="grades" element={<ProtectedLecturerRoute><LecturerGrades /></ProtectedLecturerRoute>} />
         </Route>
 
         {/* Admin Routes */}

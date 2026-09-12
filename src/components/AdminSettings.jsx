@@ -146,7 +146,7 @@ export default function AdminSettings() {
             <div className="space-y-8">
             <div>
                 <label className="block text-sm text-on-surface-variant mb-3">PLATFORM NAME</label>
-                <input type="text" defaultValue="AcademiaPro" className="w-full bg-surface-container-lowest border border-outline-variant rounded-2xl px-6 py-4 focus:border-primary" />
+                <input type="text" defaultValue="Tmbis_Academy" className="w-full bg-surface-container-lowest border border-outline-variant rounded-2xl px-6 py-4 focus:border-primary" />
             </div>
 
             <div>

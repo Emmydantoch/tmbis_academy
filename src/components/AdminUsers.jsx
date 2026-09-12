@@ -4,7 +4,7 @@ import SidebarLayout from './SidebarLayout';
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
-  const [summary, setSummary] = useState({ total_users: 0, active_students: 0, staff: 0, admins: 0 });
+  const [summary, setSummary] = useState({ total_users: 0, active_students: 0, lecturers: 0, staff: 0, admins: 0 });
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -14,7 +14,7 @@ export default function AdminUsers() {
       try {
         const response = await api.get('auth/admin-users/');
         setUsers(response.data.users || []);
-        setSummary(response.data.summary || { total_users: 0, active_students: 0, staff: 0, admins: 0 });
+        setSummary(response.data.summary || { total_users: 0, active_students: 0, lecturers: 0, staff: 0, admins: 0 });
         setError('');
       } catch (err) {
         console.error('Failed to load users:', err);
@@ -28,6 +28,17 @@ export default function AdminUsers() {
     const intervalId = setInterval(fetchUsers, 30000);
     return () => clearInterval(intervalId);
   }, []);
+
+  const updateRole = async (userId, role) => {
+    try {
+      await api.patch(`auth/admin-users/${userId}/role/`, { role });
+      setUsers((currentUsers) => currentUsers.map((user) => (
+        user.id === userId ? { ...user, role } : user
+      )));
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Unable to update this user role.');
+    }
+  };
 
   const filteredUsers = users.filter((user) =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -72,9 +83,10 @@ export default function AdminUsers() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-10">
           <MiniStat label="Total Users" value={loading ? '…' : formatNumber(summary.total_users)} />
           <MiniStat label="Active Students" value={loading ? '…' : formatNumber(summary.active_students)} />
+          <MiniStat label="Lecturers" value={loading ? '…' : formatNumber(summary.lecturers)} />
           <MiniStat label="Staff" value={loading ? '…' : formatNumber(summary.staff)} />
           <MiniStat label="Admins" value={loading ? '…' : formatNumber(summary.admins)} />
         </div>
@@ -98,7 +110,19 @@ export default function AdminUsers() {
                   <td className="px-6 py-5 text-on-surface-variant">{user.email}</td>
                   <td className="px-6 py-5">
                     <span className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary capitalize">
-                      {user.role}
+                      {user.role === 'student' || user.role === 'lecturer' ? (
+                        <select
+                          value={user.role}
+                          onChange={(event) => updateRole(user.id, event.target.value)}
+                          className="rounded-lg border border-outline-variant bg-surface-container-lowest px-2 py-1 text-xs capitalize"
+                          aria-label={`Change role for ${user.name}`}
+                        >
+                          <option value="student">Student</option>
+                          <option value="lecturer">Lecturer</option>
+                        </select>
+                      ) : (
+                        user.role
+                      )}
                     </span>
                   </td>
                   <td className="px-6 py-5">

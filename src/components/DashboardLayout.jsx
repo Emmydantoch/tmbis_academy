@@ -69,6 +69,8 @@ export default function DashboardLayout() {
     { to: '/dashboard/exams/1', icon: 'quiz', label: 'Exams & Tests' },
     { to: '/dashboard/payment', icon: 'account_balance_wallet', label: 'Payments' },
     { to: '/dashboard/resources', icon: 'article', label: 'Resources' },
+    { to: '/dashboard/journals', icon: 'menu_book', label: 'Open Journals' },
+    { to: '/dashboard/study-studio', icon: 'auto_awesome', label: 'Study Studio' },
   ];
 
   // Lecturer navigation items
@@ -77,6 +79,10 @@ export default function DashboardLayout() {
     { to: '/dashboard/my-courses', icon: 'school', label: 'My Courses' },
     { to: '/dashboard/schedule', icon: 'calendar_month', label: 'Schedule' },
     { to: '/dashboard/grades', icon: 'grade', label: 'Grades' },
+    { to: '/dashboard/live-session', icon: 'videocam', label: 'Live Sessions' },
+    { to: '/dashboard/library', icon: 'library_books', label: 'Library' },
+    { to: '/dashboard/journals', icon: 'menu_book', label: 'Open Journals' },
+    { to: '/dashboard/study-studio', icon: 'auto_awesome', label: 'Study Studio' },
   ];
 
   const navItems = userRole === 'lecturer' ? lecturerNavItems : studentNavItems;
