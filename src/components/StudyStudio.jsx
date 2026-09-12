@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import api from '../api/axios';
 
 export default function StudyStudio() {
-  const [mode, setMode] = useState('summary'); // summary | flashcards
+  const [mode, setMode] = useState('summary'); // summary | flashcards | visual
   const [text, setText] = useState('');
   const [materials, setMaterials] = useState([]);
   const [materialId, setMaterialId] = useState('');
@@ -11,6 +11,7 @@ export default function StudyStudio() {
   const [summary, setSummary] = useState('');
   const [flashcards, setFlashcards] = useState([]);
   const [flipIndex, setFlipIndex] = useState(null);
+  const [visual, setVisual] = useState(null);
 
   useEffect(() => {
     const load = async () => {
@@ -30,6 +31,7 @@ export default function StudyStudio() {
     setSummary('');
     setFlashcards([]);
     setFlipIndex(null);
+    setVisual(null);
 
     if (!text.trim() && !materialId) {
       setError('Paste study text or select a library material.');
@@ -46,6 +48,8 @@ export default function StudyStudio() {
 
       if (res.data.mode === 'flashcards') {
         setFlashcards(res.data.flashcards || []);
+      } else if (res.data.mode === 'visual') {
+        setVisual(res.data.visual || null);
       } else {
         setSummary(res.data.summary || '');
       }
@@ -93,6 +97,17 @@ export default function StudyStudio() {
             }`}
           >
             Flashcards
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode('visual')}
+            className={`px-6 py-3 rounded-2xl text-sm font-medium ${
+              mode === 'visual'
+                ? 'bg-primary text-on-primary'
+                : 'bg-surface-container border border-outline-variant'
+            }`}
+          >
+            Concept Map
           </button>
         </div>
 
@@ -151,7 +166,7 @@ export default function StudyStudio() {
           ) : (
             <>
               <span className="material-symbols-outlined">auto_awesome</span>
-              Generate {mode === 'summary' ? 'Summary' : 'Flashcards'}
+              Generate {mode === 'summary' ? 'Summary' : mode === 'visual' ? 'Concept Map' : 'Flashcards'}
             </>
           )}
         </button>
@@ -165,6 +180,73 @@ export default function StudyStudio() {
             {summary}
           </div>
         </div>
+      )}
+
+      {visual && (
+        <section className="mb-10" aria-labelledby="concept-map-title">
+          <div className="bg-surface-container rounded-3xl border border-outline-variant p-6 md:p-8">
+            <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
+              <div>
+                <p className="text-xs uppercase tracking-widest text-primary mb-2">
+                  Visual study guide
+                </p>
+                <h3 id="concept-map-title" className="text-2xl font-bold text-primary">
+                  {visual.title || 'Concept map'}
+                </h3>
+              </div>
+              <div className="rounded-2xl bg-primary/10 border border-primary/20 px-5 py-3 text-center">
+                <p className="text-xs uppercase tracking-widest text-on-surface-variant mb-1">
+                  Central topic
+                </p>
+                <p className="font-bold text-primary">
+                  {visual.central_topic || 'Key ideas'}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {(visual.nodes || []).map((node, index) => (
+                <article
+                  key={node.id || index}
+                  className="relative bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 min-h-[150px]"
+                >
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-on-primary text-sm font-bold mb-4">
+                    {index + 1}
+                  </span>
+                  <h4 className="font-bold text-on-surface mb-2">{node.label}</h4>
+                  <p className="text-sm text-on-surface-variant leading-relaxed">{node.detail}</p>
+                </article>
+              ))}
+            </div>
+
+            {(visual.relationships || []).length > 0 && (
+              <div className="mt-8 pt-6 border-t border-outline-variant">
+                <h4 className="text-sm uppercase tracking-widest text-primary mb-4">
+                  How the ideas connect
+                </h4>
+                <div className="flex flex-wrap gap-3">
+                  {visual.relationships.map((relationship, index) => {
+                    const from = visual.nodes?.find((node) => node.id === relationship.from);
+                    const to = visual.nodes?.find((node) => node.id === relationship.to);
+                    if (!from || !to) return null;
+                    return (
+                      <div
+                        key={`${relationship.from}-${relationship.to}-${index}`}
+                        className="flex items-center gap-2 rounded-xl bg-surface-container-lowest border border-outline-variant px-3 py-2 text-sm"
+                      >
+                        <span className="font-medium text-on-surface">{from.label}</span>
+                        <span className="material-symbols-outlined text-primary text-base">arrow_forward</span>
+                        <span className="text-primary">{relationship.label || 'connects to'}</span>
+                        <span className="material-symbols-outlined text-primary text-base">arrow_forward</span>
+                        <span className="font-medium text-on-surface">{to.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
       )}
 
       {/* Flashcards result */}
