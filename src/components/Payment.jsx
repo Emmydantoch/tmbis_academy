@@ -87,7 +87,7 @@ export default function Payment() {
 
           <Link
             to="/"
-            className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-primary text-on-primary transition-all"
+            className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-surface-container text-on-surface-variant transition-all"
           >
             <span className="material-symbols-outlined">Home</span>
             <span>Home</span>
@@ -99,6 +99,7 @@ export default function Payment() {
             <span className="material-symbols-outlined">account_balance_wallet</span>
             <span>Payments</span>
           </Link>
+          
 
           <Link
             to="/contact"
