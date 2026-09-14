@@ -49,6 +49,18 @@ export default function LiveSessions() {
     );
   };
 
+  const downloadNotes = (session) => {
+    const blob = new Blob([session.lecture_notes], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${session.title.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'lecture-notes'}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="p-6 md:p-10 max-w-5xl mx-auto">
       <div className="mb-8">
@@ -111,7 +123,7 @@ export default function LiveSessions() {
                 )}
               </div>
 
-              <div>
+              <div className="flex flex-wrap items-center gap-3">
                 {session.status === 'live' ? (
                   <a
                     href={session.meeting_link}
@@ -135,7 +147,29 @@ export default function LiveSessions() {
                     disabled
                     className="inline-flex items-center gap-2 bg-surface-container-high text-on-surface-variant px-8 py-4 rounded-2xl font-bold cursor-not-allowed"
                   >
+                    <span className="material-symbols-outlined">event_available</span>
                     Session Ended
+                  </button>
+                )}
+                {session.recording_link && (
+                  <a
+                    href={session.recording_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 border border-primary text-primary hover:bg-primary/10 px-5 py-3 rounded-2xl font-semibold transition-all"
+                  >
+                    <span className="material-symbols-outlined">play_circle</span>
+                    Watch recording
+                  </a>
+                )}
+                {session.lecture_notes && (
+                  <button
+                    type="button"
+                    onClick={() => downloadNotes(session)}
+                    className="inline-flex items-center gap-2 border border-outline-variant text-on-surface hover:bg-surface-container-high px-5 py-3 rounded-2xl font-semibold transition-all"
+                  >
+                    <span className="material-symbols-outlined">download</span>
+                    Download notes
                   </button>
                 )}
               </div>
