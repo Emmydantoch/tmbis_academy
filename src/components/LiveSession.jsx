@@ -1,29 +1,67 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import api from '../api/axios';
 
 export default function LiveSessions() {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+  const [isLecturer, setIsLecturer] = useState(false);
+
+  const [recordingSessionId, setRecordingSessionId] = useState(null);
+  const [uploading, setUploading] = useState(false);
+
+  const mediaRecorderRef = useRef(null);
+  const chunksRef = useRef([]);
+  const streamRef = useRef(null);
 
   useEffect(() => {
-    const fetchSessions = async () => {
-      try {
-        const res = await api.get('live-sessions/');
-        setSessions(res.data);
-      } catch (err) {
-        setError('Failed to load live sessions');
-        console.error(err);
-      } finally {
-        setLoading(false);
+    try {
+      const raw = localStorage.getItem('user');
+      if (raw) {
+        const u = JSON.parse(raw);
+        const role = u.role || '';
+        setIsLecturer(
+          u.is_staff === true ||
+          u.is_superuser === true ||
+          role === 'lecturer' ||
+          role === 'teacher' ||
+          role === 'instructor' ||
+          role === 'admin'
+        );
       }
-    };
+    } catch {
+      setIsLecturer(false);
+    }
+  }, []);
 
+  const fetchSessions = async () => {
+    try {
+      const res = await api.get('live-sessions/');
+      setSessions(res.data);
+      setError('');
+    } catch (err) {
+      setError('Failed to load live sessions');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchSessions();
-
-    // Refresh every 60 seconds so status updates automatically
     const interval = setInterval(fetchSessions, 60000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Cleanup if user leaves page while recording
+  useEffect(() => {
+    return () => {
+      if (mediaRecorderRef.current?.state === 'recording') {
+        mediaRecorderRef.current.stop();
+      }
+      streamRef.current?.getTracks()?.forEach((t) => t.stop());
+    };
   }, []);
 
   const getStatusBadge = (status) => {
@@ -61,16 +99,121 @@ export default function LiveSessions() {
     URL.revokeObjectURL(url);
   };
 
+  const startRecording = async (sessionId) => {
+    setMessage('');
+    setError('');
+
+    try {
+      // Must run from a button click — browser will show share popup
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: { displaySurface: 'browser' },
+        audio: true,
+      });
+
+      streamRef.current = stream;
+      chunksRef.current = [];
+
+      const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+        ? 'video/webm;codecs=vp9'
+        : 'video/webm';
+
+      const recorder = new MediaRecorder(stream, { mimeType: mime });
+      mediaRecorderRef.current = recorder;
+
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) chunksRef.current.push(e.data);
+      };
+
+      // If user stops sharing from browser UI
+      stream.getVideoTracks()[0].onended = () => {
+        if (mediaRecorderRef.current?.state === 'recording') {
+          stopAndUpload(sessionId);
+        }
+      };
+
+      recorder.start(1000);
+      setRecordingSessionId(sessionId);
+      setMessage(
+        'Recording started. Share this tab or the Zoom window. Click Stop & save when class ends.'
+      );
+    } catch (err) {
+      console.error(err);
+      setError(
+        err.name === 'NotAllowedError'
+          ? 'Permission denied. Allow screen/tab sharing to record the class.'
+          : 'Could not start recording. Try Chrome/Edge and allow screen share.'
+      );
+    }
+  };
+
+  const stopAndUpload = async (sessionId) => {
+    const recorder = mediaRecorderRef.current;
+    if (!recorder || recorder.state === 'inactive') {
+      setRecordingSessionId(null);
+      return;
+    }
+
+    setUploading(true);
+    setMessage('Stopping and uploading recording...');
+
+    await new Promise((resolve) => {
+      recorder.onstop = resolve;
+      recorder.stop();
+    });
+
+    streamRef.current?.getTracks()?.forEach((t) => t.stop());
+    streamRef.current = null;
+    mediaRecorderRef.current = null;
+
+    const blob = new Blob(chunksRef.current, { type: 'video/webm' });
+    chunksRef.current = [];
+
+    if (blob.size < 1000) {
+      setError('Recording was too short or empty.');
+      setUploading(false);
+      setRecordingSessionId(null);
+      return;
+    }
+
+    try {
+      const form = new FormData();
+      form.append('file', blob, `session-${sessionId}.webm`);
+
+      const res = await api.post(`live-sessions/${sessionId}/recording/`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      setMessage('Recording saved. Students can use Watch recording.');
+      // Refresh list so recording_link appears
+      await fetchSessions();
+    } catch (err) {
+      console.error(err);
+      setError(
+        err.response?.data?.detail ||
+        'Upload failed. Check login role (lecturer) and API route.'
+      );
+    } finally {
+      setUploading(false);
+      setRecordingSessionId(null);
+    }
+  };
+
   return (
     <div className="p-6 md:p-10 max-w-5xl mx-auto">
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-primary">Live Sessions</h2>
-        <p className="text-on-surface-variant mt-1">Join live classes and catch up on recordings.</p>
+        <p className="text-on-surface-variant mt-1">
+          Join live classes and catch up on recordings.
+        </p>
       </div>
 
-      {loading && (
-        <p className="text-on-surface-variant">Loading sessions...</p>
+      {message && (
+        <div className="mb-6 rounded-xl bg-primary/10 border border-primary/30 px-4 py-3 text-sm text-primary">
+          {message}
+        </div>
       )}
+
+      {loading && <p className="text-on-surface-variant">Loading sessions...</p>}
 
       {error && (
         <div className="mb-6 rounded-xl bg-error/10 border border-error/30 px-4 py-3 text-sm text-error">
@@ -104,22 +247,21 @@ export default function LiveSessions() {
                       {session.starts_in}
                     </span>
                   )}
+                  {recordingSessionId === session.id && (
+                    <span className="bg-red-600 text-white text-xs px-3 py-1 rounded-full animate-pulse">
+                      REC
+                    </span>
+                  )}
                 </div>
 
-                <h2 className="text-xl font-bold text-primary mb-1">
-                  {session.title}
-                </h2>
-                <p className="text-on-surface-variant mb-1">
-                  with {session.lecturer_name}
-                </p>
+                <h2 className="text-xl font-bold text-primary mb-1">{session.title}</h2>
+                <p className="text-on-surface-variant mb-1">with {session.lecturer_name}</p>
                 <p className="text-sm text-on-surface-variant">
                   {new Date(session.start_time).toLocaleString()} –{' '}
                   {new Date(session.end_time).toLocaleTimeString()}
                 </p>
                 {session.description && (
-                  <p className="mt-3 text-sm text-on-surface-variant">
-                    {session.description}
-                  </p>
+                  <p className="mt-3 text-sm text-on-surface-variant">{session.description}</p>
                 )}
               </div>
 
@@ -151,6 +293,32 @@ export default function LiveSessions() {
                     Session Ended
                   </button>
                 )}
+
+                {/* Lecturer recording controls */}
+                {isLecturer && session.status === 'live' && (
+                  recordingSessionId === session.id ? (
+                    <button
+                      type="button"
+                      disabled={uploading}
+                      onClick={() => stopAndUpload(session.id)}
+                      className="inline-flex items-center gap-2 bg-primary text-on-primary px-5 py-3 rounded-2xl font-semibold disabled:opacity-70"
+                    >
+                      <span className="material-symbols-outlined">stop_circle</span>
+                      {uploading ? 'Uploading...' : 'Stop & save'}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={recordingSessionId !== null || uploading}
+                      onClick={() => startRecording(session.id)}
+                      className="inline-flex items-center gap-2 border border-error text-error hover:bg-error/10 px-5 py-3 rounded-2xl font-semibold disabled:opacity-50"
+                    >
+                      <span className="material-symbols-outlined">radio_button_checked</span>
+                      Record this class
+                    </button>
+                  )
+                )}
+
                 {session.recording_link && (
                   <a
                     href={session.recording_link}
@@ -162,6 +330,7 @@ export default function LiveSessions() {
                     Watch recording
                   </a>
                 )}
+
                 {session.lecture_notes && (
                   <button
                     type="button"
