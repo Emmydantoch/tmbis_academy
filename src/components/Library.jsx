@@ -12,8 +12,9 @@ export default function Library() {
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
   const [canUpload, setCanUpload] = useState(false);
+  const [uploadMode, setUploadMode] = useState('material');
 
-  const filters = ["All Materials", "Textbooks", "Lecture Notes", "Research Papers", "Case Studies"];
+  const filters = ["All Materials", "Textbooks", "Lecture Notes", "Research Papers", "Case Studies", "Video Lectures"];
 
   useEffect(() => {
     fetchMaterials();
@@ -64,12 +65,16 @@ export default function Library() {
     }
 
     const formData = new FormData();
+    const isVideo = uploadMode === 'video' || isVideoFile(file.name, file.type);
     formData.append('title', title || file.name);
     formData.append('description', description);
     formData.append('course', course);
     formData.append('file', file);
     formData.append('file_type', file.type || inferType(file.name));
     formData.append('file_size', String(file.size));
+    if (isVideo) {
+      formData.append('category', 'Video Lectures');
+    }
 
     try {
       setUploading(true);
@@ -148,8 +153,25 @@ export default function Library() {
             <span className="material-symbols-outlined text-4xl text-primary">upload_file</span>
             <div>
               <h3 className="font-bold text-xl">Upload New Material</h3>
-              <p className="text-on-surface-variant text-sm">Share notes, slides, papers, and other files with students</p>
+              <p className="text-on-surface-variant text-sm">Share notes, slides, papers, videos, and other files with students</p>
             </div>
+          </div>
+
+          <div className="flex flex-wrap gap-3 mb-6">
+            <button
+              type="button"
+              onClick={() => setUploadMode('material')}
+              className={`px-5 py-2.5 rounded-xl text-sm font-medium ${uploadMode === 'material' ? 'bg-primary text-on-primary' : 'bg-surface-container-lowest border border-outline-variant'}`}
+            >
+              Document / Notes
+            </button>
+            <button
+              type="button"
+              onClick={() => setUploadMode('video')}
+              className={`px-5 py-2.5 rounded-xl text-sm font-medium ${uploadMode === 'video' ? 'bg-primary text-on-primary' : 'bg-surface-container-lowest border border-outline-variant'}`}
+            >
+              Video Lecture
+            </button>
           </div>
 
           <form onSubmit={handleUpload} className="space-y-4">
@@ -177,6 +199,7 @@ export default function Library() {
             />
             <input
               type="file"
+              accept={uploadMode === 'video' ? 'video/*,.mp4,.mov,.avi,.mkv,.webm' : '.pdf,.doc,.docx,.ppt,.pptx,.txt,.md,.csv,.json'}
               onChange={(e) => setFile(e.target.files?.[0] || null)}
               className="w-full rounded-2xl border border-dashed border-outline-variant p-4"
             />
@@ -186,7 +209,7 @@ export default function Library() {
               disabled={uploading}
               className="bg-primary text-on-primary px-6 py-3 rounded-2xl font-semibold disabled:opacity-70"
             >
-              {uploading ? 'Uploading...' : 'Upload Material'}
+              {uploading ? 'Uploading...' : uploadMode === 'video' ? 'Upload Video' : 'Upload Material'}
             </button>
           </form>
         </div>
@@ -231,6 +254,9 @@ export default function Library() {
 
 function inferType(value) {
   const text = String(value || '').toLowerCase();
+  if (text.includes('mp4') || text.includes('mov') || text.includes('avi') || text.includes('mkv') || text.includes('webm') || text.includes('video')) {
+    return 'Video Lectures';
+  }
   if (text.includes('pdf') || text.includes('doc') || text.includes('ppt') || text.includes('txt') || text.includes('md')) {
     return 'Lecture Notes';
   }
@@ -268,9 +294,14 @@ function formatDate(value) {
 
 function iconForType(value) {
   const type = String(value || '').toLowerCase();
+  if (type.includes('mp4') || type.includes('mov') || type.includes('avi') || type.includes('mkv') || type.includes('webm') || type.includes('video')) return 'movie';
   if (type.includes('pdf')) return 'picture_as_pdf';
   if (type.includes('doc') || type.includes('ppt') || type.includes('txt') || type.includes('md')) return 'description';
-  if (type.includes('video')) return 'movie';
   if (type.includes('image')) return 'image';
   return 'attach_file';
+}
+
+function isVideoFile(name = '', type = '') {
+  const combined = `${name} ${type}`.toLowerCase();
+  return ['mp4', 'mov', 'avi', 'mkv', 'webm', 'video'].some((token) => combined.includes(token));
 }

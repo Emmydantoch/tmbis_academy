@@ -12,6 +12,28 @@ export default function StudyStudio() {
   const [flashcards, setFlashcards] = useState([]);
   const [flipIndex, setFlipIndex] = useState(null);
   const [visual, setVisual] = useState(null);
+  const [voices, setVoices] = useState([]);
+  const [selectedVoice, setSelectedVoice] = useState('');
+  const [speechRate, setSpeechRate] = useState(1);
+  const [speechState, setSpeechState] = useState('idle');
+
+  useEffect(() => {
+    if (!('speechSynthesis' in window)) return undefined;
+
+    const loadVoices = () => {
+      const availableVoices = window.speechSynthesis.getVoices();
+      setVoices(availableVoices);
+      setSelectedVoice((currentVoice) => currentVoice || availableVoices[0]?.voiceURI || '');
+    };
+
+    loadVoices();
+    window.speechSynthesis.addEventListener('voiceschanged', loadVoices);
+
+    return () => {
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.removeEventListener('voiceschanged', loadVoices);
+    };
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -63,6 +85,57 @@ export default function StudyStudio() {
       setLoading(false);
     }
   };
+
+  const stopSpeaking = () => {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    setSpeechState('idle');
+  };
+
+  const speakText = (content) => {
+    if (!content?.trim()) {
+      setError('Add some study text before listening.');
+      return;
+    }
+
+    if (!('speechSynthesis' in window)) {
+      setError('Text-to-speech is not supported in this browser. Try Chrome or Edge.');
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(content.trim());
+    const voice = voices.find((availableVoice) => availableVoice.voiceURI === selectedVoice);
+    if (voice) utterance.voice = voice;
+    utterance.rate = speechRate;
+    utterance.onstart = () => setSpeechState('speaking');
+    utterance.onpause = () => setSpeechState('paused');
+    utterance.onresume = () => setSpeechState('speaking');
+    utterance.onend = () => setSpeechState('idle');
+    utterance.onerror = () => setSpeechState('idle');
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const toggleSpeech = (content) => {
+    if (!('speechSynthesis' in window)) {
+      speakText(content);
+      return;
+    }
+
+    if (speechState === 'speaking') {
+      window.speechSynthesis.pause();
+    } else if (speechState === 'paused') {
+      window.speechSynthesis.resume();
+    } else {
+      speakText(content);
+    }
+  };
+
+  const speechLabel = speechState === 'speaking'
+    ? 'Pause reading'
+    : speechState === 'paused'
+      ? 'Resume reading'
+      : 'Listen to notes';
 
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto">
@@ -135,16 +208,77 @@ export default function StudyStudio() {
 
         {/* Text input */}
         <div>
-          <label className="block text-sm text-on-surface mb-2">
-            Paste study material
-          </label>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
+            <label htmlFor="study-material" className="block text-sm text-on-surface">
+              Paste study material
+            </label>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => toggleSpeech(text)}
+                disabled={!text.trim() && speechState === 'idle'}
+                aria-label={speechLabel}
+                className="inline-flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-medium text-primary hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <span className="material-symbols-outlined text-base">
+                  {speechState === 'speaking' ? 'pause' : speechState === 'paused' ? 'play_arrow' : 'volume_up'}
+                </span>
+                {speechLabel}
+              </button>
+              {speechState !== 'idle' && (
+                <button
+                  type="button"
+                  onClick={stopSpeaking}
+                  className="inline-flex items-center gap-2 rounded-xl border border-outline-variant bg-surface-container px-3 py-2 text-sm text-on-surface hover:border-primary"
+                >
+                  <span className="material-symbols-outlined text-base">stop</span>
+                  Stop
+                </button>
+              )}
+            </div>
+          </div>
           <textarea
+            id="study-material"
             value={text}
             onChange={(e) => setText(e.target.value)}
             rows={10}
             placeholder="Paste lecture notes, chapter text, or key points here..."
             className="w-full bg-surface-container-lowest border border-outline-variant rounded-2xl px-5 py-4 text-on-surface placeholder:text-on-surface-variant/60 focus:border-primary outline-none"
           />
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            {voices.length > 0 && (
+              <label className="flex items-center gap-2 text-xs text-on-surface-variant">
+                Voice
+                <select
+                  value={selectedVoice}
+                  onChange={(e) => setSelectedVoice(e.target.value)}
+                  className="max-w-[220px] rounded-lg border border-outline-variant bg-surface-container-lowest px-2 py-1.5 text-on-surface outline-none focus:border-primary"
+                >
+                  {voices.map((voice) => (
+                    <option key={voice.voiceURI} value={voice.voiceURI}>
+                      {voice.name} ({voice.lang})
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            <label className="flex items-center gap-2 text-xs text-on-surface-variant">
+              Speed
+              <select
+                value={speechRate}
+                onChange={(e) => setSpeechRate(Number(e.target.value))}
+                className="rounded-lg border border-outline-variant bg-surface-container-lowest px-2 py-1.5 text-on-surface outline-none focus:border-primary"
+              >
+                <option value="0.75">0.75x</option>
+                <option value="1">1x</option>
+                <option value="1.25">1.25x</option>
+                <option value="1.5">1.5x</option>
+              </select>
+            </label>
+            <span className="text-xs text-on-surface-variant">
+              Listen to your notes while reviewing or revising.
+            </span>
+          </div>
         </div>
 
         {error && (
@@ -175,7 +309,17 @@ export default function StudyStudio() {
       {/* Summary result */}
       {summary && (
         <div className="bg-surface-container rounded-3xl border border-outline-variant p-8 mb-10">
-          <h3 className="text-xl font-bold text-primary mb-4">Summary</h3>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <h3 className="text-xl font-bold text-primary">Summary</h3>
+            <button
+              type="button"
+              onClick={() => toggleSpeech(summary)}
+              className="inline-flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-medium text-primary hover:bg-primary/20"
+            >
+              <span className="material-symbols-outlined text-base">volume_up</span>
+              Read summary
+            </button>
+          </div>
           <div className="text-on-surface whitespace-pre-wrap leading-relaxed">
             {summary}
           </div>

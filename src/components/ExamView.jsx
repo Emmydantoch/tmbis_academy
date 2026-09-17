@@ -16,6 +16,9 @@ export default function ExamView() {
   const [studentAnswers, setStudentAnswers] = useState({});
   const [lastSaved, setLastSaved] = useState(null);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [hasWorkingPaper, setHasWorkingPaper] = useState(false);
+  const [workingPaperFile, setWorkingPaperFile] = useState(null);
+  const [uploadPromptOpen, setUploadPromptOpen] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -109,6 +112,7 @@ export default function ExamView() {
     if (isSubmitting || submitSuccess) return;
 
     setShowSubmitModal(false);
+    setUploadPromptOpen(false);
     setIsSubmitting(true);
     setSubmitError('');
 
@@ -119,11 +123,28 @@ export default function ExamView() {
       });
 
       const durationSeconds = (exam?.duration_minutes || 45) * 60;
-      const response = await api.post(`exams/${examId}/submit/`, {
+      const payload = {
         answers: answersPayload,
         time_taken_seconds: durationSeconds - timeLeft,
-      });
+        has_working_paper: hasWorkingPaper,
+      };
 
+      if (hasWorkingPaper && workingPaperFile) {
+        const formData = new FormData();
+        formData.append('answers', JSON.stringify(answersPayload));
+        formData.append('time_taken_seconds', String(durationSeconds - timeLeft));
+        formData.append('has_working_paper', 'true');
+        formData.append('working_paper_file', workingPaperFile);
+        const response = await api.post(`exams/${examId}/submit/`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        setResult(response.data);
+        setSubmitSuccess(true);
+        setTimeout(() => navigate('/dashboard'), 3000);
+        return;
+      }
+
+      const response = await api.post(`exams/${examId}/submit/`, payload);
       setResult(response.data);
       setSubmitSuccess(true);
 
@@ -132,6 +153,7 @@ export default function ExamView() {
       console.error(err);
       setSubmitError(
         err.response?.data?.detail ||
+        err.response?.data?.working_paper_file?.[0] ||
         'Failed to submit exam. Please try again.'
       );
     } finally {
@@ -296,7 +318,10 @@ export default function ExamView() {
 
           <div className="flex gap-4">
             <button
-              onClick={() => setShowSubmitModal(true)}
+              onClick={() => {
+                setUploadPromptOpen(true);
+                setShowSubmitModal(false);
+              }}
               disabled={isSubmitting}
               className="px-8 py-4 rounded-2xl border border-error text-error hover:bg-error/10 font-medium disabled:opacity-50"
             >
@@ -333,11 +358,86 @@ export default function ExamView() {
                 Cancel
               </button>
               <button
-                onClick={handleSubmit}
+                onClick={() => {
+                  setShowSubmitModal(false);
+                  setUploadPromptOpen(true);
+                }}
+                className="flex-1 py-4 bg-primary text-on-primary rounded-2xl font-bold"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {uploadPromptOpen && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-6">
+          <div className="bg-surface rounded-3xl p-8 max-w-xl w-full border border-outline-variant">
+            <h3 className="text-2xl font-bold mb-4">Any rough work on paper?</h3>
+            <p className="text-on-surface-variant mb-6">
+              If you used handwritten workings, you can upload a photo or scan before submitting your exam.
+              If not, you can proceed without uploading.
+            </p>
+
+            <div className="space-y-4 mb-8">
+              <label className="flex items-center gap-3 text-on-surface">
+                <input
+                  type="radio"
+                  name="working-paper-choice"
+                  checked={hasWorkingPaper === true}
+                  onChange={() => setHasWorkingPaper(true)}
+                />
+                Yes, I have paper workings to upload
+              </label>
+              <label className="flex items-center gap-3 text-on-surface">
+                <input
+                  type="radio"
+                  name="working-paper-choice"
+                  checked={hasWorkingPaper === false}
+                  onChange={() => setHasWorkingPaper(false)}
+                />
+                No, I am submitting without paper workings
+              </label>
+            </div>
+
+            {hasWorkingPaper && (
+              <div className="mb-6">
+                <label className="block text-sm text-on-surface mb-2">Upload rough work file</label>
+                <input
+                  type="file"
+                  accept="image/*,.pdf,.png,.jpg,.jpeg,.webp"
+                  onChange={(e) => setWorkingPaperFile(e.target.files?.[0] || null)}
+                  className="w-full rounded-2xl border border-dashed border-outline-variant p-4"
+                />
+              </div>
+            )}
+
+            <div className="flex gap-4">
+              <button
+                onClick={() => {
+                  setUploadPromptOpen(false);
+                  setHasWorkingPaper(false);
+                  setWorkingPaperFile(null);
+                }}
+                className="flex-1 py-4 border border-outline-variant rounded-2xl"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={() => {
+                  if (hasWorkingPaper && !workingPaperFile) {
+                    setSubmitError('Please upload your rough work file before submitting.');
+                    return;
+                  }
+                  setUploadPromptOpen(false);
+                  handleSubmit();
+                }}
                 disabled={isSubmitting}
                 className="flex-1 py-4 bg-primary text-on-primary rounded-2xl font-bold"
               >
-                {isSubmitting ? 'Submitting...' : 'Yes, Submit Now'}
+                {isSubmitting ? 'Submitting...' : 'Proceed to submit'}
               </button>
             </div>
           </div>
