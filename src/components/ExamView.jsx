@@ -33,13 +33,7 @@ export default function ExamView() {
         setLoadError('');
 
         const res = await api.get(`exams/${examId}/`);
-        // Expected shape:
-        // {
-        //   id, title, duration_minutes,
-        //   questions: [
-        //     { id, question_text, question_type, points, options: ["A","B","C","D"] }
-        //   ]
-        // }
+        
 
         setExam(res.data);
         setQuestions(res.data.questions || []);
