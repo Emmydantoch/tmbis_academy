@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import api from '../api/axios';
 
 export default function StudyStudio() {
-  const [mode, setMode] = useState('summary'); // summary | flashcards | visual
+  const [mode, setMode] = useState('summary');
+  const [topic, setTopic] = useState('');
+  const [subtopic, setSubtopic] = useState('');
   const [text, setText] = useState('');
   const [materials, setMaterials] = useState([]);
   const [materialId, setMaterialId] = useState('');
@@ -12,10 +14,22 @@ export default function StudyStudio() {
   const [flashcards, setFlashcards] = useState([]);
   const [flipIndex, setFlipIndex] = useState(null);
   const [visual, setVisual] = useState(null);
+  const [generatedContent, setGeneratedContent] = useState('');
   const [voices, setVoices] = useState([]);
   const [selectedVoice, setSelectedVoice] = useState('');
   const [speechRate, setSpeechRate] = useState(1);
   const [speechState, setSpeechState] = useState('idle');
+  const modeLabels = {
+    summary: 'Summary',
+    flashcards: 'Flashcards',
+    visual: 'Concept Map',
+    lesson_notes: 'Lesson Notes',
+    objectives: 'Objectives',
+    examples: 'Examples',
+    exercises: 'Exercises',
+    quizzes: 'Quizzes',
+    assignments: 'Assignments',
+  };
 
   useEffect(() => {
     if (!('speechSynthesis' in window)) return undefined;
@@ -54,15 +68,22 @@ export default function StudyStudio() {
     setFlashcards([]);
     setFlipIndex(null);
     setVisual(null);
+    setGeneratedContent('');
 
-    if (!text.trim() && !materialId) {
+    const resourceMode = ['lesson_notes', 'objectives', 'examples', 'exercises', 'quizzes', 'assignments'].includes(mode);
+    if (resourceMode && !topic.trim()) {
+      setError('Enter a topic before generating resource-person content.');
+      return;
+    }
+
+    if (!text.trim() && !materialId && !resourceMode) {
       setError('Paste study text or select a library material.');
       return;
     }
 
     setLoading(true);
     try {
-      const payload = { mode };
+      const payload = { mode, topic: topic.trim(), subtopic: subtopic.trim() };
       if (text.trim()) payload.text = text.trim();
       if (materialId) payload.material_id = Number(materialId);
 
@@ -72,6 +93,8 @@ export default function StudyStudio() {
         setFlashcards(res.data.flashcards || []);
       } else if (res.data.mode === 'visual') {
         setVisual(res.data.visual || null);
+      } else if (resourceMode) {
+        setGeneratedContent(res.data.content || '');
       } else {
         setSummary(res.data.summary || '');
       }
@@ -148,40 +171,52 @@ export default function StudyStudio() {
 
       <form onSubmit={handleGenerate} className="space-y-6 mb-12">
         {/* Mode */}
-        <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={() => setMode('summary')}
-            className={`px-6 py-3 rounded-2xl text-sm font-medium ${
-              mode === 'summary'
-                ? 'bg-primary text-on-primary'
-                : 'bg-surface-container border border-outline-variant'
-            }`}
-          >
-            Summary
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode('flashcards')}
-            className={`px-6 py-3 rounded-2xl text-sm font-medium ${
-              mode === 'flashcards'
-                ? 'bg-primary text-on-primary'
-                : 'bg-surface-container border border-outline-variant'
-            }`}
-          >
-            Flashcards
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode('visual')}
-            className={`px-6 py-3 rounded-2xl text-sm font-medium ${
-              mode === 'visual'
-                ? 'bg-primary text-on-primary'
-                : 'bg-surface-container border border-outline-variant'
-            }`}
-          >
-            Concept Map
-          </button>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {[
+            ['summary', 'Summary'],
+            ['flashcards', 'Flashcards'],
+            ['visual', 'Concept Map'],
+            ['lesson_notes', 'Lesson Notes'],
+            ['objectives', 'Objectives'],
+            ['examples', 'Examples'],
+            ['exercises', 'Exercises'],
+            ['quizzes', 'Quizzes'],
+            ['assignments', 'Assignments'],
+          ].map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setMode(value)}
+              className={`px-4 py-3 rounded-2xl text-sm font-medium ${
+                mode === value
+                  ? 'bg-primary text-on-primary'
+                  : 'bg-surface-container border border-outline-variant'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <label className="block text-sm text-on-surface">
+            Topic
+            <input
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              placeholder="e.g. Database Systems"
+              className="mt-2 w-full bg-surface-container-lowest border border-outline-variant rounded-2xl px-4 py-3 text-on-surface focus:border-primary outline-none"
+            />
+          </label>
+          <label className="block text-sm text-on-surface">
+            Sub-topic
+            <input
+              value={subtopic}
+              onChange={(e) => setSubtopic(e.target.value)}
+              placeholder="e.g. Normalization"
+              className="mt-2 w-full bg-surface-container-lowest border border-outline-variant rounded-2xl px-4 py-3 text-on-surface focus:border-primary outline-none"
+            />
+          </label>
         </div>
 
         {/* Material picker */}
@@ -202,7 +237,7 @@ export default function StudyStudio() {
             ))}
           </select>
           <p className="text-xs text-on-surface-variant mt-2">
-            Materials need a title/description for best results. Full PDF text extraction can be added later.
+            Optional reference material. Topic and sub-topic guide resource-person generation.
           </p>
         </div>
 
@@ -300,7 +335,7 @@ export default function StudyStudio() {
           ) : (
             <>
               <span className="material-symbols-outlined">auto_awesome</span>
-              Generate {mode === 'summary' ? 'Summary' : mode === 'visual' ? 'Concept Map' : 'Flashcards'}
+              Generate {modeLabels[mode]}
             </>
           )}
         </button>
@@ -322,6 +357,30 @@ export default function StudyStudio() {
           </div>
           <div className="text-on-surface whitespace-pre-wrap leading-relaxed">
             {summary}
+          </div>
+        </div>
+      )}
+
+      {generatedContent && (
+        <div className="bg-surface-container rounded-3xl border border-outline-variant p-8 mb-10">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div>
+              <p className="text-xs uppercase tracking-widest text-primary mb-1">Generated resource content</p>
+              <h3 className="text-xl font-bold text-primary">
+                {topic}{subtopic ? `: ${subtopic}` : ''}
+              </h3>
+            </div>
+            <button
+              type="button"
+              onClick={() => toggleSpeech(generatedContent)}
+              className="inline-flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-medium text-primary hover:bg-primary/20"
+            >
+              <span className="material-symbols-outlined text-base">volume_up</span>
+              Read content
+            </button>
+          </div>
+          <div className="text-on-surface whitespace-pre-wrap leading-relaxed">
+            {generatedContent}
           </div>
         </div>
       )}
