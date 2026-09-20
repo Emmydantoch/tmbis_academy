@@ -91,7 +91,10 @@ export default function Library() {
       setMessage('Material uploaded successfully.');
     } catch (error) {
       console.error(error);
-      setMessage('Upload failed. Please try again.');
+      setMessage(
+        error.response?.data?.detail ||
+        'Upload failed. Please try again.'
+      );
     } finally {
       setUploading(false);
     }
