@@ -1,30 +1,42 @@
 import { useEffect, useMemo, useState } from 'react';
 import api from '../api/axios';
 
-const gradeTasks = [
-  { title: 'UXD 201 midterm submissions', due: 'Due this week', count: 32 },
-  { title: 'CSC 204 seminar feedback', due: 'Due next week', count: 28 },
-];
-
 export default function LecturerGrades() {
-  const [selectedTask, setSelectedTask] = useState(gradeTasks[0].title);
-  const [reviewed, setReviewed] = useState({});
   const [attempts, setAttempts] = useState([]);
   const [selectedExam, setSelectedExam] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const refreshAttempts = () => api.get('exams/attempts/').then(({ data }) => setAttempts(data));
+
+  const gradeTasks = useMemo(() => {
+    const grouped = new Map();
+    attempts.forEach((attempt) => {
+      const existing = grouped.get(attempt.exam_id) ?? {
+        id: attempt.exam_id,
+        title: attempt.exam_title,
+        attempts: [],
+      };
+      existing.attempts.push(attempt);
+      grouped.set(attempt.exam_id, existing);
+    });
+    return [...grouped.values()].map((task) => ({
+      ...task,
+      pending: task.attempts.filter((attempt) => !attempt.is_reviewed).length,
+      reviewed: task.attempts.length > 0 && task.attempts.every((attempt) => attempt.is_reviewed),
+    }));
+  }, [attempts]);
+
   const activeTask = useMemo(
-    () => gradeTasks.find((task) => task.title === selectedTask) ?? gradeTasks[0],
-    [selectedTask],
+    () => gradeTasks.find((task) => String(task.id) === selectedExam) ?? gradeTasks[0],
+    [gradeTasks, selectedExam],
   );
 
   useEffect(() => {
     let active = true;
-    api.get('exams/attempts/')
-      .then(({ data }) => {
-        if (active) setAttempts(data);
-      })
+    refreshAttempts()
+      .then(() => {})
       .catch(() => {
         if (active) setError('Unable to load submitted exams.');
       })
@@ -42,8 +54,25 @@ export default function LecturerGrades() {
     ? attempts
     : attempts.filter((attempt) => String(attempt.exam_id) === selectedExam);
 
-  const handleReviewed = (taskTitle) => {
-    setReviewed((current) => ({ ...current, [taskTitle]: !current[taskTitle] }));
+  const openGradebook = (examId) => {
+    setSelectedExam(String(examId));
+    document.getElementById('exam-submissions-heading')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const reviewTask = async (task) => {
+    setActionLoading(true);
+    setError('');
+    const nextReviewed = !task.reviewed;
+    try {
+      await Promise.all(task.attempts.map((attempt) => (
+        api.patch(`exams/attempts/${attempt.id}/review/`, { is_reviewed: nextReviewed })
+      )));
+      await refreshAttempts();
+    } catch {
+      setError('Unable to update the review status. Please try again.');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   return (
@@ -58,23 +87,22 @@ export default function LecturerGrades() {
 
       <div className="space-y-4">
         {gradeTasks.map((task) => {
-          const isReviewed = !!reviewed[task.title];
           return (
             <article key={task.title} className="bg-surface-container-lowest rounded-2xl border border-outline-variant p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
               <div className="flex items-start gap-4">
                 <span className="material-symbols-outlined text-primary text-3xl">grading</span>
                 <div>
                   <h2 className="text-lg font-bold text-on-surface">{task.title}</h2>
-                  <p className="text-sm text-on-surface-variant mt-1">{task.count} submissions awaiting review</p>
+                  <p className="text-sm text-on-surface-variant mt-1">{task.pending} submissions awaiting review</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 flex-wrap">
-                <span className="text-sm text-on-surface-variant">{task.due}</span>
-                <button type="button" onClick={() => setSelectedTask(task.title)} className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-on-primary hover:brightness-110 transition">
-                  {selectedTask === task.title ? 'Gradebook open' : 'Open gradebook'}
+                <span className="text-sm text-on-surface-variant">{task.attempts.length} submitted</span>
+                <button type="button" onClick={() => openGradebook(task.id)} className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-on-primary hover:brightness-110 transition">
+                  {String(selectedExam) === String(task.id) ? 'Gradebook open' : 'Open gradebook'}
                 </button>
-                <button type="button" onClick={() => handleReviewed(task.title)} className={`rounded-xl border px-4 py-2 text-sm font-semibold transition ${isReviewed ? 'border-success text-success bg-success/10' : 'border-outline-variant text-on-surface hover:border-primary'}`}>
-                  {isReviewed ? 'Reviewed' : 'Mark reviewed'}
+                <button type="button" disabled={actionLoading} onClick={() => reviewTask(task)} className={`rounded-xl border px-4 py-2 text-sm font-semibold transition ${task.reviewed ? 'border-success text-success bg-success/10' : 'border-outline-variant text-on-surface hover:border-primary'}`}>
+                  {task.reviewed ? 'Mark needs attention' : 'Mark reviewed'}
                 </button>
               </div>
             </article>
@@ -86,24 +114,24 @@ export default function LecturerGrades() {
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
             <p className="text-xs uppercase tracking-widest text-primary">Selected task</p>
-            <h3 className="text-2xl font-bold text-on-surface mt-2">{activeTask.title}</h3>
+            <h3 className="text-2xl font-bold text-on-surface mt-2">{activeTask?.title ?? 'No submitted tasks'}</h3>
           </div>
-          <button type="button" onClick={() => handleReviewed(activeTask.title)} className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary hover:brightness-110">
-            {reviewed[activeTask.title] ? 'Update review status' : 'Review now'}
+          <button type="button" disabled={!activeTask || actionLoading} onClick={() => activeTask && openGradebook(activeTask.id)} className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary hover:brightness-110">
+            Review now
           </button>
         </div>
         <div className="mt-6 grid gap-4 md:grid-cols-3">
           <div className="rounded-2xl bg-surface-container-lowest border border-outline-variant p-4">
             <p className="text-xs uppercase tracking-widest text-on-surface-variant">Pending</p>
-            <p className="mt-2 text-3xl font-bold text-on-surface">{activeTask.count}</p>
+            <p className="mt-2 text-3xl font-bold text-on-surface">{activeTask?.pending ?? 0}</p>
           </div>
           <div className="rounded-2xl bg-surface-container-lowest border border-outline-variant p-4">
             <p className="text-xs uppercase tracking-widest text-on-surface-variant">Deadline</p>
-            <p className="mt-2 text-lg font-semibold text-on-surface">{activeTask.due}</p>
+            <p className="mt-2 text-lg font-semibold text-on-surface">{activeTask ? `${activeTask.attempts.length} submitted` : 'No submissions'}</p>
           </div>
           <div className="rounded-2xl bg-surface-container-lowest border border-outline-variant p-4">
             <p className="text-xs uppercase tracking-widest text-on-surface-variant">Status</p>
-            <p className="mt-2 text-lg font-semibold text-on-surface">{reviewed[activeTask.title] ? 'Reviewed' : 'Needs attention'}</p>
+            <p className="mt-2 text-lg font-semibold text-on-surface">{activeTask?.reviewed ? 'Reviewed' : 'Needs attention'}</p>
           </div>
         </div>
       </div>
