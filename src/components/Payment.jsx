@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 
 export default function Payment() {
+  const navigate = useNavigate();
   const [amount, setAmount] = useState('4250');
   const [paymentType, setPaymentType] = useState('Tuition Fee');
   const [paymentMethod, setPaymentMethod] = useState('card');
@@ -16,6 +17,13 @@ export default function Payment() {
   const [success, setSuccess] = useState(false);
   const [transferPending, setTransferPending] = useState(false);
   const [paymentReference, setPaymentReference] = useState(null);
+
+  const handleLogout = () => {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
 
   const handlePayment = async (e) => {
     e.preventDefault();
@@ -111,13 +119,14 @@ export default function Payment() {
         </div>
 
         <div className="mt-auto pt-6 border-t border-outline-variant space-y-1">
-          <Link
-            to="/logout"
+          <button
+            type="button"
+            onClick={handleLogout}
             className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-surface-container text-on-surface-variant transition-all"
           >
             <span className="material-symbols-outlined">logout</span>
             <span>Logout</span>
-          </Link>
+          </button>
         </div>
       </nav>
 

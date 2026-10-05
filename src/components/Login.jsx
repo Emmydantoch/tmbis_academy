@@ -86,7 +86,7 @@ export default function Login() {
         <nav className="mx-auto flex h-20 max-w-7xl items-center justify-between px-margin-desktop">
           <div className="flex items-center gap-base">
             <img
-              src="https://res-console.cloudinary.com/o68u6tlz/thumbnails/v1/image/upload/v1785240187/VE1CSVNfTG9nb195dW12ejY=/drilldown"
+              src="https://res.cloudinary.com/o68u6tlz/image/upload/v1786642649/TMBIS_Logio_hw0vzu1_kphx76.png"
               alt="TMBIS Academy logo"
               className="h-10 w-10 rounded-full object-cover"
             />

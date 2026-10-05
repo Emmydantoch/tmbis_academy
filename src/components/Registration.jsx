@@ -53,27 +53,27 @@ export default function Registration() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm">Email</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-3 py-2 rounded border" />
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-3 py-2 rounded border bg-surface-container-lowest text-on-surface font-medium placeholder:text-on-surface-variant" />
             </div>
             <div>
               <label className="block text-sm">First name</label>
-              <input value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full px-3 py-2 rounded border" />
+              <input value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full px-3 py-2 rounded border bg-surface-container-lowest text-on-surface font-medium placeholder:text-on-surface-variant" />
             </div>
             <div>
               <label className="block text-sm">Last name</label>
-              <input value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full px-3 py-2 rounded border" />
+              <input value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full px-3 py-2 rounded border bg-surface-container-lowest text-on-surface font-medium placeholder:text-on-surface-variant" />
             </div>
             <div>
               <label className="block text-sm">Phone number</label>
-              <input value={phone_number} onChange={(e) => setPhoneNumber(e.target.value)} className="w-full px-3 py-2 rounded border" />
+              <input value={phone_number} onChange={(e) => setPhoneNumber(e.target.value)} className="w-full px-3 py-2 rounded border bg-surface-container-lowest text-on-surface font-medium placeholder:text-on-surface-variant" />
             </div>
             <div>
               <label className="block text-sm">Guarantor name</label>
-              <input value={guarantor} onChange={(e) => setGuarantor(e.target.value)} className="w-full px-3 py-2 rounded border" />
+              <input value={guarantor} onChange={(e) => setGuarantor(e.target.value)} className="w-full px-3 py-2 rounded border bg-surface-container-lowest text-on-surface font-medium placeholder:text-on-surface-variant" />
             </div>
             <div>
               <label className="block text-sm">Guarantor phone</label>
-              <input value={guarantor_number} onChange={(e) => setGuarantorNumber(e.target.value)} className="w-full px-3 py-2 rounded border" />
+              <input value={guarantor_number} onChange={(e) => setGuarantorNumber(e.target.value)} className="w-full px-3 py-2 rounded border bg-surface-container-lowest text-on-surface font-medium placeholder:text-on-surface-variant" />
             </div>
             <div>
               <button type="submit" className="w-full py-2 bg-primary text-on-primary rounded">Register</button>

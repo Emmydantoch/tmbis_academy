@@ -53,8 +53,6 @@ export default function AdminPayments() {
         subtitle="Admin Portal"
         headerTitle="Payment History"
         navItems={navItems}
-        showSearch
-        searchPlaceholder="Search students or invoice..."
         headerActions={
             <div className="relative hidden sm:block">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>

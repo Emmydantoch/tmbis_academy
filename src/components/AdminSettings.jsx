@@ -11,9 +11,15 @@ const defaultSummary = {
 
 export default function AdminSettings() {
     const [activeTab, setActiveTab] = useState('general');
+    const [theme, setTheme] = useState(() => localStorage.getItem('tmbis-theme') || 'deep-sea');
     const [stats, setStats] = useState(defaultSummary);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+
+    useEffect(() => {
+        document.documentElement.dataset.theme = theme;
+        localStorage.setItem('tmbis-theme', theme);
+    }, [theme]);
 
     useEffect(() => {
         const fetchLiveStats = async () => {
@@ -109,7 +115,7 @@ export default function AdminSettings() {
                 {activeTab === 'security' && <SecuritySettings />}
                 {activeTab === 'notifications' && <NotificationsSettings />}
                 {activeTab === 'integrations' && <IntegrationsSettings />}
-                {activeTab === 'appearance' && <AppearanceSettings />}
+                {activeTab === 'appearance' && <AppearanceSettings theme={theme} onThemeChange={setTheme} />}
                 </div>
             </div>
         </SidebarLayout>
@@ -205,16 +211,16 @@ export default function AdminSettings() {
     );
     }
 
-    function AppearanceSettings() {
+    function AppearanceSettings({ theme, onThemeChange }) {
     return (
     <div className="max-w-3xl">
         <h3 className="font-headline-lg text-headline-lg text-primary mb-8">Appearance Customization</h3>
         <div className="bg-surface-container p-10 rounded-3xl">
         <label className="block text-sm text-on-surface-variant mb-6">INTERFACE THEME</label>
-        <div className="grid grid-cols-3 gap-6">
-            <ThemeOption name="Academic Light" active={false} />
-            <ThemeOption name="Deep Sea (Dark)" active={true} />
-            <ThemeOption name="High Contrast" active={false} />
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <ThemeOption name="Aurora Canvas" theme="aurora" active={theme === 'aurora'} onSelect={onThemeChange} />
+            <ThemeOption name="Deep Sea (Dark)" theme="deep-sea" active={theme === 'deep-sea'} onSelect={onThemeChange} />
+            <ThemeOption name="High Contrast" theme="high-contrast" active={theme === 'high-contrast'} onSelect={onThemeChange} />
         </div>
         </div>
     </div>
@@ -284,14 +290,20 @@ export default function AdminSettings() {
     );
     }
 
-    function ThemeOption({ name, active }) {
+    function ThemeOption({ name, theme, active, onSelect }) {
     return (
-    <div className={`p-4 rounded-2xl border ${active ? "border-primary" : "border-outline-variant"} cursor-pointer hover:border-primary transition-all`}>
-        <div className={`h-32 rounded-xl ${active ? "bg-[#07122a]" : "bg-white"} flex items-center justify-center text-4xl`}>
-        {active ? "🌊" : "☀️"}
+    <button
+        type="button"
+        onClick={() => onSelect(theme)}
+        aria-pressed={active}
+        className={`p-4 rounded-2xl border text-left ${active ? "border-primary" : "border-outline-variant"} cursor-pointer hover:border-primary transition-all`}
+    >
+        <div className={`theme-preview theme-preview-${theme} h-32 rounded-xl flex items-end justify-between p-4`}>
+            <span className="text-2xl font-bold">Aa</span>
+            <span className="material-symbols-outlined">{theme === 'aurora' ? 'flare' : theme === 'high-contrast' ? 'contrast' : 'waves'}</span>
         </div>
         <p className="text-center mt-4 font-medium">{name}</p>
-    </div>
+    </button>
     );
 }
 
