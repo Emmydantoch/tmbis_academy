@@ -110,11 +110,6 @@ export default function AdminDashboard() {
       footerItems={footerItems}
       showSearch
       searchPlaceholder="Search students, faculty..."
-      headerActions={
-        <button className="rounded-full p-2 hover:bg-surface-container">
-          <span className="material-symbols-outlined">notifications</span>
-        </button>
-      }
     >
       <div className="p-6 md:p-10 max-w-7xl mx-auto">
         {error && (

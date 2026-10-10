@@ -12,25 +12,10 @@ const defaultPlatformSettings = {
     platform_name: 'TMBIS Academy',
     strict_password_policy: true,
     logo: '',
-    integrations: [],
 };
 
-function oauthResultError(result) {
-    const messages = {
-        denied: 'The integration authorization was declined.',
-        invalid_state: 'The integration authorization expired or could not be verified. Please try again.',
-        admin_required: 'An active administrator must complete the connection.',
-        connection_failed: 'The provider could not complete the connection. Check its OAuth app settings and try again.',
-    };
-    return messages[result] || '';
-}
-
 export default function AdminSettings() {
-    const [activeTab, setActiveTab] = useState(() => (
-        new URLSearchParams(window.location.search).has('integration')
-            ? 'integrations'
-            : 'general'
-    ));
+    const [activeTab, setActiveTab] = useState('general');
     const [theme, setTheme] = useState(() => localStorage.getItem('tmbis-theme') || 'deep-sea');
     const [stats, setStats] = useState(defaultSummary);
     const [platformSettings, setPlatformSettings] = useState(defaultPlatformSettings);
@@ -44,43 +29,17 @@ export default function AdminSettings() {
     const [logoUploading, setLogoUploading] = useState(false);
     const [logoError, setLogoError] = useState('');
     const [logoMessage, setLogoMessage] = useState('');
-    const [oauthResult] = useState(
-        () => new URLSearchParams(window.location.search).get('result')
-    );
-    const [integrationError, setIntegrationError] = useState(
-        () => oauthResultError(oauthResult)
-    );
-    const [integrationSuccess] = useState(
-        () => oauthResult === 'connected' ? 'Integration connected successfully.' : ''
-    );
-    const [integrationAction, setIntegrationAction] = useState('');
     const [notificationTemplates, setNotificationTemplates] = useState([]);
     const [notificationLoading, setNotificationLoading] = useState(true);
     const [notificationError, setNotificationError] = useState('');
     const [notificationSuccess, setNotificationSuccess] = useState('');
     const [editingNotificationTemplate, setEditingNotificationTemplate] = useState(null);
     const [notificationSaving, setNotificationSaving] = useState(false);
-    const [driveDocuments, setDriveDocuments] = useState([]);
-    const [driveHasLoaded, setDriveHasLoaded] = useState(false);
-    const [driveFile, setDriveFile] = useState(null);
-    const [driveLoading, setDriveLoading] = useState(false);
-    const [driveUploading, setDriveUploading] = useState(false);
-    const [zoomTopic, setZoomTopic] = useState('');
-    const [zoomStartTime, setZoomStartTime] = useState('');
-    const [zoomDuration, setZoomDuration] = useState('60');
-    const [zoomMeeting, setZoomMeeting] = useState(null);
 
     useEffect(() => {
         document.documentElement.dataset.theme = theme;
         localStorage.setItem('tmbis-theme', theme);
     }, [theme]);
-
-    useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        if (params.has('result')) {
-            window.history.replaceState({}, '', window.location.pathname);
-        }
-    }, []);
 
     useEffect(() => {
         const fetchLiveStats = async () => {
@@ -231,146 +190,6 @@ export default function AdminSettings() {
         }
     };
 
-    const connectIntegration = async (provider) => {
-        setIntegrationAction(provider);
-        setIntegrationError('');
-        try {
-            const response = await api.post(`auth/admin-integrations/${provider}/connect/`);
-            window.location.assign(response.data.authorization_url);
-        } catch (err) {
-            console.error(`Failed to start ${provider} OAuth:`, err);
-            setIntegrationError(
-                err.response?.data?.detail || 'Unable to start the integration connection.'
-            );
-            setIntegrationAction('');
-        }
-    };
-
-    const disconnectIntegration = async (provider) => {
-        setIntegrationAction(provider);
-        setIntegrationError('');
-        try {
-            await api.post(`auth/admin-integrations/${provider}/disconnect/`);
-            setPlatformSettings((current) => ({
-                ...current,
-                integrations: current.integrations.map((integration) => (
-                    integration.provider === provider
-                        ? { ...integration, connected: false, account_email: '' }
-                        : integration
-                )),
-            }));
-            if (provider === 'google_drive') {
-                setDriveDocuments([]);
-                setDriveHasLoaded(false);
-            } else {
-                setZoomMeeting(null);
-            }
-        } catch (err) {
-            console.error(`Failed to disconnect ${provider}:`, err);
-            setIntegrationError(
-                err.response?.data?.detail || 'Unable to disconnect the integration.'
-            );
-        } finally {
-            setIntegrationAction('');
-        }
-    };
-
-    const fetchDriveDocuments = async () => {
-        setDriveLoading(true);
-        setIntegrationError('');
-        try {
-            const response = await api.get(
-                'auth/admin-integrations/google_drive/documents/'
-            );
-            setDriveDocuments(response.data);
-            setDriveHasLoaded(true);
-        } catch (err) {
-            console.error('Failed to load Google Drive documents:', err);
-            setIntegrationError(
-                err.response?.data?.detail || 'Unable to load Google Drive documents.'
-            );
-        } finally {
-            setDriveLoading(false);
-        }
-    };
-
-    const uploadDriveDocument = async (event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
-        if (!driveFile) {
-            setIntegrationError('Choose a document to upload.');
-            return;
-        }
-        setDriveUploading(true);
-        setIntegrationError('');
-        try {
-            const formData = new FormData();
-            formData.append('file', driveFile);
-            await api.post(
-                'auth/admin-integrations/google_drive/documents/',
-                formData,
-                { headers: { 'Content-Type': 'multipart/form-data' } }
-            );
-            setDriveFile(null);
-            form.reset();
-            await fetchDriveDocuments();
-        } catch (err) {
-            console.error('Failed to upload Google Drive document:', err);
-            setIntegrationError(
-                err.response?.data?.detail || 'Unable to upload this document.'
-            );
-        } finally {
-            setDriveUploading(false);
-        }
-    };
-
-    const downloadDriveDocument = async (document) => {
-        setIntegrationAction(`download-${document.id}`);
-        setIntegrationError('');
-        try {
-            const response = await api.get(
-                `auth/admin-integrations/google_drive/documents/${encodeURIComponent(document.id)}/download/`,
-                { responseType: 'blob' }
-            );
-            const downloadUrl = URL.createObjectURL(response.data);
-            const anchor = window.document.createElement('a');
-            anchor.href = downloadUrl;
-            anchor.download = document.name;
-            anchor.click();
-            URL.revokeObjectURL(downloadUrl);
-        } catch (err) {
-            console.error('Failed to download Google Drive document:', err);
-            setIntegrationError('Unable to download this document.');
-        } finally {
-            setIntegrationAction('');
-        }
-    };
-
-    const createZoomMeeting = async (event) => {
-        event.preventDefault();
-        setIntegrationAction('zoom-meeting');
-        setIntegrationError('');
-        setZoomMeeting(null);
-        try {
-            const response = await api.post(
-                'auth/admin-integrations/zoom/meetings/',
-                {
-                    topic: zoomTopic,
-                    start_time: new Date(zoomStartTime).toISOString(),
-                    duration_minutes: zoomDuration,
-                }
-            );
-            setZoomMeeting(response.data);
-        } catch (err) {
-            console.error('Failed to create Zoom meeting:', err);
-            setIntegrationError(
-                err.response?.data?.detail || 'Unable to create the Zoom meeting.'
-            );
-        } finally {
-            setIntegrationAction('');
-        }
-    };
-
     const navItems = [
         { icon: 'home', label: 'Home', to: '/' },
         { icon: 'dashboard', label: 'Dashboard', to: '/admin/dashboard' },
@@ -418,12 +237,6 @@ export default function AdminSettings() {
                     label="Notifications"
                     active={activeTab === 'notifications'}
                     onClick={() => setActiveTab('notifications')}
-                />
-                <TabButton
-                    icon="hub"
-                    label="Integrations"
-                    active={activeTab === 'integrations'}
-                    onClick={() => setActiveTab('integrations')}
                 />
                 <TabButton
                     icon="palette"
@@ -500,34 +313,6 @@ export default function AdminSettings() {
                         onTemplateChange={setEditingNotificationTemplate}
                         onSave={saveNotificationTemplate}
                         onCancelEdit={() => setEditingNotificationTemplate(null)}
-                    />
-                )}
-                {activeTab === 'integrations' && (
-                    <IntegrationsSettings
-                        integrations={platformSettings.integrations}
-                        loading={settingsLoading}
-                        error={integrationError}
-                        success={integrationSuccess}
-                        busy={integrationAction}
-                        onConnect={connectIntegration}
-                        onDisconnect={disconnectIntegration}
-                        documents={driveDocuments}
-                        driveHasLoaded={driveHasLoaded}
-                        driveFile={driveFile}
-                        onDriveFileChange={setDriveFile}
-                        driveLoading={driveLoading}
-                        driveUploading={driveUploading}
-                        onLoadDocuments={fetchDriveDocuments}
-                        onUploadDocument={uploadDriveDocument}
-                        onDownloadDocument={downloadDriveDocument}
-                        zoomTopic={zoomTopic}
-                        onZoomTopicChange={setZoomTopic}
-                        zoomStartTime={zoomStartTime}
-                        onZoomStartTimeChange={setZoomStartTime}
-                        zoomDuration={zoomDuration}
-                        onZoomDurationChange={setZoomDuration}
-                        zoomMeeting={zoomMeeting}
-                        onCreateMeeting={createZoomMeeting}
                     />
                 )}
                 {activeTab === 'appearance' && <AppearanceSettings theme={theme} onThemeChange={setTheme} />}
@@ -793,82 +578,6 @@ export default function AdminSettings() {
     );
     }
 
-    function IntegrationsSettings({
-        integrations,
-        loading,
-        error,
-        success,
-        busy,
-        onConnect,
-        onDisconnect,
-        documents,
-        driveHasLoaded,
-        driveFile,
-        onDriveFileChange,
-        driveLoading,
-        driveUploading,
-        onLoadDocuments,
-        onUploadDocument,
-        onDownloadDocument,
-        zoomTopic,
-        onZoomTopicChange,
-        zoomStartTime,
-        onZoomStartTimeChange,
-        zoomDuration,
-        onZoomDurationChange,
-        zoomMeeting,
-        onCreateMeeting,
-    }) {
-    return (
-    <div className="max-w-3xl">
-        <h3 className="font-headline-lg text-headline-lg text-primary mb-8">Integrations</h3>
-        <p className="mb-6 text-sm text-on-surface-variant">
-            Connect Google Drive to manage academy documents and Zoom to create meeting links.
-        </p>
-        {error && (
-            <div className="mb-6 rounded-2xl border border-error/30 bg-error/10 px-4 py-3 text-sm text-error">
-                {error}
-            </div>
-        )}
-        {success && (
-            <div className="mb-6 rounded-2xl border border-primary/30 bg-primary/10 px-4 py-3 text-sm text-primary">
-                {success}
-            </div>
-        )}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {loading ? (
-            <p className="text-sm text-on-surface-variant">Checking integration status…</p>
-        ) : integrations.map((integration) => (
-            <IntegrationCard
-                key={integration.provider}
-                {...integration}
-                busy={busy === integration.provider}
-                onConnect={() => onConnect(integration.provider)}
-                onDisconnect={() => onDisconnect(integration.provider)}
-                documents={documents}
-                driveHasLoaded={driveHasLoaded}
-                driveFile={driveFile}
-                onDriveFileChange={onDriveFileChange}
-                driveLoading={driveLoading}
-                driveUploading={driveUploading}
-                onLoadDocuments={onLoadDocuments}
-                onUploadDocument={onUploadDocument}
-                onDownloadDocument={onDownloadDocument}
-                zoomTopic={zoomTopic}
-                onZoomTopicChange={onZoomTopicChange}
-                zoomStartTime={zoomStartTime}
-                onZoomStartTimeChange={onZoomStartTimeChange}
-                zoomDuration={zoomDuration}
-                onZoomDurationChange={onZoomDurationChange}
-                zoomMeeting={zoomMeeting}
-                onCreateMeeting={onCreateMeeting}
-            />
-        ))}
-        </div>
-    </div>
-    );
-    }
-
     function AppearanceSettings({ theme, onThemeChange }) {
     return (
     <div className="max-w-3xl">
@@ -936,191 +645,6 @@ export default function AdminSettings() {
         >
             Edit Template
         </button>
-    </div>
-    );
-    }
-
-    function IntegrationCard({
-        provider,
-        name,
-        configured,
-        connected,
-        account_email,
-        callback_url,
-        setup_hint,
-        busy,
-        onConnect,
-        onDisconnect,
-        documents,
-        driveHasLoaded,
-        driveFile,
-        onDriveFileChange,
-        driveLoading,
-        driveUploading,
-        onLoadDocuments,
-        onUploadDocument,
-        onDownloadDocument,
-        zoomTopic,
-        onZoomTopicChange,
-        zoomStartTime,
-        onZoomStartTimeChange,
-        zoomDuration,
-        onZoomDurationChange,
-        zoomMeeting,
-        onCreateMeeting,
-    }) {
-    return (
-    <div className="bg-surface-container p-6 rounded-3xl border border-outline-variant">
-        <div className="flex justify-between items-start gap-4">
-        <div>
-            <p className="font-bold text-on-surface">{name}</p>
-            <p className={`text-sm mt-1 ${connected ? 'text-primary' : 'text-warning'}`}>
-                {connected ? 'Connected' : configured ? 'Ready to connect' : 'Not configured'}
-            </p>
-            {account_email && (
-                <p className="mt-2 text-sm text-on-surface-variant">{account_email}</p>
-            )}
-            {!connected && (
-                <p className="mt-3 break-all text-xs text-on-surface-variant">
-                    {configured ? `Register callback URL: ${callback_url}` : setup_hint}
-                </p>
-            )}
-        </div>
-        {connected ? (
-            <button
-                type="button"
-                onClick={onDisconnect}
-                disabled={busy}
-                className="shrink-0 rounded-xl border border-outline-variant px-4 py-2 text-sm font-medium hover:bg-surface-container-high disabled:opacity-50"
-            >
-                {busy ? 'Working…' : 'Disconnect'}
-            </button>
-        ) : (
-            <button
-                type="button"
-                onClick={onConnect}
-                disabled={!configured || busy}
-                className="shrink-0 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-on-primary hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-                {busy ? 'Connecting…' : 'Connect'}
-            </button>
-        )}
-        </div>
-        {provider === 'google_drive' && connected && (
-            <div className="mt-6 border-t border-outline-variant pt-5">
-                <div className="flex items-center justify-between gap-3">
-                    <h4 className="font-medium">Academy documents</h4>
-                    <button
-                        type="button"
-                        onClick={onLoadDocuments}
-                        disabled={driveLoading}
-                        className="text-sm font-medium text-primary hover:underline disabled:opacity-50"
-                    >
-                        {driveLoading ? 'Refreshing…' : 'Refresh'}
-                    </button>
-                </div>
-                <form onSubmit={onUploadDocument} className="mt-4 flex flex-col gap-3">
-                    <input
-                        type="file"
-                        required
-                        onChange={(event) => onDriveFileChange(event.target.files?.[0] || null)}
-                        className="w-full text-sm text-on-surface-variant file:mr-3 file:rounded-xl file:border-0 file:bg-surface-container-high file:px-4 file:py-2 file:font-medium file:text-on-surface"
-                    />
-                    {driveFile && (
-                        <button
-                            type="submit"
-                            disabled={driveUploading}
-                            className="self-start rounded-xl bg-primary px-4 py-2 text-sm font-bold text-on-primary disabled:opacity-50"
-                        >
-                            {driveUploading ? 'Uploading…' : 'Upload document'}
-                        </button>
-                    )}
-                </form>
-                {documents.length === 0 ? (
-                    <p className="mt-4 text-sm text-on-surface-variant">
-                        {driveLoading
-                            ? 'Loading documents…'
-                            : driveHasLoaded
-                                ? 'No documents found in this Google Drive account.'
-                                : 'Select Refresh to load Google Drive documents.'}
-                    </p>
-                ) : (
-                    <ul className="mt-4 max-h-64 space-y-2 overflow-y-auto">
-                        {documents.map((document) => (
-                            <li key={document.id} className="flex items-center justify-between gap-3 rounded-xl bg-surface-container-low p-3">
-                                <span className="truncate text-sm">{document.name}</span>
-                                <button
-                                    type="button"
-                                    onClick={() => onDownloadDocument(document)}
-                                    disabled={busy === `download-${document.id}`}
-                                    className="shrink-0 text-sm font-medium text-primary hover:underline disabled:opacity-50"
-                                >
-                                    {busy === `download-${document.id}` ? 'Downloading…' : 'Download'}
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
-                )}
-            </div>
-        )}
-        {provider === 'zoom' && connected && (
-            <div className="mt-6 border-t border-outline-variant pt-5">
-                <h4 className="font-medium">Create a Zoom meeting</h4>
-                <form onSubmit={onCreateMeeting} className="mt-4 space-y-3">
-                    <input
-                        type="text"
-                        required
-                        maxLength={200}
-                        value={zoomTopic}
-                        onChange={(event) => onZoomTopicChange(event.target.value)}
-                        placeholder="Meeting title"
-                        className="w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3 text-sm"
-                    />
-                    <label className="block text-xs text-on-surface-variant">
-                        Start time
-                        <input
-                            type="datetime-local"
-                            required
-                            value={zoomStartTime}
-                            onChange={(event) => onZoomStartTimeChange(event.target.value)}
-                            className="mt-1 w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3 text-sm text-on-surface"
-                        />
-                    </label>
-                    <label className="block text-xs text-on-surface-variant">
-                        Duration (minutes)
-                        <input
-                            type="number"
-                            required
-                            min="1"
-                            max="1440"
-                            value={zoomDuration}
-                            onChange={(event) => onZoomDurationChange(event.target.value)}
-                            className="mt-1 w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3 text-sm text-on-surface"
-                        />
-                    </label>
-                    <button
-                        type="submit"
-                        disabled={busy === 'zoom-meeting'}
-                        className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-on-primary disabled:opacity-50"
-                    >
-                        {busy === 'zoom-meeting' ? 'Creating…' : 'Create meeting'}
-                    </button>
-                </form>
-                {zoomMeeting && (
-                    <div className="mt-4 rounded-xl bg-surface-container-low p-4 text-sm">
-                        <p className="font-medium">{zoomMeeting.topic}</p>
-                        <a
-                            href={zoomMeeting.join_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="mt-2 inline-block break-all text-primary hover:underline"
-                        >
-                            {zoomMeeting.join_url}
-                        </a>
-                    </div>
-                )}
-            </div>
-        )}
     </div>
     );
     }

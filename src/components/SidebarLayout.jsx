@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import NotificationBell from './NotificationBell';
 
 export default function SidebarLayout({
     title = 'TMBIS Academy',
@@ -17,10 +18,6 @@ export default function SidebarLayout({
         const location = useLocation();
         const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
         const displayTitle = localStorage.getItem('tmbis-platform-name') || title;
-
-        useEffect(() => {
-            setMobileMenuOpen(false);
-        }, [location.pathname]);
 
         return (
     <div className="min-h-screen bg-background text-on-surface flex">
@@ -49,6 +46,7 @@ export default function SidebarLayout({
                 <Link
                 key={item.label}
                 to={item.to || '#'}
+                onClick={() => setMobileMenuOpen(false)}
                 className={`flex items-center gap-3 rounded-2xl px-4 py-3 transition-all ${
                     isActive
                     ? 'bg-primary text-on-primary'
@@ -68,6 +66,7 @@ export default function SidebarLayout({
                 <Link
                 key={item.label}
                 to={item.to || '#'}
+                onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center gap-3 rounded-2xl px-4 py-3 text-on-surface-variant transition-all hover:bg-surface-container hover:text-on-surface"
                 >
                 <span className="material-symbols-outlined">{item.icon}</span>
@@ -107,6 +106,8 @@ export default function SidebarLayout({
             )}
 
             {headerActions}
+
+            <NotificationBell />
 
             <div className="h-8 w-8 overflow-hidden rounded-full border border-outline-variant">
                 <img src={profileImage} alt="Profile" className="h-full w-full object-cover" />

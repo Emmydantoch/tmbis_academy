@@ -1,14 +1,30 @@
 import { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import NotificationBell from './NotificationBell';
 
 export default function DashboardLayout() {
-  const [userName, setUserName] = useState('Student');
-  const [avatarUrl, setAvatarUrl] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [userRole, setUserRole] = useState('student');
+  const [profile] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || 'null');
+    } catch {
+      return null;
+    }
+  });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const fullName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ').trim();
+  const userName = fullName || profile?.email?.split('@')[0] || 'Student';
+  const avatarUrl = profile?.avatar || profile?.profile_picture || profile?.avatar_url || null;
+  const isAdmin =
+    profile?.is_admin === true ||
+    profile?.is_staff === true ||
+    profile?.role === 'admin' ||
+    profile?.role === 'superuser';
+  const userRole =
+    profile?.role === 'lecturer' || profile?.role === 'teacher' || profile?.role === 'instructor'
+      ? 'lecturer'
+      : 'student';
 
   useEffect(() => {
     // ── Auth Guard: redirect to login if no valid session exists ──
@@ -21,26 +37,8 @@ export default function DashboardLayout() {
     }
 
     try {
-      const u = JSON.parse(raw);
-      const name = [u.first_name, u.last_name].filter(Boolean).join(' ').trim();
-      if (name) setUserName(name);
-      else if (u.email) setUserName(u.email.split('@')[0]);
-
-      if (u.avatar || u.profile_picture || u.avatar_url) {
-        setAvatarUrl(u.avatar || u.profile_picture || u.avatar_url);
-      }
-
-      const admin =
-        u.is_admin === true ||
-        u.is_staff === true ||
-        u.role === 'admin' ||
-        u.role === 'superuser';
-      setIsAdmin(admin);
-
-      if (u.role === 'lecturer' || u.role === 'teacher' || u.role === 'instructor') {
-        setUserRole('lecturer');
-      }
-    } catch (e) {
+      JSON.parse(raw);
+    } catch {
       // Corrupted user data → force re-login
       navigate('/login');
     }
@@ -54,15 +52,10 @@ export default function DashboardLayout() {
     navigate('/login');
   };
 
-  // Close mobile menu when navigating
-  useEffect(() => {
-    setMobileMenuOpen(false);
-  }, [location.pathname]);
-
   // Student navigation items
   const studentNavItems = [
     { to: '/dashboard', icon: 'dashboard', label: 'Dashboard', exact: true },
-    { to: '/', icon: 'home', label: 'Landing Page' },
+    { to: '/', icon: 'home', label: 'Home' },
     { to: '/dashboard/faculty', icon: 'group', label: 'Faculty' },
     { to: '/dashboard/library', icon: 'library_books', label: 'Library' },
     { to: '/dashboard/live-session', icon: 'videocam', label: 'Live Sessions' },
@@ -135,6 +128,7 @@ export default function DashboardLayout() {
             <Link
               key={item.to}
               to={item.to}
+              onClick={() => setMobileMenuOpen(false)}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                 isActive(item)
                   ? 'bg-primary text-on-primary'
@@ -150,6 +144,7 @@ export default function DashboardLayout() {
           {isAdmin && (
             <Link
               to="/admin/dashboard"
+              onClick={() => setMobileMenuOpen(false)}
               className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
             >
               <span className="material-symbols-outlined">admin_panel_settings</span>
@@ -162,6 +157,7 @@ export default function DashboardLayout() {
         <div className="mt-auto pt-6 border-t border-outline-variant space-y-1">
           <Link
             to="/dashboard/change-password"
+            onClick={() => setMobileMenuOpen(false)}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
               location.pathname === '/dashboard/change-password'
                 ? 'bg-primary text-on-primary'
@@ -173,6 +169,7 @@ export default function DashboardLayout() {
           </Link>
           <Link
             to="/dashboard/contact"
+            onClick={() => setMobileMenuOpen(false)}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
               location.pathname === '/dashboard/contact'
                 ? 'bg-primary text-on-primary'
@@ -220,10 +217,7 @@ export default function DashboardLayout() {
               />
             </div>
 
-            <button className="p-2 rounded-full hover:bg-surface-container relative">
-              <span className="material-symbols-outlined">notifications</span>
-              <span className="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span>
-            </button>
+            <NotificationBell />
 
             <div className="w-8 h-8 rounded-full overflow-hidden border border-outline-variant flex items-center justify-center bg-surface-container-low">
               {avatarUrl ? (
