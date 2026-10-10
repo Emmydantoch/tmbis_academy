@@ -9,6 +9,10 @@ const defaultStats = {
   completion_rate: 0,
   pending_admissions: 0,
   revenue_trend: [30, 45, 40, 60, 55, 80, 95],
+  recent_activity: [],
+  notification_recipient_count: 0,
+  system_status: [],
+  system_status_checked_at: null,
 };
 
 export default function AdminDashboard() {
@@ -17,6 +21,12 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState(defaultStats);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [notificationOpen, setNotificationOpen] = useState(false);
+  const [notificationSubject, setNotificationSubject] = useState('');
+  const [notificationMessage, setNotificationMessage] = useState('');
+  const [notificationSending, setNotificationSending] = useState(false);
+  const [notificationError, setNotificationError] = useState('');
+  const [notificationSuccess, setNotificationSuccess] = useState('');
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -46,6 +56,37 @@ export default function AdminDashboard() {
     const intervalId = setInterval(fetchStats, 30000);
     return () => clearInterval(intervalId);
   }, [navigate]);
+
+  const sendMassNotification = async (event) => {
+    event.preventDefault();
+    setNotificationSending(true);
+    setNotificationError('');
+    setNotificationSuccess('');
+
+    try {
+      const response = await api.post('auth/admin-notifications/', {
+        subject: notificationSubject,
+        message: notificationMessage,
+      });
+      const count = response.data.recipient_count;
+      setNotificationSuccess(
+        `Notification sent to ${formatNumber(count)} ${count === 1 ? 'user' : 'users'}.`
+      );
+      setNotificationSubject('');
+      setNotificationMessage('');
+    } catch (err) {
+      console.error('Failed to send admin mass notification:', err);
+      setNotificationError(
+        err.response?.data?.detail || 'Unable to send the notification.'
+      );
+    } finally {
+      setNotificationSending(false);
+    }
+  };
+
+  const emailServiceReady = stats.system_status.some(
+    (item) => item.label === 'Email Service' && item.status === 'good'
+  );
 
   const navItems = [
     { icon: 'home', label: 'Home', to: '/' },
@@ -128,24 +169,25 @@ export default function AdminDashboard() {
           <div className="bg-surface-container p-8 rounded-3xl border border-outline-variant flex flex-col">
             <h3 className="font-headline-lg text-primary mb-8">Recent Activity</h3>
             <div className="space-y-8 flex-1 overflow-y-auto">
-              <ActivityItem
-                icon="person_add"
-                title="New Instructor Signed Up"
-                subtitle="Dr. Elena Rodriguez joined Science faculty"
-                time="2 minutes ago"
-              />
-              <ActivityItem
-                icon="cloud_done"
-                title="System Backup Completed"
-                subtitle="Database cluster synchronization successful"
-                time="1 hour ago"
-              />
-              <ActivityItem
-                icon="send"
-                title="Bulk Invoices Sent"
-                subtitle="Summer semester billing sent to 450 users"
-                time="3 hours ago"
-              />
+              {loading && stats.recent_activity.length === 0 ? (
+                <p className="text-sm text-on-surface-variant">
+                  Loading recent activity…
+                </p>
+              ) : stats.recent_activity.length > 0 ? (
+                stats.recent_activity.map((activity) => (
+                  <ActivityItem
+                    key={activity.id}
+                    icon={activity.icon}
+                    title={activity.title}
+                    subtitle={activity.subtitle}
+                    time={formatRelativeTime(activity.timestamp)}
+                  />
+                ))
+              ) : (
+                <p className="text-sm text-on-surface-variant">
+                  No recent activity to show.
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -155,23 +197,133 @@ export default function AdminDashboard() {
           <div className="bg-surface-container p-8 rounded-3xl border border-outline-variant">
             <h3 className="font-headline-lg text-primary mb-8">Quick Actions</h3>
             <div className="grid grid-cols-2 gap-4">
-              <QuickAction icon="manage_accounts" label="Manage Users" />
-              <QuickAction icon="settings_applications" label="System Settings" />
-              <QuickAction icon="analytics" label="Financial Report" />
-              <QuickAction icon="campaign" label="Mass Notification" />
+              <QuickAction icon="manage_accounts" label="Manage Users" onClick={() => navigate('/admin/users')} />
+              <QuickAction icon="settings_applications" label="System Settings" onClick={() => navigate('/admin/settings')} />
+              <QuickAction icon="analytics" label="Financial Report" onClick={() => navigate('/admin/reports')} />
+              <QuickAction
+                icon="campaign"
+                label="Mass Notification"
+                onClick={() => {
+                  setNotificationError('');
+                  setNotificationSuccess('');
+                  setNotificationOpen(true);
+                }}
+              />
             </div>
           </div>
 
           <div className="bg-surface-container p-8 rounded-3xl border border-outline-variant">
             <h3 className="font-headline-lg text-primary mb-8">System Status</h3>
             <div className="space-y-6">
-              <StatusItem label="Server Status" value="Healthy" status="good" />
-              <StatusItem label="Security Protocol" value="AES-256 Enabled" status="good" />
-              <StatusItem label="Next Patch" value="v4.2.1-Stable" status="info" />
+              {stats.system_status.map((item) => (
+                <StatusItem
+                  key={item.label}
+                  label={item.label}
+                  value={loading ? 'Checking…' : item.value}
+                  status={item.status}
+                />
+              ))}
+              {stats.system_status_checked_at && (
+                <p className="pt-2 text-xs text-on-surface-variant">
+                  Last checked {formatRelativeTime(stats.system_status_checked_at)}
+                </p>
+              )}
             </div>
           </div>
         </div>
       </div>
+      {notificationOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="mass-notification-title"
+            className="w-full max-w-xl rounded-3xl border border-outline-variant bg-surface-container p-6 shadow-2xl md:p-8"
+          >
+            <div className="mb-6 flex items-start justify-between gap-4">
+              <div>
+                <h2 id="mass-notification-title" className="font-headline-lg text-primary">
+                  Mass Notification
+                </h2>
+                <p className="mt-2 text-sm text-on-surface-variant">
+                  Sends an email to all {formatNumber(stats.notification_recipient_count)} registered users.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setNotificationOpen(false)}
+                className="rounded-full p-2 hover:bg-surface-container-high"
+                aria-label="Close mass notification"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            {notificationError && (
+              <div className="mb-4 rounded-2xl border border-error/30 bg-error/10 px-4 py-3 text-sm text-error">
+                {notificationError}
+              </div>
+            )}
+            {notificationSuccess && (
+              <div className="mb-4 rounded-2xl border border-primary/30 bg-primary/10 px-4 py-3 text-sm text-primary">
+                {notificationSuccess}
+              </div>
+            )}
+            {!emailServiceReady && (
+              <div className="mb-4 rounded-2xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">
+                Email service is not configured. Notifications cannot be sent right now.
+              </div>
+            )}
+
+            <form onSubmit={sendMassNotification} className="space-y-5">
+              <div>
+                <label htmlFor="notification-subject" className="mb-2 block text-sm font-medium">
+                  Subject
+                </label>
+                <input
+                  id="notification-subject"
+                  type="text"
+                  maxLength={200}
+                  required
+                  value={notificationSubject}
+                  onChange={(event) => setNotificationSubject(event.target.value)}
+                  className="w-full rounded-2xl border border-outline-variant bg-surface-container-lowest px-4 py-3 focus:border-primary focus:outline-none"
+                />
+              </div>
+              <div>
+                <label htmlFor="notification-message" className="mb-2 block text-sm font-medium">
+                  Message
+                </label>
+                <textarea
+                  id="notification-message"
+                  rows={6}
+                  maxLength={10000}
+                  required
+                  value={notificationMessage}
+                  onChange={(event) => setNotificationMessage(event.target.value)}
+                  className="w-full resize-y rounded-2xl border border-outline-variant bg-surface-container-lowest px-4 py-3 focus:border-primary focus:outline-none"
+                />
+              </div>
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setNotificationOpen(false)}
+                  className="rounded-2xl border border-outline-variant px-5 py-3 font-medium hover:bg-surface-container-high"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={notificationSending || loading || !emailServiceReady || stats.notification_recipient_count === 0}
+                  className="rounded-2xl bg-primary px-5 py-3 font-bold text-on-primary transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {notificationSending ? 'Sending…' : 'Send to All Users'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </SidebarLayout>
   );
 }
@@ -201,6 +353,27 @@ function formatNumber(value) {
   return Number(value || 0).toLocaleString();
 }
 
+function formatRelativeTime(timestamp) {
+  const activityTime = new Date(timestamp).getTime();
+  if (!Number.isFinite(activityTime)) {
+    return '';
+  }
+
+  const elapsedSeconds = Math.max(0, Math.floor((Date.now() - activityTime) / 1000));
+  if (elapsedSeconds < 60) {
+    return 'Just now';
+  }
+
+  const units = [
+    ['day', 86400],
+    ['hour', 3600],
+    ['minute', 60],
+  ];
+  const [unit, unitSeconds] = units.find(([, seconds]) => elapsedSeconds >= seconds);
+  const count = Math.floor(elapsedSeconds / unitSeconds);
+  return `${count} ${unit}${count === 1 ? '' : 's'} ago`;
+}
+
 function ActivityItem({ icon, title, subtitle, time }) {
   return (
     <div className="flex gap-5">
@@ -216,9 +389,9 @@ function ActivityItem({ icon, title, subtitle, time }) {
   );
 }
 
-function QuickAction({ icon, label }) {
+function QuickAction({ icon, label, onClick }) {
   return (
-    <button className="flex flex-col items-center justify-center p-8 bg-surface-container-low border border-outline-variant rounded-3xl hover:border-primary hover:bg-surface-container transition-all group">
+    <button type="button" onClick={onClick} className="flex flex-col items-center justify-center p-8 bg-surface-container-low border border-outline-variant rounded-3xl hover:border-primary hover:bg-surface-container transition-all group">
       <span className="material-symbols-outlined text-4xl text-primary mb-4 group-hover:scale-110 transition-transform">{icon}</span>
       <span className="font-medium text-sm">{label}</span>
     </button>
@@ -226,7 +399,9 @@ function QuickAction({ icon, label }) {
 }
 
 function StatusItem({ label, value, status }) {
-  const color = status === "good" ? "text-primary" : "text-on-surface-variant";
+  const color = status === "good"
+    ? "text-primary"
+    : status === "warning" ? "text-warning" : "text-on-surface-variant";
   return (
     <div className="flex justify-between items-center">
       <span className="text-on-surface-variant">{label}</span>

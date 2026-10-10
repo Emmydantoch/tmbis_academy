@@ -29,6 +29,8 @@ import LecturerSchedule from './components/LecturerSchedule';
 import LecturerGrades from './components/LecturerGrades';
 import Journals from './components/Journals';
 import StudyStudio from './components/StudyStudio';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
 
 function App() {
   return (
@@ -66,6 +68,8 @@ function App() {
           <Route path="schedule" element={<ProtectedLecturerRoute><LecturerSchedule /></ProtectedLecturerRoute>} />
           <Route path="grades" element={<ProtectedLecturerRoute><LecturerGrades /></ProtectedLecturerRoute>} />
         </Route>
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Admin Routes */}
         <Route path="/admin/dashboard" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>} />

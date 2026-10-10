@@ -12,15 +12,16 @@ export default function SidebarLayout({
     showSearch = false,
     searchPlaceholder = 'Search...',
     profileImage = 'https://lh3.googleusercontent.com/aida-public/AB6AXuAXGuHtLxOFZHUj9y7PHjvU_PadOmMMsC_tkvCbxww2gR9O1Os1Y9GqpFw5zalhq4cevRlbBjuLwF69cZfWgBJDFamdsJS5G0Q6hVGsLomewqEA_ygtScFaULRWUFT7YB33Q-Wy-O83qUeHP-zJC-ljioQ6U6dwd3uL7MHzmtFYfQ9wD8azANMadX4WS5CPAFh_R3EfX6fdIr9Z_3FSHvZt5nP1l9lnD8R_6g7Ry_1TiAMeJDCk1In-Wl-8yNgiuZoTpRBT9PtxCQhJ',
-    }) {
-    const location = useLocation();
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+        }) {
+        const location = useLocation();
+        const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+        const displayTitle = localStorage.getItem('tmbis-platform-name') || title;
 
-    useEffect(() => {
-        setMobileMenuOpen(false);
-    }, [location.pathname]);
+        useEffect(() => {
+            setMobileMenuOpen(false);
+        }, [location.pathname]);
 
-    return (
+        return (
     <div className="min-h-screen bg-background text-on-surface flex">
         {mobileMenuOpen && (
             <div
@@ -31,7 +32,7 @@ export default function SidebarLayout({
 
         <nav className={`${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed left-0 top-0 z-40 flex w-64 flex-col h-screen bg-surface-container-low border-r border-outline-variant p-4 transition-transform duration-300`}>
         <div className="mb-8 px-2">
-            <h1 className="font-headline-lg font-bold text-primary">{title}</h1>
+            <h1 className="font-headline-lg font-bold text-primary">{displayTitle}</h1>
             <p className="text-on-surface-variant text-sm">{subtitle}</p>
         </div>
 

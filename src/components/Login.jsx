@@ -161,9 +161,9 @@ export default function Login() {
                   <label className="font-label-md text-label-md text-on-surface" htmlFor="password">
                   Token 
                   </label>
-                  <a href="#" className="font-label-md text-primary hover:underline transition-all">
+                  <Link to="/forgot-password" className="font-label-md text-primary hover:underline transition-all">
                     Forgot Password?
-                  </a>
+                  </Link>
                 </div>
                 <div className="relative">
                   <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">

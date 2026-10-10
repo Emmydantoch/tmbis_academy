@@ -153,7 +153,7 @@ export default function ChangePassword() {
                 type={showNew ? 'text' : 'password'}
                 value={formData.new_password}
                 onChange={handleChange}
-                placeholder="Enter new password (min. 8 characters)"
+                placeholder="Enter a password that meets the current security policy"
                 required
                 minLength={8}
                 className="w-full rounded-xl border border-outline bg-surface-container pl-11 pr-12 py-4 text-on-surface placeholder-on-surface-variant/60 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
@@ -203,15 +203,12 @@ export default function ChangePassword() {
             </div>
           </div>
 
-          {/* Password strength hint */}
+          <p className="text-xs text-on-surface-variant">
+            New password requirements are set by your administrator.
+          </p>
+
           {formData.new_password && (
             <div className="text-xs text-on-surface-variant space-y-1">
-              <div className="flex items-center gap-2">
-                <span className={`material-symbols-outlined text-sm ${formData.new_password.length >= 8 ? 'text-green-400' : 'text-on-surface-variant/50'}`}>
-                  {formData.new_password.length >= 8 ? 'check_circle' : 'radio_button_unchecked'}
-                </span>
-                At least 8 characters
-              </div>
               <div className="flex items-center gap-2">
                 <span className={`material-symbols-outlined text-sm ${formData.new_password === formData.confirm_password && formData.confirm_password ? 'text-green-400' : 'text-on-surface-variant/50'}`}>
                   {formData.new_password === formData.confirm_password && formData.confirm_password ? 'check_circle' : 'radio_button_unchecked'}

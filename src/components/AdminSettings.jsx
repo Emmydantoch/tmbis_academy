@@ -8,13 +8,24 @@ const defaultSummary = {
     pending_admissions: 0,
     completion_rate: 0,
 };
+const defaultPlatformSettings = {
+    platform_name: 'TMBIS Academy',
+    strict_password_policy: true,
+    two_factor_enabled: false,
+    integrations: [],
+};
 
 export default function AdminSettings() {
     const [activeTab, setActiveTab] = useState('general');
     const [theme, setTheme] = useState(() => localStorage.getItem('tmbis-theme') || 'deep-sea');
     const [stats, setStats] = useState(defaultSummary);
+    const [platformSettings, setPlatformSettings] = useState(defaultPlatformSettings);
     const [loading, setLoading] = useState(true);
+    const [settingsLoading, setSettingsLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
+    const [settingsError, setSettingsError] = useState('');
+    const [saveMessage, setSaveMessage] = useState('');
 
     useEffect(() => {
         document.documentElement.dataset.theme = theme;
@@ -43,10 +54,53 @@ export default function AdminSettings() {
             }
         };
 
+        const fetchPlatformSettings = async () => {
+            try {
+                const response = await api.get('auth/admin-settings/');
+                setPlatformSettings({
+                    ...defaultPlatformSettings,
+                    ...response.data,
+                });
+                localStorage.setItem('tmbis-platform-name', response.data.platform_name);
+                setSettingsError('');
+            } catch (err) {
+                console.error('Failed to load admin platform settings:', err);
+                setSettingsError('Unable to load saved platform settings right now.');
+            } finally {
+                setSettingsLoading(false);
+            }
+        };
+
         fetchLiveStats();
+        fetchPlatformSettings();
         const intervalId = setInterval(fetchLiveStats, 30000);
         return () => clearInterval(intervalId);
     }, []);
+
+    const saveSettings = async () => {
+        setSaving(true);
+        setSettingsError('');
+        setSaveMessage('');
+        try {
+            const response = await api.patch('auth/admin-settings/', {
+                platform_name: platformSettings.platform_name,
+                strict_password_policy: platformSettings.strict_password_policy,
+            });
+            setPlatformSettings((current) => ({ ...current, ...response.data }));
+            localStorage.setItem('tmbis-platform-name', response.data.platform_name);
+            setSaveMessage('Settings saved successfully.');
+        } catch (err) {
+            console.error('Failed to save admin platform settings:', err);
+            setSettingsError(
+                err.response?.data?.platform_name?.[0]
+                || err.response?.data?.strict_password_policy?.[0]
+                || err.response?.data?.detail
+                || 'Unable to save settings right now.'
+            );
+        } finally {
+            setSaving(false);
+        }
+    };
 
     const navItems = [
         { icon: 'home', label: 'Home', to: '/' },
@@ -58,13 +112,18 @@ export default function AdminSettings() {
 
     return (
         <SidebarLayout
-            title="TMBIS Academy"
+            title={platformSettings.platform_name}
             subtitle="Admin Portal"
             headerTitle="Admin Settings"
             navItems={navItems}
             headerActions={
-                <button className="rounded-2xl bg-primary px-8 py-3 font-bold text-on-primary transition-all hover:brightness-110">
-                    Save All Changes
+                <button
+                    type="button"
+                    onClick={saveSettings}
+                    disabled={saving || settingsLoading}
+                    className="rounded-2xl bg-primary px-8 py-3 font-bold text-on-primary transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                    {saving ? 'Saving…' : 'Save Changes'}
                 </button>
             }
         >
@@ -110,11 +169,48 @@ export default function AdminSettings() {
                         {error}
                     </div>
                 )}
+                {settingsError && (
+                    <div className="mb-6 rounded-2xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">
+                        {settingsError}
+                    </div>
+                )}
+                {saveMessage && (
+                    <div className="mb-6 rounded-2xl border border-primary/30 bg-primary/10 px-4 py-3 text-sm text-primary">
+                        {saveMessage}
+                    </div>
+                )}
 
-                {activeTab === 'general' && <GeneralSettings stats={stats} loading={loading} />}
-                {activeTab === 'security' && <SecuritySettings />}
+                {activeTab === 'general' && (
+                    <GeneralSettings
+                        stats={stats}
+                        loading={loading}
+                        platformName={platformSettings.platform_name}
+                        onPlatformNameChange={(platform_name) => {
+                            setPlatformSettings((current) => ({ ...current, platform_name }));
+                            setSaveMessage('');
+                        }}
+                    />
+                )}
+                {activeTab === 'security' && (
+                    <SecuritySettings
+                        strictPasswordPolicy={platformSettings.strict_password_policy}
+                        twoFactorEnabled={platformSettings.two_factor_enabled}
+                        onStrictPasswordPolicyChange={(strict_password_policy) => {
+                            setPlatformSettings((current) => ({
+                                ...current,
+                                strict_password_policy,
+                            }));
+                            setSaveMessage('');
+                        }}
+                    />
+                )}
                 {activeTab === 'notifications' && <NotificationsSettings />}
-                {activeTab === 'integrations' && <IntegrationsSettings />}
+                {activeTab === 'integrations' && (
+                    <IntegrationsSettings
+                        integrations={platformSettings.integrations}
+                        loading={settingsLoading}
+                    />
+                )}
                 {activeTab === 'appearance' && <AppearanceSettings theme={theme} onThemeChange={setTheme} />}
                 </div>
             </div>
@@ -135,7 +231,7 @@ export default function AdminSettings() {
     }
 
     /* Tab Content Components */
-    function GeneralSettings({ stats, loading }) {
+    function GeneralSettings({ stats, loading, platformName, onPlatformNameChange }) {
     return (
         <div className="max-w-3xl space-y-10">
             <div>
@@ -152,7 +248,13 @@ export default function AdminSettings() {
             <div className="space-y-8">
             <div>
                 <label className="block text-sm text-on-surface-variant mb-3">PLATFORM NAME</label>
-                <input type="text" defaultValue="Tmbis_Academy" className="w-full bg-surface-container-lowest border border-outline-variant rounded-2xl px-6 py-4 focus:border-primary" />
+                <input
+                    type="text"
+                    maxLength={100}
+                    value={platformName}
+                    onChange={(event) => onPlatformNameChange(event.target.value)}
+                    className="w-full bg-surface-container-lowest border border-outline-variant rounded-2xl px-6 py-4 focus:border-primary"
+                />
             </div>
 
             <div>
@@ -161,7 +263,9 @@ export default function AdminSettings() {
                 <div className="w-24 h-24 bg-surface-container-high rounded-2xl flex items-center justify-center border border-dashed border-outline-variant">
                     <span className="material-symbols-outlined text-5xl text-primary">upload_file</span>
                 </div>
-                <button className="bg-surface-container-high px-8 py-3 rounded-2xl text-sm font-medium hover:bg-surface-container transition-all">Change Logo</button>
+                <span className="text-sm text-on-surface-variant">
+                    Logo upload is not available yet.
+                </span>
                 </div>
             </div>
             </div>
@@ -169,7 +273,11 @@ export default function AdminSettings() {
     );
     }
 
-    function SecuritySettings() {
+    function SecuritySettings({
+        strictPasswordPolicy,
+        twoFactorEnabled,
+        onStrictPasswordPolicyChange,
+    }) {
     return (
     <div className="max-w-3xl space-y-10">
         <div>
@@ -178,8 +286,20 @@ export default function AdminSettings() {
         </div>
 
         <div className="space-y-8">
-        <ToggleItem label="Two-Factor Authentication (2FA)" description="Require all admin users to verify identity" defaultChecked />
-        <ToggleItem label="Strict Password Policy" description="Must include symbols, numbers, and at least 12 characters" defaultChecked />
+        <div className="rounded-2xl border border-outline-variant bg-surface-container p-6">
+            <p className="font-medium">Two-Factor Authentication (2FA)</p>
+            <p className="mt-2 text-sm text-on-surface-variant">
+                {twoFactorEnabled
+                    ? 'Enabled for administrator accounts.'
+                    : 'Not enabled. An enrollment and verification flow is not configured.'}
+            </p>
+        </div>
+        <ToggleItem
+            label="Strict Password Policy"
+            description="Require at least 12 characters, one number, and one symbol for new passwords."
+            checked={strictPasswordPolicy}
+            onChange={onStrictPasswordPolicyChange}
+        />
         </div>
     </div>
     );
@@ -198,14 +318,19 @@ export default function AdminSettings() {
     );
     }
 
-    function IntegrationsSettings() {
+    function IntegrationsSettings({ integrations, loading }) {
     return (
     <div className="max-w-3xl">
         <h3 className="font-headline-lg text-headline-lg text-primary mb-8">Integrations</h3>
+        <p className="mb-6 text-sm text-on-surface-variant">
+    Status reflects configured credentials only; provider connectivity is not actively tested.
+        </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <IntegrationCard name="Stripe Payments" status="Connected" />
-        <IntegrationCard name="Zoom Video" status="Connected" />
-        <IntegrationCard name="Google Drive" status="Disconnected" />
+        {loading ? (
+            <p className="text-sm text-on-surface-variant">Checking configured services…</p>
+        ) : integrations.map((integration) => (
+            <IntegrationCard key={integration.name} {...integration} />
+        ))}
         </div>
     </div>
     );
@@ -217,6 +342,9 @@ export default function AdminSettings() {
         <h3 className="font-headline-lg text-headline-lg text-primary mb-8">Appearance Customization</h3>
         <div className="bg-surface-container p-10 rounded-3xl">
         <label className="block text-sm text-on-surface-variant mb-6">INTERFACE THEME</label>
+        <p className="mb-6 text-sm text-on-surface-variant">
+            Theme changes are saved automatically in this browser.
+        </p>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             <ThemeOption name="Aurora Canvas" theme="aurora" active={theme === 'aurora'} onSelect={onThemeChange} />
             <ThemeOption name="Deep Sea (Dark)" theme="deep-sea" active={theme === 'deep-sea'} onSelect={onThemeChange} />
@@ -237,16 +365,7 @@ export default function AdminSettings() {
     );
     }
 
-    function NavItem({ icon, label, active = false }) {
-    return (
-    <a href="#" className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${active ? 'bg-primary text-on-primary' : 'hover:bg-surface-container text-on-surface-variant'}`}>
-        <span className="material-symbols-outlined">{icon}</span>
-        <span>{label}</span>
-    </a>
-    );
-    }
-
-    function ToggleItem({ label, description, defaultChecked }) {
+    function ToggleItem({ label, description, checked, onChange }) {
     return (
     <div className="flex items-center justify-between py-6 border-b border-outline-variant/10 last:border-0">
         <div>
@@ -254,7 +373,13 @@ export default function AdminSettings() {
         <p className="text-sm text-on-surface-variant">{description}</p>
         </div>
         <label className="relative inline-flex items-center cursor-pointer">
-        <input type="checkbox" defaultChecked={defaultChecked} className="sr-only peer" />
+        <input
+            type="checkbox"
+            aria-label={label}
+            checked={checked}
+            onChange={(event) => onChange(event.target.checked)}
+            className="sr-only peer"
+        />
         <div className="w-12 h-6 bg-surface-container-high peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:content-[''] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
         </label>
     </div>
@@ -273,18 +398,24 @@ export default function AdminSettings() {
     );
     }
 
-    function IntegrationCard({ name, status }) {
-    const connected = status === "Connected";
+    function IntegrationCard({ name, configured, providers = [], setup_hint }) {
     return (
     <div className="bg-surface-container p-8 rounded-3xl border border-outline-variant">
         <div className="flex justify-between items-start">
         <div>
             <p className="font-bold text-on-surface">{name}</p>
-            <p className={`text-sm mt-1 ${connected ? "text-primary" : "text-on-surface-variant"}`}>{status}</p>
+            <p className={`text-sm mt-1 ${configured ? "text-primary" : "text-warning"}`}>
+                {configured ? 'Credentials configured' : 'Not configured'}
+            </p>
+            {providers.length > 0 && (
+                <p className="mt-2 text-sm text-on-surface-variant">
+                    Providers: {providers.join(', ')}
+                </p>
+            )}
+            <p className="mt-3 text-xs text-on-surface-variant">
+                Deployment setup: {setup_hint}
+            </p>
         </div>
-        <button className={`px-6 py-2 rounded-2xl text-sm font-medium ${connected ? "bg-surface-container-high" : "bg-primary text-on-primary"}`}>
-            {connected ? "Configure" : "Connect"}
-        </button>
         </div>
     </div>
     );
