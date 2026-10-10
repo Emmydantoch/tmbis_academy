@@ -7,6 +7,7 @@ export default function SidebarLayout({
     navItems = [],
     footerItems = [],
     headerTitle = 'Dashboard',
+    logo = localStorage.getItem('tmbis-institution-logo') || '',
     children,
     headerActions = null,
     showSearch = false,
@@ -32,7 +33,12 @@ export default function SidebarLayout({
 
         <nav className={`${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed left-0 top-0 z-40 flex w-64 flex-col h-screen bg-surface-container-low border-r border-outline-variant p-4 transition-transform duration-300`}>
         <div className="mb-8 px-2">
-            <h1 className="font-headline-lg font-bold text-primary">{displayTitle}</h1>
+            <div className="flex items-center gap-3">
+                {logo && (
+                    <img src={logo} alt="" className="h-10 w-10 shrink-0 rounded-lg bg-surface object-contain p-1" />
+                )}
+                <h1 className="font-headline-lg font-bold text-primary">{displayTitle}</h1>
+            </div>
             <p className="text-on-surface-variant text-sm">{subtitle}</p>
         </div>
 
