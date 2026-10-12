@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import NotificationBell from './NotificationBell';
+import ProfileAvatarMenu from './ProfileAvatarMenu';
 
 export default function DashboardLayout() {
-  const [profile] = useState(() => {
+  const [profile, setProfile] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('user') || 'null');
     } catch {
@@ -219,15 +220,11 @@ export default function DashboardLayout() {
 
             <NotificationBell />
 
-            <div className="w-8 h-8 rounded-full overflow-hidden border border-outline-variant flex items-center justify-center bg-surface-container-low">
-              {avatarUrl ? (
-                <img src={avatarUrl} alt="Profile" className="object-cover w-full h-full" />
-              ) : (
-                <span className="text-sm font-semibold">
-                  {userName.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                </span>
-              )}
-            </div>
+            <ProfileAvatarMenu
+              profile={profile}
+              onProfileUpdate={setProfile}
+              avatarClassName="h-8 w-8"
+            />
           </div>
         </header>
 

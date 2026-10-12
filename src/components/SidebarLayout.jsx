@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import NotificationBell from './NotificationBell';
+import ProfileAvatarMenu from './ProfileAvatarMenu';
 
 export default function SidebarLayout({
     title = 'TMBIS Academy',
@@ -13,13 +14,19 @@ export default function SidebarLayout({
     headerActions = null,
     showSearch = false,
     searchPlaceholder = 'Search...',
-    profileImage = 'https://lh3.googleusercontent.com/aida-public/AB6AXuAXGuHtLxOFZHUj9y7PHjvU_PadOmMMsC_tkvCbxww2gR9O1Os1Y9GqpFw5zalhq4cevRlbBjuLwF69cZfWgBJDFamdsJS5G0Q6hVGsLomewqEA_ygtScFaULRWUFT7YB33Q-Wy-O83qUeHP-zJC-ljioQ6U6dwd3uL7MHzmtFYfQ9wD8azANMadX4WS5CPAFh_R3EfX6fdIr9Z_3FSHvZt5nP1l9lnD8R_6g7Ry_1TiAMeJDCk1In-Wl-8yNgiuZoTpRBT9PtxCQhJ',
-        }) {
-        const location = useLocation();
-        const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-        const displayTitle = localStorage.getItem('tmbis-platform-name') || title;
+}) {
+    const location = useLocation();
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [profile, setProfile] = useState(() => {
+        try {
+            return JSON.parse(localStorage.getItem('user') || 'null');
+        } catch {
+            return null;
+        }
+    });
+    const displayTitle = localStorage.getItem('tmbis-platform-name') || title;
 
-        return (
+    return (
     <div className="min-h-screen bg-background text-on-surface flex">
         {mobileMenuOpen && (
             <div
@@ -109,9 +116,7 @@ export default function SidebarLayout({
 
             <NotificationBell />
 
-            <div className="h-8 w-8 overflow-hidden rounded-full border border-outline-variant">
-                <img src={profileImage} alt="Profile" className="h-full w-full object-cover" />
-            </div>
+            <ProfileAvatarMenu profile={profile} onProfileUpdate={setProfile} />
             </div>
         </header>
 

@@ -6,6 +6,7 @@ export default function Registration() {
   const [email, setEmail] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [profilePicture, setProfilePicture] = useState(null);
   const [phone_number, setPhoneNumber] = useState('');
   const [guarantor, setGuarantor] = useState('');
   const [guarantor_number, setGuarantorNumber] = useState('');
@@ -17,13 +18,17 @@ export default function Registration() {
     e.preventDefault();
     setError('');
     try {
-      const res = await api.post('auth/register/', {
-        email,
-        first_name: firstName,
-        last_name: lastName,
-        phone_number: phone_number,
-        guarantor: guarantor,
-        guarantor_number: guarantor_number,
+      const formData = new FormData();
+      formData.append('email', email);
+      formData.append('first_name', firstName);
+      formData.append('last_name', lastName);
+      formData.append('phone_number', phone_number);
+      formData.append('guarantor', guarantor);
+      formData.append('guarantor_number', guarantor_number);
+      if (profilePicture) formData.append('profile_picture', profilePicture);
+
+      await api.post('auth/register/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
       setSuccess(true);
       setTimeout(() => navigate('/payment'), 1500);
@@ -62,6 +67,17 @@ export default function Registration() {
             <div>
               <label className="block text-sm">Last name</label>
               <input value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full px-3 py-2 rounded border bg-surface-container-lowest text-on-surface font-medium placeholder:text-on-surface-variant" />
+            </div>
+            <div>
+              <label className="block text-sm" htmlFor="profile-picture">Profile photo (optional)</label>
+              <input
+                id="profile-picture"
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                onChange={(e) => setProfilePicture(e.target.files?.[0] || null)}
+                className="w-full px-3 py-2 rounded border bg-surface-container-lowest text-on-surface file:mr-3 file:rounded file:border-0 file:bg-primary file:px-3 file:py-1 file:text-on-primary"
+              />
+              <p className="mt-1 text-xs text-on-surface-variant">You can add or change this later from your profile menu.</p>
             </div>
             <div>
               <label className="block text-sm">Phone number</label>
