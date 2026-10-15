@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import NotificationBell from './NotificationBell';
+import NavigationIcon from './NavigationIcon';
 import ProfileAvatarMenu from './ProfileAvatarMenu';
 
 export default function DashboardLayout() {
@@ -136,7 +137,7 @@ export default function DashboardLayout() {
                   : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
               }`}
             >
-              <span className="material-symbols-outlined">{item.icon}</span>
+              <NavigationIcon name={item.icon} />
               <span className="font-medium">{item.label}</span>
             </Link>
           ))}
@@ -148,7 +149,7 @@ export default function DashboardLayout() {
               onClick={() => setMobileMenuOpen(false)}
               className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
             >
-              <span className="material-symbols-outlined">admin_panel_settings</span>
+              <NavigationIcon name="admin_panel_settings" />
               <span className="font-medium">Admin Panel</span>
             </Link>
           )}
@@ -165,7 +166,7 @@ export default function DashboardLayout() {
                 : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
             }`}
           >
-            <span className="material-symbols-outlined">lock_reset</span>
+            <NavigationIcon name="lock_reset" />
             <span className="font-medium">Change Password</span>
           </Link>
           <Link
@@ -177,14 +178,14 @@ export default function DashboardLayout() {
                 : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
             }`}
           >
-            <span className="material-symbols-outlined">contact_support</span>
+            <NavigationIcon name="contact_support" />
             <span className="font-medium">Support</span>
           </Link>
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-on-surface-variant hover:bg-surface-container hover:text-on-surface w-full text-left"
           >
-            <span className="material-symbols-outlined">logout</span>
+            <NavigationIcon name="logout" />
             <span className="font-medium">Logout</span>
           </button>
         </div>

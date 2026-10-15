@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import NotificationBell from './NotificationBell';
+import NavigationIcon from './NavigationIcon';
 import ProfileAvatarMenu from './ProfileAvatarMenu';
 
 export default function SidebarLayout({
@@ -16,6 +17,7 @@ export default function SidebarLayout({
     searchPlaceholder = 'Search...',
 }) {
     const location = useLocation();
+    const navigate = useNavigate();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [profile, setProfile] = useState(() => {
         try {
@@ -25,6 +27,13 @@ export default function SidebarLayout({
         }
     });
     const displayTitle = localStorage.getItem('tmbis-platform-name') || title;
+
+    const handleLogout = () => {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
+        navigate('/login');
+    };
 
     return (
     <div className="min-h-screen bg-background text-on-surface flex">
@@ -60,15 +69,14 @@ export default function SidebarLayout({
                     : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
                 }`}
                 >
-                <span className="material-symbols-outlined">{item.icon}</span>
+                <NavigationIcon name={item.icon} />
                 <span className="font-medium">{item.label}</span>
                 </Link>
             );
             })}
         </div>
 
-        {footerItems.length > 0 && (
-            <div className="mt-auto space-y-1 border-t border-outline-variant pt-6">
+        <div className="mt-auto space-y-1 border-t border-outline-variant pt-6">
             {footerItems.map((item) => (
                 <Link
                 key={item.label}
@@ -76,12 +84,22 @@ export default function SidebarLayout({
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center gap-3 rounded-2xl px-4 py-3 text-on-surface-variant transition-all hover:bg-surface-container hover:text-on-surface"
                 >
-                <span className="material-symbols-outlined">{item.icon}</span>
+                <NavigationIcon name={item.icon} />
                 <span className="font-medium">{item.label}</span>
                 </Link>
             ))}
-            </div>
-        )}
+            <button
+                type="button"
+                onClick={() => {
+                    setMobileMenuOpen(false);
+                    handleLogout();
+                }}
+                className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-on-surface-variant transition-all hover:bg-surface-container hover:text-on-surface"
+            >
+                <NavigationIcon name="logout" />
+                <span className="font-medium">Logout</span>
+            </button>
+        </div>
         </nav>
 
         <div className="flex-1 md:ml-64">
