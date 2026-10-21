@@ -587,10 +587,11 @@ export default function AdminSettings() {
         <p className="mb-6 text-sm text-on-surface-variant">
             Theme changes are saved automatically in this browser.
         </p>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <ThemeOption name="Aurora Canvas" theme="aurora" active={theme === 'aurora'} onSelect={onThemeChange} />
             <ThemeOption name="Deep Sea (Dark)" theme="deep-sea" active={theme === 'deep-sea'} onSelect={onThemeChange} />
             <ThemeOption name="High Contrast" theme="high-contrast" active={theme === 'high-contrast'} onSelect={onThemeChange} />
+            <ThemeOption name="Orbit Dashboard" theme="orbit-admin" active={theme === 'orbit-admin'} onSelect={onThemeChange} />
         </div>
         </div>
     </div>
@@ -659,7 +660,9 @@ export default function AdminSettings() {
     >
         <div className={`theme-preview theme-preview-${theme} h-32 rounded-xl flex items-end justify-between p-4`}>
             <span className="text-2xl font-bold">Aa</span>
-            <span className="material-symbols-outlined">{theme === 'aurora' ? 'flare' : theme === 'high-contrast' ? 'contrast' : 'waves'}</span>
+            <span className="material-symbols-outlined">
+                {theme === 'aurora' ? 'flare' : theme === 'high-contrast' ? 'contrast' : theme === 'orbit-admin' ? 'dashboard' : 'waves'}
+            </span>
         </div>
         <p className="text-center mt-4 font-medium">{name}</p>
     </button>
