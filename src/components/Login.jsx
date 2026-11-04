@@ -137,7 +137,7 @@ export default function Login() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <label className="font-label-md text-label-md text-on-surface" htmlFor="email">
-                  Email Address
+                  Email Address or Matric Number
                 </label>
                 <div className="relative">
                   <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">
@@ -146,10 +146,10 @@ export default function Login() {
                   <input
                     id="email"
                     name="email"
-                    type="email"
+                    type="text"
                     value={formData.email}
                     onChange={handleChange}
-                    placeholder="student@tmbis.edu"
+                    placeholder="Email address or matric number"
                     required
                     className="w-full rounded-xl border border-outline bg-surface-container pl-11 py-4 text-on-surface placeholder-on-surface-variant/60 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                   />
@@ -159,7 +159,7 @@ export default function Login() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="font-label-md text-label-md text-on-surface" htmlFor="password">
-                  Token 
+                  Password or Activation Token
                   </label>
                   <Link to="/forgot-password" className="font-label-md text-primary hover:underline transition-all">
                     Forgot Password?
@@ -175,7 +175,7 @@ export default function Login() {
                     type={showPassword ? 'text' : 'password'}
                     value={formData.password}
                     onChange={handleChange}
-                    placeholder="Password or Activation Token"
+                    placeholder="Password or activation token"
                     required
                     className="w-full rounded-xl border border-outline bg-surface-container pl-11 pr-12 py-4 text-on-surface placeholder-on-surface-variant/60 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                   />

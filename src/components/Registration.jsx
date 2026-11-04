@@ -4,8 +4,11 @@ import api from '../api/axios';
 
 export default function Registration() {
   const [email, setEmail] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [matricNo, setMatricNo] = useState('');
+  const [department, setDepartment] = useState('');
+  const [level, setLevel] = useState('');
+  const [studyCenter, setStudyCenter] = useState('');
   const [profilePicture, setProfilePicture] = useState(null);
   const [phone_number, setPhoneNumber] = useState('');
   const [guarantor, setGuarantor] = useState('');
@@ -20,8 +23,11 @@ export default function Registration() {
     try {
       const formData = new FormData();
       formData.append('email', email);
-      formData.append('first_name', firstName);
-      formData.append('last_name', lastName);
+      formData.append('full_name', fullName);
+      formData.append('matric_no', matricNo);
+      formData.append('department', department);
+      formData.append('level', level);
+      formData.append('study_center', studyCenter);
       formData.append('phone_number', phone_number);
       formData.append('guarantor', guarantor);
       formData.append('guarantor_number', guarantor_number);
@@ -61,12 +67,24 @@ export default function Registration() {
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-3 py-2 rounded border bg-surface-container-lowest text-on-surface font-medium placeholder:text-on-surface-variant" />
             </div>
             <div>
-              <label className="block text-sm">First name</label>
-              <input value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full px-3 py-2 rounded border bg-surface-container-lowest text-on-surface font-medium placeholder:text-on-surface-variant" />
+              <label className="block text-sm" htmlFor="full-name">Full name</label>
+              <input id="full-name" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full px-3 py-2 rounded border bg-surface-container-lowest text-on-surface font-medium placeholder:text-on-surface-variant" />
             </div>
             <div>
-              <label className="block text-sm">Last name</label>
-              <input value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full px-3 py-2 rounded border bg-surface-container-lowest text-on-surface font-medium placeholder:text-on-surface-variant" />
+              <label className="block text-sm" htmlFor="matric-no">Matric number</label>
+              <input id="matric-no" value={matricNo} onChange={(e) => setMatricNo(e.target.value)} className="w-full px-3 py-2 rounded border bg-surface-container-lowest text-on-surface font-medium placeholder:text-on-surface-variant" />
+            </div>
+            <div>
+              <label className="block text-sm" htmlFor="department">Department</label>
+              <input id="department" value={department} onChange={(e) => setDepartment(e.target.value)} className="w-full px-3 py-2 rounded border bg-surface-container-lowest text-on-surface font-medium placeholder:text-on-surface-variant" />
+            </div>
+            <div>
+              <label className="block text-sm" htmlFor="level">Level</label>
+              <input id="level" value={level} onChange={(e) => setLevel(e.target.value)} className="w-full px-3 py-2 rounded border bg-surface-container-lowest text-on-surface font-medium placeholder:text-on-surface-variant" />
+            </div>
+            <div>
+              <label className="block text-sm" htmlFor="study-center">Study center</label>
+              <input id="study-center" value={studyCenter} onChange={(e) => setStudyCenter(e.target.value)} className="w-full px-3 py-2 rounded border bg-surface-container-lowest text-on-surface font-medium placeholder:text-on-surface-variant" />
             </div>
             <div>
               <label className="block text-sm" htmlFor="profile-picture">Profile photo (optional)</label>

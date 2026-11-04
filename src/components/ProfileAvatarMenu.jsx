@@ -20,8 +20,8 @@ export default function ProfileAvatarMenu({
 
   const fullName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ').trim();
   const userName =
-    fullName ||
     profile?.full_name ||
+    fullName ||
     profile?.username ||
     profile?.email?.split('@')[0] ||
     'User';
@@ -165,6 +165,16 @@ export default function ProfileAvatarMenu({
               <p className="truncate text-xs text-on-surface-variant">{profile.email}</p>
             )}
             <p className="mt-1 text-xs text-on-surface-variant">{roleLabel}</p>
+            {[
+              ['Matric No.', profile?.matric_no],
+              ['Department', profile?.department],
+              ['Level', profile?.level],
+              ['Study Center', profile?.study_center],
+            ].filter(([, value]) => value).map(([label, value]) => (
+              <p key={label} className="mt-1 truncate text-xs text-on-surface-variant">
+                {label}: {value}
+              </p>
+            ))}
           </div>
           {error && (
             <p role="alert" className="px-4 pt-3 text-xs text-error">

@@ -16,7 +16,8 @@ export default function DashboardLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const fullName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ').trim();
-  const userName = fullName || profile?.email?.split('@')[0] || 'Student';
+  const userName = profile?.full_name || fullName || profile?.email?.split('@')[0] || 'Student';
+  const studentDetails = [profile?.department, profile?.level].filter(Boolean).join(' · ');
   const avatarUrl = profile?.avatar || profile?.profile_picture || profile?.avatar_url || null;
   const isAdmin =
     profile?.is_admin === true ||
@@ -120,7 +121,7 @@ export default function DashboardLayout() {
             Welcome, {userName}
           </h2>
           <p className="text-on-surface-variant text-sm mt-1">
-            {userRole === 'lecturer' ? 'Lecturer' : 'Computer Science Major'}
+            {studentDetails || (userRole === 'lecturer' ? 'Lecturer' : 'Student')}
           </p>
         </div>
 

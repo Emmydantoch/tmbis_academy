@@ -41,9 +41,15 @@ export default function AdminUsers() {
   };
 
   const filteredUsers = users.filter((user) =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.role.toLowerCase().includes(searchTerm.toLowerCase())
+    [
+      user.name,
+      user.email,
+      user.role,
+      user.matric_no,
+      user.department,
+      user.level,
+      user.study_center,
+    ].some((value) => value?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const navItems = [
@@ -92,11 +98,16 @@ export default function AdminUsers() {
         </div>
 
         <div className="bg-surface-container rounded-3xl overflow-hidden border border-outline-variant">
-          <table className="w-full">
+          <div className="overflow-x-auto">
+            <table className="w-full">
             <thead>
               <tr className="border-b border-outline-variant">
                 <th className="text-left px-6 py-5 text-xs uppercase tracking-widest text-on-surface-variant">Name</th>
                 <th className="text-left px-6 py-5 text-xs uppercase tracking-widest text-on-surface-variant">Email</th>
+                <th className="text-left px-6 py-5 text-xs uppercase tracking-widest text-on-surface-variant">Matric No.</th>
+                <th className="text-left px-6 py-5 text-xs uppercase tracking-widest text-on-surface-variant">Department</th>
+                <th className="text-left px-6 py-5 text-xs uppercase tracking-widest text-on-surface-variant">Level</th>
+                <th className="text-left px-6 py-5 text-xs uppercase tracking-widest text-on-surface-variant">Study Center</th>
                 <th className="text-left px-6 py-5 text-xs uppercase tracking-widest text-on-surface-variant">Role</th>
                 <th className="text-left px-6 py-5 text-xs uppercase tracking-widest text-on-surface-variant">Status</th>
                 <th className="text-left px-6 py-5 text-xs uppercase tracking-widest text-on-surface-variant">Semester</th>
@@ -108,6 +119,10 @@ export default function AdminUsers() {
                 <tr key={user.id} className="hover:bg-surface-container-high transition-colors">
                   <td className="px-6 py-5 font-medium text-on-surface">{user.name}</td>
                   <td className="px-6 py-5 text-on-surface-variant">{user.email}</td>
+                  <td className="px-6 py-5 text-on-surface-variant">{user.matric_no || '—'}</td>
+                  <td className="px-6 py-5 text-on-surface-variant">{user.department || '—'}</td>
+                  <td className="px-6 py-5 text-on-surface-variant">{user.level || '—'}</td>
+                  <td className="px-6 py-5 text-on-surface-variant">{user.study_center || '—'}</td>
                   <td className="px-6 py-5">
                     <span className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary capitalize">
                       {user.role === 'student' || user.role === 'lecturer' ? (
@@ -137,7 +152,8 @@ export default function AdminUsers() {
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
         </div>
       </div>
     </SidebarLayout>
