@@ -63,6 +63,17 @@ export default function ProfileAvatarMenu({
   }, [onProfileUpdate]);
 
   useEffect(() => {
+    const handleProfileUpdated = (event) => {
+      onProfileUpdate((currentProfile) => ({
+        ...currentProfile,
+        ...event.detail,
+      }));
+    };
+    window.addEventListener('profile-updated', handleProfileUpdated);
+    return () => window.removeEventListener('profile-updated', handleProfileUpdated);
+  }, [onProfileUpdate]);
+
+  useEffect(() => {
     const closeProfileMenu = (event) => {
       if (event.type === 'keydown' && event.key === 'Escape') {
         setOpen(false);
@@ -176,6 +187,17 @@ export default function ProfileAvatarMenu({
               </p>
             ))}
           </div>
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              navigate('/dashboard/profile');
+            }}
+            className="flex w-full items-center gap-3 border-b border-outline-variant px-4 py-3 text-left text-sm text-on-surface hover:bg-surface-container"
+          >
+            <span className="material-symbols-outlined">edit</span>
+            <span>Edit profile</span>
+          </button>
           {error && (
             <p role="alert" className="px-4 pt-3 text-xs text-error">
               {error}

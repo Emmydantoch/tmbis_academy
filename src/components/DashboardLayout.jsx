@@ -47,6 +47,14 @@ export default function DashboardLayout() {
     }
   }, [navigate]);
 
+  useEffect(() => {
+    const handleProfileUpdated = (event) => {
+      setProfile((currentProfile) => ({ ...currentProfile, ...event.detail }));
+    };
+    window.addEventListener('profile-updated', handleProfileUpdated);
+    return () => window.removeEventListener('profile-updated', handleProfileUpdated);
+  }, []);
+
   const handleLogout = () => {
     // ── Clear all auth keys (matching exactly what Login.jsx saves) ──
     localStorage.removeItem('access_token');

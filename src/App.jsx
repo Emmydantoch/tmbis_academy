@@ -5,6 +5,7 @@ import LandingPage from './components/LandingPage';
 import Login from './components/Login';
 import DashboardLayout from './components/DashboardLayout';
 import Dashboard from './components/Dashboard';
+import StudentProfile from './components/StudentProfile';
 import LiveSession from './components/LiveSession';
 import Payment from './components/Payment';
 import PaymentSuccess from './components/PaymentSuccess';
@@ -53,6 +54,7 @@ function App() {
         {/* Dashboard Routes — nested under DashboardLayout */}
         <Route path="/dashboard" element={<DashboardLayout />}>
           <Route index element={<Dashboard />} />
+          <Route path="profile" element={<StudentProfile />} />
           <Route path="live-session" element={<LiveSession />} />
           <Route path="payment" element={<Payment />} />  
           <Route path="exams/:examId" element={<ExamView />} />

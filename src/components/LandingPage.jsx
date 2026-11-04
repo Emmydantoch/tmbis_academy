@@ -1,7 +1,28 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 
+function getStoredUser() {
+  try {
+    return JSON.parse(localStorage.getItem('user') || 'null');
+  } catch {
+    return null;
+  }
+}
+
 export default function LandingPage() {
+  const accessToken = localStorage.getItem('access_token');
+  const user = getStoredUser();
+  const isLoggedIn = Boolean(
+    accessToken &&
+    accessToken !== 'null' &&
+    accessToken !== 'undefined' &&
+    user
+  );
+  const homeDestination =
+    user?.role === 'admin' || user?.role === 'superuser' || user?.is_staff
+      ? '/admin/dashboard'
+      : '/dashboard';
+
   useEffect(() => {
     const header = document.querySelector('header')
 
@@ -74,8 +95,11 @@ export default function LandingPage() {
             <Link to="/apply" className="hidden font-body-md text-body-md text-on-surface-variant transition-colors hover:text-primary md:block">
               Apply Now
             </Link>
-            <Link to="/login" className="rounded-lg bg-primary-fixed px-md py-sm font-bold text-on-primary transition-all hover:brightness-110">
-              Login
+            <Link
+              to={isLoggedIn ? homeDestination : '/login'}
+              className="rounded-lg bg-primary-fixed px-md py-sm font-bold text-on-primary transition-all hover:brightness-110"
+            >
+              {isLoggedIn ? 'Dashboard' : 'Login'}
             </Link>
           </div>
         </nav>

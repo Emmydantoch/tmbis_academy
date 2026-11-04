@@ -8,6 +8,7 @@ export default function AdminUsers() {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -37,6 +38,23 @@ export default function AdminUsers() {
       )));
     } catch (err) {
       setError(err.response?.data?.detail || 'Unable to update this user role.');
+    }
+  };
+
+  const approveStudent = async (user) => {
+    setError('');
+    setNotice('');
+    try {
+      const response = await api.post(`auth/admin-users/${user.id}/approve/`);
+      setUsers((currentUsers) => currentUsers.map((currentUser) => (
+        currentUser.id === user.id
+          ? { ...currentUser, is_activated: true, status: 'active' }
+          : currentUser
+      )));
+      setSummary((current) => ({ ...current, active_students: current.active_students + 1 }));
+      setNotice(response.data.detail);
+    } catch (requestError) {
+      setError(requestError.response?.data?.detail || 'Unable to approve this student.');
     }
   };
 
@@ -83,9 +101,17 @@ export default function AdminUsers() {
       }
     >
       <div className="p-6 md:p-10 max-w-7xl mx-auto">
+        <div className="mb-6 rounded-2xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-on-surface-variant">
+          Verify each student against school records before approving. Approval activates the account and emails a one-time password setup link to the address shown.
+        </div>
         {error && (
           <div className="mb-6 rounded-2xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">
             {error}
+          </div>
+        )}
+        {notice && (
+          <div role="status" className="mb-6 rounded-2xl border border-primary/30 bg-primary/10 px-4 py-3 text-sm text-primary">
+            {notice}
           </div>
         )}
 
@@ -112,6 +138,7 @@ export default function AdminUsers() {
                 <th className="text-left px-6 py-5 text-xs uppercase tracking-widest text-on-surface-variant">Status</th>
                 <th className="text-left px-6 py-5 text-xs uppercase tracking-widest text-on-surface-variant">Semester</th>
                 <th className="text-left px-6 py-5 text-xs uppercase tracking-widest text-on-surface-variant">Joined</th>
+                <th className="text-left px-6 py-5 text-xs uppercase tracking-widest text-on-surface-variant">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/10">
@@ -141,14 +168,44 @@ export default function AdminUsers() {
                     </span>
                   </td>
                   <td className="px-6 py-5">
+                    {user.is_activated && !user.has_usable_password ? (
+                      <span className="inline-flex rounded-full bg-warning/10 px-3 py-1 text-xs font-medium text-warning">
+                        Approved · password setup pending
+                      </span>
+                    ) : (
                     <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
-                      user.status === 'active' ? 'bg-primary/10 text-primary' : 'bg-error/10 text-error'
+                      user.status === 'active'
+                        ? 'bg-primary/10 text-primary'
+                        : user.status === 'pending approval'
+                          ? 'bg-warning/10 text-warning'
+                          : 'bg-error/10 text-error'
                     }`}>
                       {user.status}
                     </span>
+                    )}
                   </td>
                   <td className="px-6 py-5 text-on-surface-variant">{user.semester}</td>
                   <td className="px-6 py-5 text-on-surface-variant">{formatDate(user.joined_at)}</td>
+                  <td className="px-6 py-5">
+                    {user.role === 'student' && !user.is_activated && user.email?.endsWith('@students.tmbis.invalid') && (
+                      <span className="text-xs text-on-surface-variant">
+                        Waiting for student to register with a working email
+                      </span>
+                    )}
+                    {user.role === 'student' && !user.is_activated && !user.email?.endsWith('@students.tmbis.invalid') && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (window.confirm(`Approve ${user.name} and email a password setup link to ${user.email}?`)) {
+                            approveStudent(user);
+                          }
+                        }}
+                        className="whitespace-nowrap rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-on-primary hover:opacity-90"
+                      >
+                        Approve &amp; send setup link
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -2,35 +2,61 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../api/axios';
 
+const inputClassName = 'w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3 text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20';
+
+function Field({ label, htmlFor, children, className = '' }) {
+  return (
+    <div className={className}>
+      <label className="mb-2 block text-sm font-medium text-on-surface" htmlFor={htmlFor}>
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
 export default function Registration() {
-  const [email, setEmail] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [matricNo, setMatricNo] = useState('');
-  const [department, setDepartment] = useState('');
-  const [level, setLevel] = useState('');
-  const [studyCenter, setStudyCenter] = useState('');
+  const [form, setForm] = useState({
+    email: '',
+    full_name: '',
+    contact_address: '',
+    phone_number: '',
+    whatsapp_number: '',
+    gender: '',
+    guarantor: '',
+    guarantor_number: '',
+    department: '',
+    mode_of_entry: '',
+    year_of_entry: '',
+    level: '',
+    matric_no: '',
+    study_center: '',
+  });
   const [profilePicture, setProfilePicture] = useState(null);
-  const [phone_number, setPhoneNumber] = useState('');
-  const [guarantor, setGuarantor] = useState('');
-  const [guarantor_number, setGuarantorNumber] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const updateField = (event) => {
+    const { name, value } = event.target;
+    setForm((current) => ({ ...current, [name]: value }));
+  };
+
+  const formatFullName = () => {
+    const names = form.full_name.trim().split(/\s+/).filter(Boolean);
+    if (!names.length) return;
+    const formattedName = [names[0].toUpperCase(), ...names.slice(1).map((name) => name.toLowerCase())].join(' ');
+    setForm((current) => ({ ...current, full_name: formattedName }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setError('');
+    setSubmitting(true);
     try {
       const formData = new FormData();
-      formData.append('email', email);
-      formData.append('full_name', fullName);
-      formData.append('matric_no', matricNo);
-      formData.append('department', department);
-      formData.append('level', level);
-      formData.append('study_center', studyCenter);
-      formData.append('phone_number', phone_number);
-      formData.append('guarantor', guarantor);
-      formData.append('guarantor_number', guarantor_number);
+      Object.entries(form).forEach(([key, value]) => formData.append(key, value));
       if (profilePicture) formData.append('profile_picture', profilePicture);
 
       await api.post('auth/register/', formData, {
@@ -38,83 +64,236 @@ export default function Registration() {
       });
       setSuccess(true);
       setTimeout(() => navigate('/payment'), 1500);
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data || 'Registration failed');
+    } catch (requestError) {
+      console.error(requestError);
+      setError(requestError.response?.data || 'Registration failed');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="w-full max-w-md p-8 bg-surface-container rounded-lg border">
+    <main className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-6xl rounded-3xl border border-outline-variant bg-surface-container p-5 shadow-xl sm:p-8 lg:p-10">
         <Link
           to="/"
-          className="inline-flex items-center gap-2 text-primary hover:underline mb-6 text-sm font-medium"
+          className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
         >
           <span className="material-symbols-outlined text-base">arrow_back</span>
           Back to Home
         </Link>
-        <h2 className="text-2xl font-bold mb-4">Register</h2>
-        {error && <div className="text-sm text-error mb-4">{JSON.stringify(error)}</div>}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-on-surface">Student Registration</h1>
+          <p className="mt-2 text-sm text-on-surface-variant">
+            Enter your details below. Fields marked with * are required.
+          </p>
+        </div>
+
+        {error && (
+          <div role="alert" className="mb-6 rounded-xl border border-error/40 bg-error/10 p-4 text-sm text-error">
+            {typeof error === 'string' ? error : JSON.stringify(error)}
+          </div>
+        )}
+
         {success ? (
-        <div className="text-green-600 font-medium">
-            ✅ Details saved! Redirecting you to make payment...
+          <div className="rounded-xl border border-primary/30 bg-primary/10 p-5 font-medium text-primary">
+            Details saved! Redirecting you to make payment...
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm">Email</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-3 py-2 rounded border bg-surface-container-lowest text-on-surface font-medium placeholder:text-on-surface-variant" />
-            </div>
-            <div>
-              <label className="block text-sm" htmlFor="full-name">Full name</label>
-              <input id="full-name" value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full px-3 py-2 rounded border bg-surface-container-lowest text-on-surface font-medium placeholder:text-on-surface-variant" />
-            </div>
-            <div>
-              <label className="block text-sm" htmlFor="matric-no">Matric number</label>
-              <input id="matric-no" value={matricNo} onChange={(e) => setMatricNo(e.target.value)} className="w-full px-3 py-2 rounded border bg-surface-container-lowest text-on-surface font-medium placeholder:text-on-surface-variant" />
-            </div>
-            <div>
-              <label className="block text-sm" htmlFor="department">Department</label>
-              <input id="department" value={department} onChange={(e) => setDepartment(e.target.value)} className="w-full px-3 py-2 rounded border bg-surface-container-lowest text-on-surface font-medium placeholder:text-on-surface-variant" />
-            </div>
-            <div>
-              <label className="block text-sm" htmlFor="level">Level</label>
-              <input id="level" value={level} onChange={(e) => setLevel(e.target.value)} className="w-full px-3 py-2 rounded border bg-surface-container-lowest text-on-surface font-medium placeholder:text-on-surface-variant" />
-            </div>
-            <div>
-              <label className="block text-sm" htmlFor="study-center">Study center</label>
-              <input id="study-center" value={studyCenter} onChange={(e) => setStudyCenter(e.target.value)} className="w-full px-3 py-2 rounded border bg-surface-container-lowest text-on-surface font-medium placeholder:text-on-surface-variant" />
-            </div>
-            <div>
-              <label className="block text-sm" htmlFor="profile-picture">Profile photo (optional)</label>
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
+            <Field label="Full name (surname first) *" htmlFor="full-name">
               <input
-                id="profile-picture"
-                type="file"
-                accept="image/png,image/jpeg,image/webp,image/gif"
-                onChange={(e) => setProfilePicture(e.target.files?.[0] || null)}
-                className="w-full px-3 py-2 rounded border bg-surface-container-lowest text-on-surface file:mr-3 file:rounded file:border-0 file:bg-primary file:px-3 file:py-1 file:text-on-primary"
+                id="full-name"
+                name="full_name"
+                value={form.full_name}
+                onChange={updateField}
+                onBlur={formatFullName}
+                autoComplete="name"
+                placeholder="SURNAME Firstname Othername"
+                required
+                className={inputClassName}
               />
-              <p className="mt-1 text-xs text-on-surface-variant">You can add or change this later from your profile menu.</p>
+              <span className="mt-1 block text-xs text-on-surface-variant">
+                Surname will be uppercase; other names will be lowercase.
+              </span>
+            </Field>
+            <Field label="Email *" htmlFor="email">
+              <input
+                id="email"
+                name="email"
+                type="email"
+                value={form.email}
+                onChange={updateField}
+                autoComplete="email"
+                required
+                className={inputClassName}
+              />
+            </Field>
+            <Field label="Contact address *" htmlFor="contact-address">
+              <textarea
+                id="contact-address"
+                name="contact_address"
+                value={form.contact_address}
+                onChange={updateField}
+                autoComplete="street-address"
+                rows="2"
+                required
+                className={inputClassName}
+              />
+            </Field>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:col-span-2">
+              <Field label="Contact number *" htmlFor="phone-number">
+                <input
+                  id="phone-number"
+                  name="phone_number"
+                  type="tel"
+                  value={form.phone_number}
+                  onChange={updateField}
+                  autoComplete="tel"
+                  required
+                  className={inputClassName}
+                />
+              </Field>
+              <Field label="WhatsApp number" htmlFor="whatsapp-number">
+                <input
+                  id="whatsapp-number"
+                  name="whatsapp_number"
+                  type="tel"
+                  value={form.whatsapp_number}
+                  onChange={updateField}
+                  placeholder="If different from contact number"
+                  className={inputClassName}
+                />
+              </Field>
             </div>
-            <div>
-              <label className="block text-sm">Phone number</label>
-              <input value={phone_number} onChange={(e) => setPhoneNumber(e.target.value)} className="w-full px-3 py-2 rounded border bg-surface-container-lowest text-on-surface font-medium placeholder:text-on-surface-variant" />
+            <Field label="Gender *" htmlFor="gender">
+              <select id="gender" name="gender" value={form.gender} onChange={updateField} required className={inputClassName}>
+                <option value="">Select gender</option>
+                <option value="female">Female</option>
+                <option value="male">Male</option>
+                <option value="other">Other</option>
+                <option value="prefer_not_to_say">Prefer not to say</option>
+              </select>
+            </Field>
+            <Field label="Name of guardian *" htmlFor="guardian-name">
+              <input
+                id="guardian-name"
+                name="guarantor"
+                value={form.guarantor}
+                onChange={updateField}
+                required
+                className={inputClassName}
+              />
+            </Field>
+            <Field label="Contact of guardian *" htmlFor="guardian-number">
+              <input
+                id="guardian-number"
+                name="guarantor_number"
+                type="tel"
+                value={form.guarantor_number}
+                onChange={updateField}
+                required
+                className={inputClassName}
+              />
+            </Field>
+            <Field label="Course of study *" htmlFor="department">
+              <input
+                id="department"
+                name="department"
+                value={form.department}
+                onChange={updateField}
+                required
+                className={inputClassName}
+              />
+            </Field>
+            <Field label="Mode of entry *" htmlFor="mode-of-entry">
+              <select
+                id="mode-of-entry"
+                name="mode_of_entry"
+                value={form.mode_of_entry}
+                onChange={updateField}
+                required
+                className={inputClassName}
+              >
+                <option value="">Select mode of entry</option>
+                <option value="utme">UTME — 5 years</option>
+                <option value="direct_entry">Direct Entry — 4 years</option>
+                <option value="top_up">Top Up — 2 years</option>
+              </select>
+            </Field>
+            <Field label="Year of entry *" htmlFor="year-of-entry">
+              <input
+                id="year-of-entry"
+                name="year_of_entry"
+                value={form.year_of_entry}
+                onChange={updateField}
+                placeholder="2026 or 2026/2027"
+                pattern="\d{4}(/\d{4})?"
+                title="Enter a year such as 2026 or an academic year such as 2026/2027"
+                required
+                className={inputClassName}
+              />
+            </Field>
+            <Field label="Current level *" htmlFor="level">
+              <input
+                id="level"
+                name="level"
+                value={form.level}
+                onChange={updateField}
+                placeholder="e.g. 100 level"
+                required
+                className={inputClassName}
+              />
+            </Field>
+            <div className="md:col-span-2">
+              <details className="rounded-2xl border border-outline-variant p-4">
+                <summary className="cursor-pointer font-medium text-on-surface">
+                  Additional details (optional)
+                </summary>
+                <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
+                  <Field label="Matric number" htmlFor="matric-no">
+                    <input
+                      id="matric-no"
+                      name="matric_no"
+                      value={form.matric_no}
+                      onChange={updateField}
+                      className={inputClassName}
+                    />
+                  </Field>
+                  <Field label="Study center" htmlFor="study-center">
+                    <input
+                      id="study-center"
+                      name="study_center"
+                      value={form.study_center}
+                      onChange={updateField}
+                      className={inputClassName}
+                    />
+                  </Field>
+                  <Field label="Profile photo (optional)" htmlFor="profile-picture" className="md:col-span-2">
+                    <input
+                      id="profile-picture"
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/gif"
+                      onChange={(event) => setProfilePicture(event.target.files?.[0] || null)}
+                      className={`${inputClassName} file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:text-on-primary`}
+                    />
+                    <span className="mt-1 block text-xs text-on-surface-variant">
+                      You can add or change this later from your profile menu.
+                    </span>
+                  </Field>
+                </div>
+              </details>
             </div>
-            <div>
-              <label className="block text-sm">Guarantor name</label>
-              <input value={guarantor} onChange={(e) => setGuarantor(e.target.value)} className="w-full px-3 py-2 rounded border bg-surface-container-lowest text-on-surface font-medium placeholder:text-on-surface-variant" />
-            </div>
-            <div>
-              <label className="block text-sm">Guarantor phone</label>
-              <input value={guarantor_number} onChange={(e) => setGuarantorNumber(e.target.value)} className="w-full px-3 py-2 rounded border bg-surface-container-lowest text-on-surface font-medium placeholder:text-on-surface-variant" />
-            </div>
-            <div>
-              <button type="submit" className="w-full py-2 bg-primary text-on-primary rounded">Register</button>
-            </div>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="mt-2 w-full rounded-xl bg-primary px-5 py-3 font-semibold text-on-primary transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 md:col-span-2"
+            >
+              {submitting ? 'Submitting…' : 'Register'}
+            </button>
           </form>
         )}
       </div>
-    </div>
+    </main>
   );
 }

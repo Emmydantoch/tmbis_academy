@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import NotificationBell from './NotificationBell';
 import NavigationIcon from './NavigationIcon';
@@ -27,6 +27,14 @@ export default function SidebarLayout({
         }
     });
     const displayTitle = localStorage.getItem('tmbis-platform-name') || title;
+
+    useEffect(() => {
+        const handleProfileUpdated = (event) => {
+            setProfile((currentProfile) => ({ ...currentProfile, ...event.detail }));
+        };
+        window.addEventListener('profile-updated', handleProfileUpdated);
+        return () => window.removeEventListener('profile-updated', handleProfileUpdated);
+    }, []);
 
     const handleLogout = () => {
         localStorage.removeItem('access_token');
