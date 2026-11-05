@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import api from '../api/axios';
 
 export default function Library() {
@@ -11,36 +11,25 @@ export default function Library() {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
-  const [canUpload, setCanUpload] = useState(false);
+  const [canUpload] = useState(() => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || 'null');
+      const isAdmin =
+        user?.is_admin === true ||
+        user?.is_staff === true ||
+        user?.role === 'admin' ||
+        user?.role === 'superuser';
+      const isLecturer = ['lecturer', 'teacher', 'instructor'].includes(user?.role);
+      return isAdmin || isLecturer;
+    } catch {
+      return false;
+    }
+  });
   const [uploadMode, setUploadMode] = useState('material');
 
   const filters = ["All Materials", "Textbooks", "Lecture Notes", "Research Papers", "Case Studies", "Video Lectures"];
 
-  useEffect(() => {
-    fetchMaterials();
-
-    // Determine upload permission from stored user object
-    try {
-      const raw = localStorage.getItem('user');
-      if (raw) {
-        const u = JSON.parse(raw);
-        const isAdmin =
-          u.is_admin === true ||
-          u.is_staff === true ||
-          u.role === 'admin' ||
-          u.role === 'superuser';
-        const isLecturer =
-          u.role === 'lecturer' ||
-          u.role === 'teacher' ||
-          u.role === 'instructor';
-        setCanUpload(isAdmin || isLecturer);
-      }
-    } catch {
-      setCanUpload(false);
-    }
-  }, []);
-
-  const fetchMaterials = async () => {
+  const fetchMaterials = useCallback(async () => {
     try {
       const response = await api.get('library/materials/');
       const materials = response.data || [];
@@ -55,7 +44,12 @@ export default function Library() {
       console.error(error);
       setMessage('Unable to load materials right now.');
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const initialFetch = setTimeout(fetchMaterials, 0);
+    return () => clearTimeout(initialFetch);
+  }, [fetchMaterials]);
 
   const handleUpload = async (event) => {
     event.preventDefault();

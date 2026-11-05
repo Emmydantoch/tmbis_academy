@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../api/axios';
+import { DEPARTMENTS } from '../constants/departments';
 
 const inputClassName = 'w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3 text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20';
 
@@ -197,14 +198,21 @@ export default function Registration() {
               />
             </Field>
             <Field label="Course of study *" htmlFor="department">
-              <input
+              <select
                 id="department"
                 name="department"
                 value={form.department}
                 onChange={updateField}
                 required
                 className={inputClassName}
-              />
+              >
+                <option value="">Select department</option>
+                {DEPARTMENTS.map((department) => (
+                  <option key={department} value={department}>
+                    {department}
+                  </option>
+                ))}
+              </select>
             </Field>
             <Field label="Mode of entry *" htmlFor="mode-of-entry">
               <select

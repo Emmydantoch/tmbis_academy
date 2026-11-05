@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 
@@ -11,23 +11,16 @@ export default function ChangePassword() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [isFirstLogin, setIsFirstLogin] = useState(false);
+  const [isFirstLogin] = useState(() => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || 'null');
+      return Boolean(user && !user.has_usable_password);
+    } catch {
+      return false;
+    }
+  });
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem('user');
-      if (raw) {
-        const u = JSON.parse(raw);
-        if (!u.has_usable_password) {
-          setIsFirstLogin(true);
-        }
-      }
-    } catch (e) {
-      // ignore
-    }
-  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -66,8 +59,8 @@ export default function ChangePassword() {
           u.has_usable_password = true;
           localStorage.setItem('user', JSON.stringify(u));
         }
-      } catch (e) {
-        // ignore
+      } catch (storageError) {
+        console.error('Unable to update stored user details.', storageError);
       }
 
       setSuccess('Password changed successfully! Redirecting to dashboard...');

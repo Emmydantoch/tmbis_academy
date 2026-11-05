@@ -9,12 +9,8 @@ export default function Payment() {
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
-  const [cardNumber, setCardNumber] = useState('');
-  const [expiry, setExpiry] = useState('');
-  const [cvv, setCvv] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
   const [transferPending, setTransferPending] = useState(false);
   const [paymentReference, setPaymentReference] = useState(null);
 
@@ -186,20 +182,7 @@ export default function Payment() {
                 </div>
               </div>
 
-              {success ? (
-                <div className="text-center py-16">
-                  <div className="w-20 h-20 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-6">
-                    <span className="material-symbols-outlined text-5xl text-green-400">check_circle</span>
-                  </div>
-                  <h3 className="text-2xl font-bold text-primary mb-3">Payment Successful!</h3>
-                  <p className="text-on-surface-variant">
-                    Your activation token has been sent to your email.
-                    <br />
-                    Use it to log in to your student portal.
-                  </p>
-                </div>
-              ) : (
-                <form onSubmit={handlePayment} className="space-y-6">
+              <form onSubmit={handlePayment} className="space-y-6">
                   {error && (
                     <div className="rounded-xl bg-error/10 border border-error/30 px-4 py-3 text-sm text-error">
                       {error}
@@ -384,8 +367,7 @@ export default function Payment() {
                   <p className="text-center text-sm text-on-surface-variant">
                     Secured by Paystack • Cards And Bank Transfer
                   </p>
-                </form>
-              )}
+              </form>
             </div>
 
             {/* Right Column */}

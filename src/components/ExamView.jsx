@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import api from '../api/axios';
 
@@ -52,34 +52,6 @@ export default function ExamView() {
     if (examId) fetchExam();
   }, [examId]);
 
-  // Timer
-  useEffect(() => {
-    if (loading || submitSuccess || timeLeft <= 0) return;
-
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          handleSubmit(true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [loading, submitSuccess, timeLeft]);
-
-  // Auto-save indicator
-  useEffect(() => {
-    const autoSave = setInterval(() => {
-      if (Object.keys(studentAnswers).length > 0) {
-        setLastSaved(new Date());
-      }
-    }, 30000);
-    return () => clearInterval(autoSave);
-  }, [studentAnswers]);
-
   const formatTime = (seconds) => {
     const min = Math.floor(seconds / 60);
     const sec = seconds % 60;
@@ -102,7 +74,7 @@ export default function ExamView() {
     if (currentIndex > 0) setCurrentIndex(currentIndex - 1);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (isSubmitting || submitSuccess) return;
 
     setShowSubmitModal(false);
@@ -141,7 +113,6 @@ export default function ExamView() {
       const response = await api.post(`exams/${examId}/submit/`, payload);
       setResult(response.data);
       setSubmitSuccess(true);
-
       setTimeout(() => navigate('/dashboard'), 3000);
     } catch (err) {
       console.error(err);
@@ -153,7 +124,44 @@ export default function ExamView() {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [
+    exam,
+    examId,
+    hasWorkingPaper,
+    isSubmitting,
+    navigate,
+    studentAnswers,
+    submitSuccess,
+    timeLeft,
+    workingPaperFile,
+  ]);
+
+  // Timer
+  useEffect(() => {
+    if (loading || submitSuccess || timeLeft <= 0) return;
+
+    const timer = setInterval(() => {
+      if (timeLeft <= 1) {
+        clearInterval(timer);
+        setTimeLeft(0);
+        handleSubmit();
+      } else {
+        setTimeLeft(timeLeft - 1);
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [handleSubmit, loading, submitSuccess, timeLeft]);
+
+  // Auto-save indicator
+  useEffect(() => {
+    const autoSave = setInterval(() => {
+      if (Object.keys(studentAnswers).length > 0) {
+        setLastSaved(new Date());
+      }
+    }, 30000);
+    return () => clearInterval(autoSave);
+  }, [studentAnswers]);
 
   // Loading state
   if (loading) {

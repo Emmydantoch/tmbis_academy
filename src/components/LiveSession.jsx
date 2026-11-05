@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import api from '../api/axios';
 
 export default function LiveSessions() {
@@ -6,7 +6,18 @@ export default function LiveSessions() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-  const [isLecturer, setIsLecturer] = useState(false);
+  const [isLecturer] = useState(() => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || 'null');
+      return (
+        user?.is_staff === true ||
+        user?.is_superuser === true ||
+        ['lecturer', 'teacher', 'instructor', 'admin'].includes(user?.role)
+      );
+    } catch {
+      return false;
+    }
+  });
 
   const [recordingSessionId, setRecordingSessionId] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -15,27 +26,7 @@ export default function LiveSessions() {
   const chunksRef = useRef([]);
   const streamRef = useRef(null);
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem('user');
-      if (raw) {
-        const u = JSON.parse(raw);
-        const role = u.role || '';
-        setIsLecturer(
-          u.is_staff === true ||
-          u.is_superuser === true ||
-          role === 'lecturer' ||
-          role === 'teacher' ||
-          role === 'instructor' ||
-          role === 'admin'
-        );
-      }
-    } catch {
-      setIsLecturer(false);
-    }
-  }, []);
-
-  const fetchSessions = async () => {
+  const fetchSessions = useCallback(async () => {
     try {
       const res = await api.get('live-sessions/');
       setSessions(res.data);
@@ -46,13 +37,16 @@ export default function LiveSessions() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchSessions();
+    const initialFetch = setTimeout(fetchSessions, 0);
     const interval = setInterval(fetchSessions, 60000);
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      clearTimeout(initialFetch);
+      clearInterval(interval);
+    };
+  }, [fetchSessions]);
 
   // Cleanup if user leaves page while recording
   useEffect(() => {
@@ -179,7 +173,7 @@ export default function LiveSessions() {
       const form = new FormData();
       form.append('file', blob, `session-${sessionId}.webm`);
 
-      const res = await api.post(`live-sessions/${sessionId}/recording/`, form, {
+      await api.post(`live-sessions/${sessionId}/recording/`, form, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 

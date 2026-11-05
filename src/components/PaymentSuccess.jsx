@@ -4,32 +4,46 @@ import api from '../api/axios';
 
 export default function PaymentSuccess() {
   const navigate = useNavigate();
-  const [message, setMessage] = useState('Verifying payment...');
+  const reference = new URLSearchParams(window.location.search).get('reference');
+  const [message, setMessage] = useState(
+    reference ? 'Verifying payment...' : 'No payment reference provided.'
+  );
   const [isVerified, setIsVerified] = useState(false);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const reference = params.get('reference');
     if (!reference) {
-      setMessage('No payment reference provided.');
       return;
     }
 
-    api.get('payments/verify/', { params: { reference } })
-      .then((res) => {
+    let active = true;
+    let redirectTimer;
+
+    const verifyPayment = async () => {
+      try {
+        const res = await api.get('payments/verify/', { params: { reference } });
+        if (!active) return;
+
         if (res.data?.status === 'success') {
           setIsVerified(true);
           setMessage('Payment confirmed! Redirecting to home...');
-          setTimeout(() => navigate('/'), 1500);
+          redirectTimer = setTimeout(() => navigate('/'), 1500);
         } else {
           setMessage('Payment not confirmed yet. Please wait a few moments.');
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error(err);
-        setMessage('Error verifying payment. Please contact support.');
-      });
-  }, [navigate]);
+        if (active) {
+          setMessage('Error verifying payment. Please contact support.');
+        }
+      }
+    };
+
+    verifyPayment();
+    return () => {
+      active = false;
+      clearTimeout(redirectTimer);
+    };
+  }, [navigate, reference]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">

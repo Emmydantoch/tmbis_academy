@@ -2,40 +2,37 @@ import { useEffect, useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 
 export default function Dashboard({ userRole = "student" }) {
-  const [userName, setUserName] = useState('Femi');
-  const [accessDeniedMsg, setAccessDeniedMsg] = useState(false);
-  const [needsPassword, setNeedsPassword] = useState(false);
-  const [currentRole, setCurrentRole] = useState(userRole);
+  const [storedUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || 'null');
+    } catch {
+      return null;
+    }
+  });
+  const userName = storedUser
+    ? [storedUser.first_name, storedUser.last_name].filter(Boolean).join(' ').trim() ||
+      storedUser.email?.split('@')[0] ||
+      'Femi'
+    : 'Femi';
   const location = useLocation();
+  const [dismissedAccessDeniedKey, setDismissedAccessDeniedKey] = useState(null);
+  const accessDeniedMsg =
+    Boolean(location.state?.accessDenied) &&
+    dismissedAccessDeniedKey !== location.key;
+  const needsPassword = storedUser?.has_usable_password === false;
+  const currentRole = ['lecturer', 'teacher', 'instructor'].includes(storedUser?.role)
+    ? 'lecturer'
+    : userRole;
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem('user');
-      if (raw) {
-        const u = JSON.parse(raw);
-        const name = [u.first_name, u.last_name].filter(Boolean).join(' ').trim();
-        if (name) setUserName(name);
-        else if (u.email) setUserName(u.email.split('@')[0]);
-        if (u.role === 'lecturer' || u.role === 'teacher' || u.role === 'instructor') {
-          setCurrentRole('lecturer');
-        }
+    if (!location.state?.accessDenied) return;
 
-        // Check if the student needs to set a password
-        if (u.has_usable_password === false) {
-          setNeedsPassword(true);
-        }
-      }
-    } catch (e) {
-      // ignore parse errors
-    }
-
-    // Show access-denied banner if redirected from a protected admin route
-    if (location.state?.accessDenied) {
-      setAccessDeniedMsg(true);
-      const t = setTimeout(() => setAccessDeniedMsg(false), 4000);
-      return () => clearTimeout(t);
-    }
-  }, [location.state]);
+    const timer = setTimeout(
+      () => setDismissedAccessDeniedKey(location.key),
+      4000
+    );
+    return () => clearTimeout(timer);
+  }, [location.key, location.state?.accessDenied]);
 
   return (
     <>

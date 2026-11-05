@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/axios';   // the axios instance we created
+import { DEPARTMENTS } from '../constants/departments';
 
 export default function AdmissionForm() {
     const navigate = useNavigate();
@@ -235,12 +236,12 @@ export default function AdmissionForm() {
                     onChange={handleChange}
                     className="w-full bg-surface-container-lowest border border-outline-variant rounded-2xl px-5 py-4 focus:border-primary focus:outline-none"
                     >
-                    <option value="">Select Program</option>
-                    <option value="computer-science">Computer Science</option>
-                    <option value="data-science">Data Science & AI</option>
-                    <option value="cybersecurity">Cybersecurity</option>
-                    <option value="business">Business Administration</option>
-                    <option value="research">Research Methods</option>
+                    <option value="">Select Department</option>
+                    {DEPARTMENTS.map((department) => (
+                      <option key={department} value={department}>
+                        {department}
+                      </option>
+                    ))}
                     </select>
                 </div>
 
@@ -357,17 +358,3 @@ export default function AdmissionForm() {
     </div>
     );
     }
-
-    function NavItem({ icon, label, active = false }) {
-    return (
-    <a
-        href="#"
-        className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
-        active ? 'bg-primary text-on-primary' : 'hover:bg-surface-container text-on-surface-variant'
-        }`}
-    >
-        <span className="material-symbols-outlined">{icon}</span>
-        <span>{label}</span>
-    </a>
-    );
-}
