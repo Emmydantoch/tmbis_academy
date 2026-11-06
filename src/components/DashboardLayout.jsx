@@ -3,6 +3,7 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import NotificationBell from './NotificationBell';
 import NavigationIcon from './NavigationIcon';
 import ProfileAvatarMenu from './ProfileAvatarMenu';
+import api from '../api/axios';
 
 export default function DashboardLayout() {
   const [profile, setProfile] = useState(() => {
@@ -13,6 +14,7 @@ export default function DashboardLayout() {
     }
   });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
   const fullName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ').trim();
@@ -28,6 +30,14 @@ export default function DashboardLayout() {
     profile?.role === 'lecturer' || profile?.role === 'teacher' || profile?.role === 'instructor'
       ? 'lecturer'
       : 'student';
+  const isPaymentRestricted = paymentStatus?.restricted === true;
+  const allowedRestrictedPaths = [
+    '/dashboard/payment',
+    '/dashboard/profile',
+    '/dashboard/change-password',
+  ];
+  const showPaymentRestriction =
+    isPaymentRestricted && !allowedRestrictedPaths.includes(location.pathname);
 
   useEffect(() => {
     // ── Auth Guard: redirect to login if no valid session exists ──
@@ -46,6 +56,35 @@ export default function DashboardLayout() {
       navigate('/login');
     }
   }, [navigate]);
+
+  useEffect(() => {
+    if (
+      userRole !== 'student' ||
+      isAdmin ||
+      !localStorage.getItem('access_token')
+    ) {
+      return undefined;
+    }
+
+    let active = true;
+    const refreshPaymentStatus = () => {
+      api.get('payments/status/')
+        .then(({ data }) => {
+          if (active) setPaymentStatus(data);
+        })
+        .catch((requestError) => {
+          console.error('Failed to refresh semester payment status:', requestError);
+        });
+    };
+
+    const initialFetch = window.setTimeout(refreshPaymentStatus, 0);
+    const intervalId = window.setInterval(refreshPaymentStatus, 60000);
+    return () => {
+      active = false;
+      window.clearTimeout(initialFetch);
+      window.clearInterval(intervalId);
+    };
+  }, [isAdmin, userRole]);
 
   useEffect(() => {
     const handleProfileUpdated = (event) => {
@@ -90,6 +129,9 @@ export default function DashboardLayout() {
   ];
 
   const navItems = userRole === 'lecturer' ? lecturerNavItems : studentNavItems;
+  const visibleNavItems = isPaymentRestricted
+    ? studentNavItems.filter((item) => item.exact || item.to === '/dashboard/payment')
+    : navItems;
 
   const isActive = (item) => {
     if (item.exact) {
@@ -135,7 +177,7 @@ export default function DashboardLayout() {
 
         {/* Navigation Links */}
         <div className="flex-1 flex flex-col gap-1 overflow-y-auto">
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <Link
               key={item.to}
               to={item.to}
@@ -240,7 +282,47 @@ export default function DashboardLayout() {
 
         {/* Child Page Content */}
         <main>
-          <Outlet />
+          {showPaymentRestriction ? (
+            <section className="mx-auto my-10 max-w-3xl rounded-3xl border border-error/40 bg-error/10 p-6 sm:p-10">
+              <div className="mb-4 flex items-center gap-3 text-error">
+                <span className="material-symbols-outlined text-3xl">lock</span>
+                <h2 className="text-2xl font-bold">Semester access restricted</h2>
+              </div>
+              <p className="mb-5 text-on-surface">
+                Complete both tuition installments and pay the semester exam fee
+                to restore your dashboard access.
+              </p>
+              {paymentStatus && (
+                <ul className="mb-6 space-y-2 text-on-surface-variant">
+                  <li>
+                    Tuition remaining:{' '}
+                    {`₦${Math.max(
+                      0,
+                      Number(paymentStatus.tuition_fee) -
+                        Number(paymentStatus.tuition_paid)
+                    ).toLocaleString('en-NG')}`}
+                  </li>
+                  <li>
+                    Exam fee: {paymentStatus.exam_fee_paid ? 'Paid' : '₦15,000 unpaid'}
+                  </li>
+                  {paymentStatus.first_exam_at && (
+                    <li>
+                      First exam: {paymentStatus.first_exam} —{' '}
+                      {new Date(paymentStatus.first_exam_at).toLocaleString()}
+                    </li>
+                  )}
+                </ul>
+              )}
+              <Link
+                to="/dashboard/payment"
+                className="inline-flex rounded-xl bg-primary px-5 py-3 font-semibold text-on-primary hover:opacity-90"
+              >
+                Make a payment
+              </Link>
+            </section>
+          ) : (
+            <Outlet />
+          )}
         </main>
       </div>
     </div>

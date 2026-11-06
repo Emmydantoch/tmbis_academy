@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../api/axios';
+import { STUDY_CENTERS } from '../constants/studyCenters';
 
 const editableFields = [
   'full_name',
@@ -197,7 +198,7 @@ export default function StudentProfile() {
               <ProfileField label="Course of study" htmlFor="profile-course">
                 <input id="profile-course" name="department" value={form.department} onChange={updateField} className={inputClassName} />
               </ProfileField>
-              <ProfileField label="Mode of entry" htmlFor="profile-entry-mode">
+              <ProfileField label="Programme type" htmlFor="profile-entry-mode">
                 <select id="profile-entry-mode" name="mode_of_entry" value={form.mode_of_entry} onChange={updateField} className={inputClassName}>
                   <option value="">Select mode of entry</option>
                   <option value="utme">UTME — 5 years</option>
@@ -220,8 +221,26 @@ export default function StudentProfile() {
               <ProfileField label="Current level" htmlFor="profile-level">
                 <input id="profile-level" name="level" value={form.level} onChange={updateField} className={inputClassName} />
               </ProfileField>
-              <ProfileField label="Study center" htmlFor="profile-study-center">
-                <input id="profile-study-center" name="study_center" value={form.study_center} onChange={updateField} className={inputClassName} />
+              <ProfileField label="Study centre" htmlFor="profile-study-center">
+                <select
+                  id="profile-study-center"
+                  name="study_center"
+                  value={form.study_center}
+                  onChange={updateField}
+                  className={inputClassName}
+                >
+                  <option value="">Select study centre</option>
+                  {form.study_center && !STUDY_CENTERS.includes(form.study_center) && (
+                    <option value={form.study_center}>
+                      {form.study_center} (existing value)
+                    </option>
+                  )}
+                  {STUDY_CENTERS.map((center) => (
+                    <option key={center} value={center}>
+                      {center}
+                    </option>
+                  ))}
+                </select>
               </ProfileField>
               <ProfileField label="Matric number (not editable)" htmlFor="profile-matric">
                 <input id="profile-matric" value={profile.matric_no || ''} readOnly className={`${inputClassName} cursor-not-allowed opacity-70`} />

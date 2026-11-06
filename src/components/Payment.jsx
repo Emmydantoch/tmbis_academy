@@ -1,18 +1,62 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import { EXAM_FEE, PROGRAMME_TYPES } from '../constants/programmeFees';
 
 export default function Payment() {
   const navigate = useNavigate();
-  const [amount, setAmount] = useState('4250');
-  const [paymentType, setPaymentType] = useState('Tuition Fee');
+  const location = useLocation();
+  const [storedUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || 'null');
+    } catch {
+      return null;
+    }
+  });
+  const [modeOfEntry, setModeOfEntry] = useState(
+    location.state?.mode_of_entry || storedUser?.mode_of_entry || ''
+  );
+  const [paymentType, setPaymentType] = useState('Tuition Installment 1/2');
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [step, setStep] = useState(1);
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(location.state?.email || storedUser?.email || '');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
   const [transferPending, setTransferPending] = useState(false);
   const [paymentReference, setPaymentReference] = useState(null);
+  const [paymentStatus, setPaymentStatus] = useState(null);
+  const [statusError, setStatusError] = useState('');
+  const selectedProgramme = PROGRAMME_TYPES.find(
+    (programme) => programme.value === modeOfEntry
+  );
+  const amount = paymentType === 'Exam Fee'
+    ? EXAM_FEE
+    : (selectedProgramme?.fee || 0) / 2;
+  const formatCurrency = (value) => `₦${value.toLocaleString('en-NG')}`;
+
+  useEffect(() => {
+    if (!localStorage.getItem('access_token')) return;
+
+    let active = true;
+    api.get('payments/status/')
+      .then(({ data }) => {
+        if (!active) return;
+        setPaymentStatus(data);
+        if (data.installment_1_paid && !data.installment_2_paid) {
+          setPaymentType('Tuition Installment 2/2');
+        } else if (data.tuition_complete && !data.exam_fee_paid) {
+          setPaymentType('Exam Fee');
+        }
+      })
+      .catch((requestError) => {
+        console.error('Unable to load semester payment status:', requestError);
+        if (active) setStatusError('Could not load your semester payment status.');
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('access_token');
@@ -45,7 +89,7 @@ export default function Payment() {
       try {
         const response = await api.post('payments/initialize/', {
           email: email,
-          amount: parseFloat(amount),
+          mode_of_entry: modeOfEntry,
           payment_type: paymentType,
           payment_method: paymentMethod,
         });
@@ -137,15 +181,19 @@ export default function Payment() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 bg-surface-container p-8 rounded-2xl border border-outline-variant">
               <p className="uppercase tracking-widest text-primary-fixed text-sm font-medium">
-                Current Balance
+                Semester Fees
               </p>
-              <h2 className="text-5xl font-bold text-primary mt-2 mb-4">₦4,250.00</h2>
+              <h2 className="text-5xl font-bold text-primary mt-2 mb-4">
+                {formatCurrency(selectedProgramme?.fee || 0)}
+              </h2>
               <div className="flex items-center gap-4">
-                <div className="bg-error-container/20 text-error px-4 py-2 rounded-full text-sm flex items-center gap-2">
+                <div className="bg-surface-container-high text-on-surface px-4 py-2 rounded-full text-sm flex items-center gap-2">
                   <span className="material-symbols-outlined">event_busy</span>
-                  Due in 14 days
+                  Tuition paid: {formatCurrency(Number(paymentStatus?.tuition_paid || 0))}
                 </div>
-                <p className="text-on-surface-variant">Last paid: ₦1,200 on Sep 12</p>
+                <p className="text-on-surface-variant">
+                  Exam fee: {paymentStatus?.exam_fee_paid ? 'Paid' : 'Unpaid'}
+                </p>
               </div>
             </div>
 
@@ -154,17 +202,25 @@ export default function Payment() {
               <div className="space-y-6">
                 <div className="flex justify-between">
                   <div>
-                    <p>Tuition Installment #3</p>
-                    <p className="text-sm text-on-surface-variant">Oct 15, 2026</p>
+                    <p>Programme tuition fee</p>
+                    <p className="text-sm text-on-surface-variant">
+                      {selectedProgramme?.label || 'Select your programme type'}
+                    </p>
                   </div>
-                  <p className="font-bold text-primary">₦2,125</p>
+                  <p className="font-bold text-primary">
+                    {formatCurrency(selectedProgramme?.fee || 0)}
+                  </p>
                 </div>
                 <div className="flex justify-between opacity-75">
                   <div>
-                    <p>Exam Fee - Semester</p>
-                    <p className="text-sm text-on-surface-variant">Nov 01, 2026</p>
+                    <p>Exam Fee</p>
+                    <p className="text-sm text-on-surface-variant">
+                      {paymentStatus?.first_exam_at
+                        ? new Date(paymentStatus.first_exam_at).toLocaleDateString()
+                        : 'Scheduled by the school'}
+                    </p>
                   </div>
-                  <p className="font-bold">₦450</p>
+                  <p className="font-bold">{formatCurrency(EXAM_FEE)}</p>
                 </div>
               </div>
             </div>
@@ -182,10 +238,25 @@ export default function Payment() {
                 </div>
               </div>
 
+              {paymentStatus?.tuition_complete && paymentStatus?.exam_fee_paid ? (
+                <div className="rounded-2xl border border-primary/30 bg-primary/10 p-6 text-on-surface">
+                  <h4 className="text-lg font-bold text-primary">
+                    All semester payments are complete
+                  </h4>
+                  <p className="mt-2 text-sm text-on-surface-variant">
+                    Your tuition and exam fee have both been paid.
+                  </p>
+                </div>
+              ) : (
               <form onSubmit={handlePayment} className="space-y-6">
                   {error && (
                     <div className="rounded-xl bg-error/10 border border-error/30 px-4 py-3 text-sm text-error">
                       {error}
+                    </div>
+                  )}
+                  {statusError && (
+                    <div role="alert" className="rounded-xl bg-error/10 border border-error/30 px-4 py-3 text-sm text-error">
+                      {statusError}
                     </div>
                   )}
 
@@ -203,18 +274,20 @@ export default function Payment() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm text-on-surface-variant mb-2">Amount (₦)</label>
-                      <div className="relative">
-                        <span className="absolute left-4 top-4 text-on-surface-variant">₦</span>
-                        <input
-                          type="number"
-                          value={amount}
-                          onChange={(e) => setAmount(e.target.value)}
-                          required
-                          min="100"
-                          className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl pl-8 py-4 focus:border-primary outline-none"
-                        />
-                      </div>
+                      <label className="block text-sm text-on-surface-variant mb-2">Programme type</label>
+                      <select
+                      value={modeOfEntry}
+                      onChange={(event) => setModeOfEntry(event.target.value)}
+                      required
+                      className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl px-4 py-4 focus:border-primary outline-none"
+                      >
+                      <option value="">Select programme type</option>
+                      {PROGRAMME_TYPES.map((programme) => (
+                        <option key={programme.value} value={programme.value}>
+                          {programme.label} — {formatCurrency(programme.fee)}
+                        </option>
+                      ))}
+                      </select>
                     </div>
 
                     <div>
@@ -224,13 +297,31 @@ export default function Payment() {
                         onChange={(e) => setPaymentType(e.target.value)}
                         className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl px-4 py-4 focus:border-primary outline-none"
                       >
-                        <option>Tuition Fee</option>
-                        <option>Exam Fee</option>
-                        <option>Full Semester Balance</option>
-                        <option>Custom Amount</option>
+                        <option
+                          value="Tuition Installment 1/2"
+                          disabled={Boolean(paymentStatus?.installment_1_paid)}
+                        >
+                          Tuition installment 1 of 2
+                        </option>
+                        <option
+                          value="Tuition Installment 2/2"
+                          disabled={
+                            !paymentStatus?.installment_1_paid ||
+                            Boolean(paymentStatus?.installment_2_paid)
+                          }
+                        >
+                          Tuition installment 2 of 2
+                        </option>
+                        <option value="Exam Fee" disabled={Boolean(paymentStatus?.exam_fee_paid)}>
+                          Exam Fee
+                        </option>
                       </select>
                     </div>
                   </div>
+                  <p className="rounded-xl bg-surface-container-lowest border border-outline-variant px-4 py-3 text-on-surface">
+                    Amount due: <strong>{formatCurrency(amount)}</strong>
+                    {paymentType !== 'Exam Fee' && ' (one half of tuition)'}
+                  </p>
 
                   <div className="rounded-2xl bg-surface-container-lowest border border-outline-variant p-4">
                     <p className="text-sm text-on-surface-variant">Step {step} of 2</p>
@@ -368,6 +459,7 @@ export default function Payment() {
                     Secured by Paystack • Cards And Bank Transfer
                   </p>
               </form>
+              )}
             </div>
 
             {/* Right Column */}

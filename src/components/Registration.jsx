@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../api/axios';
 import { DEPARTMENTS } from '../constants/departments';
+import { STUDY_CENTERS } from '../constants/studyCenters';
 
 const inputClassName = 'w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3 text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20';
 
@@ -64,7 +65,12 @@ export default function Registration() {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setSuccess(true);
-      setTimeout(() => navigate('/payment'), 1500);
+      setTimeout(() => navigate('/payment', {
+        state: {
+          email: form.email,
+          mode_of_entry: form.mode_of_entry,
+        },
+      }), 1500);
     } catch (requestError) {
       console.error(requestError);
       setError(requestError.response?.data || 'Registration failed');
@@ -214,7 +220,7 @@ export default function Registration() {
                 ))}
               </select>
             </Field>
-            <Field label="Mode of entry *" htmlFor="mode-of-entry">
+            <Field label="Programme type *" htmlFor="mode-of-entry">
               <select
                 id="mode-of-entry"
                 name="mode_of_entry"
@@ -242,6 +248,23 @@ export default function Registration() {
                 className={inputClassName}
               />
             </Field>
+            <Field label="Study centre *" htmlFor="study-center">
+              <select
+                id="study-center"
+                name="study_center"
+                value={form.study_center}
+                onChange={updateField}
+                required
+                className={inputClassName}
+              >
+                <option value="">Select study centre</option>
+                {STUDY_CENTERS.map((center) => (
+                  <option key={center} value={center}>
+                    {center}
+                  </option>
+                ))}
+              </select>
+            </Field>
             <Field label="Current level *" htmlFor="level">
               <input
                 id="level"
@@ -264,15 +287,6 @@ export default function Registration() {
                       id="matric-no"
                       name="matric_no"
                       value={form.matric_no}
-                      onChange={updateField}
-                      className={inputClassName}
-                    />
-                  </Field>
-                  <Field label="Study center" htmlFor="study-center">
-                    <input
-                      id="study-center"
-                      name="study_center"
-                      value={form.study_center}
                       onChange={updateField}
                       className={inputClassName}
                     />
