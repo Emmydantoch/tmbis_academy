@@ -18,6 +18,7 @@ function Field({ label, htmlFor, children, className = '' }) {
 }
 
 export default function Registration() {
+  const [activeTab, setActiveTab] = useState('student');
   const [form, setForm] = useState({
     email: '',
     full_name: '',
@@ -34,15 +35,31 @@ export default function Registration() {
     matric_no: '',
     study_center: '',
   });
+  const [lecturerForm, setLecturerForm] = useState({
+    full_name: '',
+    faculty: '',
+    department: '',
+    email: '',
+    contact_address: '',
+    phone_number: '',
+    lecturer_id: '',
+    lecturer_course_preferences: '',
+    lecturer_level_preferences: '',
+  });
   const [profilePicture, setProfilePicture] = useState(null);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
+  const [success, setSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const updateField = (event) => {
     const { name, value } = event.target;
     setForm((current) => ({ ...current, [name]: value }));
+  };
+
+  const updateLecturerField = (event) => {
+    const { name, value } = event.target;
+    setLecturerForm((current) => ({ ...current, [name]: value }));
   };
 
   const formatFullName = () => {
@@ -52,7 +69,7 @@ export default function Registration() {
     setForm((current) => ({ ...current, full_name: formattedName }));
   };
 
-  const handleSubmit = async (event) => {
+  const handleStudentSubmit = async (event) => {
     event.preventDefault();
     setError('');
     setSubmitting(true);
@@ -64,7 +81,7 @@ export default function Registration() {
       await api.post('auth/register/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      setSuccess(true);
+      setSuccess('student');
       setTimeout(() => navigate('/payment', {
         state: {
           email: form.email,
@@ -79,6 +96,39 @@ export default function Registration() {
     }
   };
 
+  const handleLecturerSubmit = async (event) => {
+    event.preventDefault();
+    setError('');
+    setSubmitting(true);
+    try {
+      await api.post('auth/register/lecturer/', lecturerForm);
+      setSuccess('lecturer');
+    } catch (requestError) {
+      console.error(requestError);
+      const data = requestError.response?.data;
+      setError(
+        typeof data === 'string'
+          ? data
+          : data?.detail ||
+            Object.entries(data || {})
+              .map(([field, messages]) => `${field.replaceAll('_', ' ')}: ${Array.isArray(messages) ? messages.join(' ') : messages}`)
+              .join(' ') ||
+            'Lecturer registration failed.'
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const formatLecturerName = () => {
+    const names = lecturerForm.full_name.trim().split(/\s+/).filter(Boolean);
+    if (!names.length) return;
+    setLecturerForm((current) => ({
+      ...current,
+      full_name: [names[0].toUpperCase(), ...names.slice(1).map((name) => name.toLowerCase())].join(' '),
+    }));
+  };
+
   return (
     <main className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-6xl rounded-3xl border border-outline-variant bg-surface-container p-5 shadow-xl sm:p-8 lg:p-10">
@@ -90,10 +140,39 @@ export default function Registration() {
           Back to Home
         </Link>
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-on-surface">Student Registration</h1>
+          <h1 className="text-3xl font-bold text-on-surface">
+            {activeTab === 'student' ? 'Registration' : 'Lecturer Registration'}
+          </h1>
           <p className="mt-2 text-sm text-on-surface-variant">
-            Enter your details below. Fields marked with * are required.
+            {activeTab === 'student'
+              ? 'Choose your registration type, then enter the required details.'
+              : 'Submit your lecturer details for administrator review.'}
           </p>
+        </div>
+
+        <div className="mb-8 grid grid-cols-2 gap-3" role="tablist" aria-label="Registration type">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'student'}
+            onClick={() => { setActiveTab('student'); setError(''); setSuccess(''); }}
+            className={`rounded-xl border px-4 py-3 font-semibold transition ${
+              activeTab === 'student' ? 'border-primary bg-primary/10 text-primary' : 'border-outline-variant text-on-surface-variant'
+            }`}
+          >
+            Student
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'lecturer'}
+            onClick={() => { setActiveTab('lecturer'); setError(''); setSuccess(''); }}
+            className={`rounded-xl border px-4 py-3 font-semibold transition ${
+              activeTab === 'lecturer' ? 'border-primary bg-primary/10 text-primary' : 'border-outline-variant text-on-surface-variant'
+            }`}
+          >
+            Lecturer
+          </button>
         </div>
 
         {error && (
@@ -104,10 +183,12 @@ export default function Registration() {
 
         {success ? (
           <div className="rounded-xl border border-primary/30 bg-primary/10 p-5 font-medium text-primary">
-            Details saved! Redirecting you to make payment...
+            {success === 'student'
+              ? 'Details saved! Redirecting you to make payment...'
+              : 'Your lecturer application has been submitted. An administrator will review it and email you a secure password setup link if approved.'}
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
+        ) : activeTab === 'student' ? (
+          <form onSubmit={handleStudentSubmit} className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
             <Field label="Full name (surname first) *" htmlFor="full-name">
               <input
                 id="full-name"
@@ -312,6 +393,121 @@ export default function Registration() {
               className="mt-2 w-full rounded-xl bg-primary px-5 py-3 font-semibold text-on-primary transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 md:col-span-2"
             >
               {submitting ? 'Submitting…' : 'Register'}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleLecturerSubmit} className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
+            <Field label="Full name (surname first) *" htmlFor="lecturer-full-name">
+              <input
+                id="lecturer-full-name"
+                name="full_name"
+                value={lecturerForm.full_name}
+                onChange={updateLecturerField}
+                onBlur={formatLecturerName}
+                autoComplete="name"
+                placeholder="SURNAME Firstname Othername"
+                required
+                className={inputClassName}
+              />
+            </Field>
+            <Field label="Email *" htmlFor="lecturer-email">
+              <input
+                id="lecturer-email"
+                name="email"
+                type="email"
+                value={lecturerForm.email}
+                onChange={updateLecturerField}
+                autoComplete="email"
+                required
+                className={inputClassName}
+              />
+            </Field>
+            <Field label="Faculty *" htmlFor="lecturer-faculty">
+              <input
+                id="lecturer-faculty"
+                name="faculty"
+                value={lecturerForm.faculty}
+                onChange={updateLecturerField}
+                required
+                className={inputClassName}
+              />
+            </Field>
+            <Field label="Department *" htmlFor="lecturer-department">
+              <select
+                id="lecturer-department"
+                name="department"
+                value={lecturerForm.department}
+                onChange={updateLecturerField}
+                required
+                className={inputClassName}
+              >
+                <option value="">Select department</option>
+                {DEPARTMENTS.map((department) => (
+                  <option key={department} value={department}>{department}</option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Contact address *" htmlFor="lecturer-address">
+              <textarea
+                id="lecturer-address"
+                name="contact_address"
+                value={lecturerForm.contact_address}
+                onChange={updateLecturerField}
+                autoComplete="street-address"
+                rows="2"
+                required
+                className={inputClassName}
+              />
+            </Field>
+            <Field label="Contact number *" htmlFor="lecturer-phone">
+              <input
+                id="lecturer-phone"
+                name="phone_number"
+                type="tel"
+                value={lecturerForm.phone_number}
+                onChange={updateLecturerField}
+                autoComplete="tel"
+                required
+                className={inputClassName}
+              />
+            </Field>
+            <Field label="Lecturer ID *" htmlFor="lecturer-id">
+              <input
+                id="lecturer-id"
+                name="lecturer_id"
+                value={lecturerForm.lecturer_id}
+                onChange={updateLecturerField}
+                required
+                className={inputClassName}
+              />
+            </Field>
+            <Field label="Courses you handle (optional)" htmlFor="lecturer-courses">
+              <textarea
+                id="lecturer-courses"
+                name="lecturer_course_preferences"
+                value={lecturerForm.lecturer_course_preferences}
+                onChange={updateLecturerField}
+                rows="2"
+                placeholder="For administrator reference; final assignments are set by the school."
+                className={inputClassName}
+              />
+            </Field>
+            <Field label="Levels you handle (optional)" htmlFor="lecturer-levels">
+              <input
+                id="lecturer-levels"
+                name="lecturer_level_preferences"
+                value={lecturerForm.lecturer_level_preferences}
+                onChange={updateLecturerField}
+                placeholder="e.g. 100, 200"
+                className={inputClassName}
+              />
+            </Field>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="mt-2 w-full rounded-xl bg-primary px-5 py-3 font-semibold text-on-primary transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 md:col-span-2"
+            >
+              {submitting ? 'Submitting…' : 'Submit lecturer application'}
             </button>
           </form>
         )}

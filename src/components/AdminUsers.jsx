@@ -3,6 +3,7 @@ import api from '../api/axios';
 import SidebarLayout from './SidebarLayout';
 
 export default function AdminUsers() {
+  const adminBackendUrl = new URL('/admin/', api.defaults.baseURL).toString();
   const [users, setUsers] = useState([]);
   const [summary, setSummary] = useState({ total_users: 0, active_students: 0, lecturers: 0, staff: 0, admins: 0 });
   const [searchTerm, setSearchTerm] = useState('');
@@ -58,6 +59,22 @@ export default function AdminUsers() {
     }
   };
 
+  const approveLecturer = async (user) => {
+    setError('');
+    setNotice('');
+    try {
+      const response = await api.post(`auth/admin-users/${user.id}/approve-lecturer/`);
+      setUsers((currentUsers) => currentUsers.map((currentUser) => (
+        currentUser.id === user.id
+          ? { ...currentUser, is_active: true, is_activated: true, status: 'active' }
+          : currentUser
+      )));
+      setNotice(response.data.detail);
+    } catch (requestError) {
+      setError(requestError.response?.data?.detail || 'Unable to approve this lecturer.');
+    }
+  };
+
   const filteredUsers = users.filter((user) =>
     [
       user.name,
@@ -102,7 +119,11 @@ export default function AdminUsers() {
     >
       <div className="p-6 md:p-10 max-w-7xl mx-auto">
         <div className="mb-6 rounded-2xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-on-surface-variant">
-          Verify each student against school records before approving. Approval activates the account and emails a one-time password setup link to the address shown.
+          Verify each application before approving. Approval sends a secure password setup link. Manage lecturers’ assigned courses and levels in the{' '}
+          <a href={adminBackendUrl} target="_blank" rel="noreferrer" className="font-semibold text-primary underline">
+            backend Django Admin
+          </a>
+          {' '}under Accounts → Lecturer teaching assignments.
         </div>
         {error && (
           <div className="mb-6 rounded-2xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">
@@ -130,7 +151,9 @@ export default function AdminUsers() {
               <tr className="border-b border-outline-variant">
                 <th className="text-left px-6 py-5 text-xs uppercase tracking-widest text-on-surface-variant">Name</th>
                 <th className="text-left px-6 py-5 text-xs uppercase tracking-widest text-on-surface-variant">Email</th>
+                <th className="text-left px-6 py-5 text-xs uppercase tracking-widest text-on-surface-variant">Faculty</th>
                 <th className="text-left px-6 py-5 text-xs uppercase tracking-widest text-on-surface-variant">Matric No.</th>
+                <th className="text-left px-6 py-5 text-xs uppercase tracking-widest text-on-surface-variant">Lecturer ID</th>
                 <th className="text-left px-6 py-5 text-xs uppercase tracking-widest text-on-surface-variant">Department</th>
                 <th className="text-left px-6 py-5 text-xs uppercase tracking-widest text-on-surface-variant">Level</th>
                 <th className="text-left px-6 py-5 text-xs uppercase tracking-widest text-on-surface-variant">Study Center</th>
@@ -146,7 +169,9 @@ export default function AdminUsers() {
                 <tr key={user.id} className="hover:bg-surface-container-high transition-colors">
                   <td className="px-6 py-5 font-medium text-on-surface">{user.name}</td>
                   <td className="px-6 py-5 text-on-surface-variant">{user.email}</td>
+                  <td className="px-6 py-5 text-on-surface-variant">{user.faculty || '—'}</td>
                   <td className="px-6 py-5 text-on-surface-variant">{user.matric_no || '—'}</td>
+                  <td className="px-6 py-5 text-on-surface-variant">{user.lecturer_id || '—'}</td>
                   <td className="px-6 py-5 text-on-surface-variant">{user.department || '—'}</td>
                   <td className="px-6 py-5 text-on-surface-variant">{user.level || '—'}</td>
                   <td className="px-6 py-5 text-on-surface-variant">{user.study_center || '—'}</td>
@@ -203,6 +228,19 @@ export default function AdminUsers() {
                         className="whitespace-nowrap rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-on-primary hover:opacity-90"
                       >
                         Approve &amp; send setup link
+                      </button>
+                    )}
+                    {user.role === 'lecturer' && !user.is_active && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (window.confirm(`Approve ${user.name} and email a password setup link to ${user.email}?`)) {
+                            approveLecturer(user);
+                          }
+                        }}
+                        className="whitespace-nowrap rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-on-primary hover:opacity-90"
+                      >
+                        Approve lecturer &amp; send setup link
                       </button>
                     )}
                   </td>

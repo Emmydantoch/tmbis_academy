@@ -129,6 +129,27 @@ export default function StudentProfile() {
 
           {loading ? (
             <p className="text-sm text-on-surface-variant">Loading your profile…</p>
+          ) : profile?.role === 'lecturer' ? (
+            <div>
+              <div className="mb-8">
+                <p className="text-sm uppercase tracking-widest text-primary">Lecturer account</p>
+                <h2 className="mt-2 text-2xl font-bold text-on-surface">Lecturer Profile</h2>
+                <p className="mt-2 text-sm text-on-surface-variant">
+                  Your teaching assignments are managed by the administration.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                <ProfileSummary label="Full name" value={profile.full_name} />
+                <ProfileSummary label="Email" value={profile.email} />
+                <ProfileSummary label="Faculty" value={profile.faculty} />
+                <ProfileSummary label="Department" value={profile.department} />
+                <ProfileSummary label="Lecturer ID" value={profile.lecturer_id} />
+                <ProfileSummary label="Contact number" value={profile.phone_number} />
+                <ProfileSummary label="Contact address" value={profile.contact_address} />
+                <ProfileSummary label="Courses noted on application" value={profile.lecturer_course_preferences} />
+                <ProfileSummary label="Levels noted on application" value={profile.lecturer_level_preferences} />
+              </div>
+            </div>
           ) : profile ? (
             <form onSubmit={saveProfile} className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
               <ProfileField label="Full name (surname first)" htmlFor="profile-full-name">
@@ -259,6 +280,15 @@ export default function StudentProfile() {
             <p className="text-sm text-on-surface-variant">Your profile could not be loaded.</p>
           )}
       </section>
+    </div>
+  );
+}
+
+function ProfileSummary({ label, value }) {
+  return (
+    <div className="rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3">
+      <p className="text-xs font-medium uppercase tracking-wide text-on-surface-variant">{label}</p>
+      <p className="mt-2 whitespace-pre-wrap text-on-surface">{value || 'Not provided'}</p>
     </div>
   );
 }

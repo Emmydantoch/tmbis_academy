@@ -61,7 +61,7 @@ export default function Login() {
 
       if (user.is_staff || user.is_superuser || user.role === 'admin') {
         navigate('/admin/dashboard');   // Admin Dashboard
-      } else if (justActivated) {
+      } else if (justActivated || user.must_change_password) {
         navigate('/dashboard/change-password');  // First login — set password
       } else {
         navigate('/dashboard');         // Student or lecturer dashboard

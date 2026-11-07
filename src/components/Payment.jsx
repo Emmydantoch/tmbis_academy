@@ -31,7 +31,9 @@ export default function Payment() {
   );
   const amount = paymentType === 'Exam Fee'
     ? EXAM_FEE
-    : (selectedProgramme?.fee || 0) / 2;
+    : paymentType === 'Tuition Fee'
+      ? selectedProgramme?.fee || 0
+      : (selectedProgramme?.fee || 0) / 2;
   const formatCurrency = (value) => `₦${value.toLocaleString('en-NG')}`;
 
   useEffect(() => {
@@ -298,6 +300,16 @@ export default function Payment() {
                         className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl px-4 py-4 focus:border-primary outline-none"
                       >
                         <option
+                          value="Tuition Fee"
+                          disabled={
+                            Boolean(paymentStatus?.tuition_complete) ||
+                            Boolean(paymentStatus?.installment_1_paid) ||
+                            Boolean(paymentStatus?.installment_2_paid)
+                          }
+                        >
+                          Full tuition payment
+                        </option>
+                        <option
                           value="Tuition Installment 1/2"
                           disabled={Boolean(paymentStatus?.installment_1_paid)}
                         >
@@ -320,7 +332,8 @@ export default function Payment() {
                   </div>
                   <p className="rounded-xl bg-surface-container-lowest border border-outline-variant px-4 py-3 text-on-surface">
                     Amount due: <strong>{formatCurrency(amount)}</strong>
-                    {paymentType !== 'Exam Fee' && ' (one half of tuition)'}
+                    {paymentType === 'Tuition Fee' && ' (full tuition fee)'}
+                    {paymentType.startsWith('Tuition Installment') && ' (one half of tuition)'}
                   </p>
 
                   <div className="rounded-2xl bg-surface-container-lowest border border-outline-variant p-4">
