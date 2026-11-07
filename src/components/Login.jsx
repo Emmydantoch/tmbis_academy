@@ -208,7 +208,7 @@ export default function Login() {
               </button>
             </form>
 
-            <div className="my-8 flex items-center gap-4">
+            {/* <div className="my-8 flex items-center gap-4">
               <div className="flex-1 border-t border-outline-variant"></div>
               <span className="font-body-sm text-on-surface-variant">OR</span>
               <div className="flex-1 border-t border-outline-variant"></div>
@@ -223,7 +223,7 @@ export default function Login() {
                 <span className="material-symbols-outlined">apple</span>
                 <span className="font-body-md">Apple</span>
               </button>
-            </div>
+            </div> */}
 
             <p className="mt-8 text-center font-body-md text-body-md text-on-surface-variant">
               New to TMBIS Academy?{' '}

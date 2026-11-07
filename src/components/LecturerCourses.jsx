@@ -4,6 +4,12 @@ import api from '../api/axios';
 export default function LecturerCourses() {
   const [assignments, setAssignments] = useState([]);
   const [error, setError] = useState('');
+  const groupedAssignments = assignments.reduce((groups, assignment) => {
+    const semester = assignment.semester_name || 'Other assignments';
+    if (!groups[semester]) groups[semester] = [];
+    groups[semester].push(assignment);
+    return groups;
+  }, {});
 
   useEffect(() => {
     let active = true;
@@ -35,19 +41,38 @@ export default function LecturerCourses() {
           No courses have been assigned yet. Please check back after your administrator updates your teaching assignments.
         </div>
       )}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {assignments.map((assignment) => (
-          <article key={assignment.id} className="bg-surface-container-lowest rounded-2xl border border-outline-variant p-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-sm text-primary font-semibold">Level {assignment.level}</p>
-                <h2 className="text-xl font-bold text-on-surface mt-2">{assignment.course_name}</h2>
-              </div>
-              <span className="material-symbols-outlined text-primary">school</span>
-            </div>
-          </article>
-        ))}
-      </div>
+      {Object.entries(groupedAssignments).map(([semester, semesterAssignments]) => (
+        <section key={semester} className="mb-10">
+          <h2 className="mb-4 text-xl font-bold text-primary">{semester}</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {semesterAssignments.map((assignment) => (
+              <article
+                key={`${assignment.course_code || 'legacy'}-${assignment.id}`}
+                className="bg-surface-container-lowest rounded-2xl border border-outline-variant p-6"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm text-primary font-semibold">
+                      {assignment.department ? `${assignment.department} · ` : ''}
+                      Level {assignment.level}
+                      {assignment.units ? ` · ${assignment.units} units` : ''}
+                    </p>
+                    {assignment.course_code && (
+                      <p className="mt-2 text-sm font-semibold text-on-surface-variant">
+                        {assignment.course_code}
+                      </p>
+                    )}
+                    <h3 className="text-xl font-bold text-on-surface mt-1">
+                      {assignment.course_name}
+                    </h3>
+                  </div>
+                  <span className="material-symbols-outlined text-primary">school</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }

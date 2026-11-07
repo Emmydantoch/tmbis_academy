@@ -18,6 +18,7 @@ import AdminDashboard from './components/AdminDashboard';
 import AdminPayments from './components/AdminPayments';
 import AdminUsers from './components/AdminUsers';
 import AdminCourses from './components/AdminCourses';
+import AdminAcademics from './components/AdminAcademics';
 import AdminReports from './components/AdminReports';
 import AdminSettings from './components/AdminSettings';
 import AdmissionForm from './components/AdmissionForm';
@@ -77,6 +78,7 @@ function App() {
         <Route path="/admin/dashboard" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>} />
         <Route path="/admin/users" element={<ProtectedAdminRoute><AdminUsers /></ProtectedAdminRoute>} />
         <Route path="/admin/courses" element={<ProtectedAdminRoute><AdminCourses /></ProtectedAdminRoute>} />
+        <Route path="/admin/academics" element={<ProtectedAdminRoute><AdminAcademics /></ProtectedAdminRoute>} />
         <Route path="/admin/payments" element={<ProtectedAdminRoute><AdminPayments /></ProtectedAdminRoute>} />
         <Route path="/admin/reports" element={<ProtectedAdminRoute><AdminReports /></ProtectedAdminRoute>} />
         <Route path="/admin/settings" element={<ProtectedAdminRoute><AdminSettings /></ProtectedAdminRoute>} />

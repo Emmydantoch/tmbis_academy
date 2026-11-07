@@ -33,6 +33,7 @@ export default function AdminCourses() {
     { icon: 'dashboard', label: 'Dashboard', to: '/admin/dashboard' },
     { icon: 'people', label: 'Users', to: '/admin/users' },
     { icon: 'school', label: 'Courses', to: '/admin/courses', active: true },
+    { icon: 'library_books', label: 'Academic Management', to: '/admin/academics' },
     { icon: 'account_balance_wallet', label: 'Payments', to: '/admin/payments' },
     { icon: 'assessment', label: 'Reports', to: '/admin/reports' },
   ];

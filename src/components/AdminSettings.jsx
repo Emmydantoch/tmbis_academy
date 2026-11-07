@@ -195,6 +195,7 @@ export default function AdminSettings() {
         { icon: 'dashboard', label: 'Dashboard', to: '/admin/dashboard' },
         { icon: 'people', label: 'Users', to: '/admin/users' },
         { icon: 'school', label: 'Courses', to: '/admin/courses' },
+        { icon: 'library_books', label: 'Academic Management', to: '/admin/academics' },
         { icon: 'settings', label: 'Settings', to: '/admin/settings', active: true },
     ];
 
