@@ -33,22 +33,24 @@ export default function AdminAcademics() {
   const [departments, setDepartments] = useState([]);
   const [semesters, setSemesters] = useState([]);
   const [levels, setLevels] = useState([]);
+  const [programmes, setProgrammes] = useState([]);
+  const [assignmentDepartments, setAssignmentDepartments] = useState([]);
   const [lecturers, setLecturers] = useState([]);
   const [allocations, setAllocations] = useState([]);
   const [courseFilters, setCourseFilters] = useState(emptyCatalogForm);
-  const [allocationFilters, setAllocationFilters] = useState({
-    department: '',
-    semester: '',
-    level: '',
-  });
   const [courseForm, setCourseForm] = useState(emptyCatalogForm);
   const [courseFile, setCourseFile] = useState(null);
+  const [importFile, setImportFile] = useState(null);
   const [editingCourseId, setEditingCourseId] = useState(null);
   const [selectedCourseId, setSelectedCourseId] = useState('');
   const [selectedLecturerId, setSelectedLecturerId] = useState('');
+  const [selectedProgramme, setSelectedProgramme] = useState('');
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState('');
+  const [courseSearch, setCourseSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [savingCourse, setSavingCourse] = useState(false);
   const [savingAllocation, setSavingAllocation] = useState(false);
+  const [importingCourses, setImportingCourses] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -64,6 +66,10 @@ export default function AdminAcademics() {
       setDepartments(catalogResponse.data.departments || []);
       setSemesters(catalogResponse.data.semesters || []);
       setLevels(catalogResponse.data.levels || []);
+      setProgrammes(catalogResponse.data.programmes || []);
+      setAssignmentDepartments(
+        catalogResponse.data.assignment_departments || [],
+      );
       setLecturers(lecturerResponse.data.lecturers || []);
       setAllocations(allocationResponse.data.allocations || []);
       setError('');
@@ -98,34 +104,17 @@ export default function AdminAcademics() {
     [courseFilters, courses],
   );
 
-  const allocationCourses = useMemo(
-    () =>
-      courses.filter(
-        (course) =>
-          (!allocationFilters.department ||
-            course.department === allocationFilters.department) &&
-          (!allocationFilters.semester ||
-            String(course.semester) === String(allocationFilters.semester)) &&
-          (!allocationFilters.level ||
-            course.level === allocationFilters.level),
-      ),
-    [allocationFilters, courses],
-  );
-
-  const visibleAllocations = useMemo(
-    () =>
-      allocations.filter(
-        (allocation) =>
-          (!allocationFilters.department ||
-            allocation.department === allocationFilters.department) &&
-          (!allocationFilters.semester ||
-            String(allocation.semester_id) ===
-              String(allocationFilters.semester)) &&
-          (!allocationFilters.level ||
-            allocation.level === allocationFilters.level),
-      ),
-    [allocationFilters, allocations],
-  );
+  const allocationCourses = useMemo(() => {
+    const query = courseSearch.trim().toLowerCase();
+    if (!query) return courses;
+    return courses.filter((course) =>
+      [
+        course.course_code,
+        course.title,
+        course.units == null ? '' : `${course.units} units`,
+      ].some((value) => value.toLowerCase().includes(query)),
+    );
+  }, [courseSearch, courses]);
 
   const updateForm = (event) => {
     const { name, value } = event.target;
@@ -141,7 +130,7 @@ export default function AdminAcademics() {
   const startEditingCourse = (course) => {
     setCourseForm({
       department: course.department,
-      semester: String(course.semester),
+      semester: course.semester ? String(course.semester) : '',
       level: course.level,
       course_code: course.course_code,
       title: course.title,
@@ -213,6 +202,34 @@ export default function AdminAcademics() {
     }
   };
 
+  const importCourses = async (event) => {
+    event.preventDefault();
+    if (!importFile) return;
+    setImportingCourses(true);
+    setError('');
+    setSuccess('');
+    const payload = new FormData();
+    payload.append('workbook', importFile);
+    try {
+      const response = await api.post(
+        'auth/admin-academic/courses/import/',
+        payload,
+        { headers: { 'Content-Type': 'multipart/form-data' } },
+      );
+      setSuccess(response.data.detail);
+      setImportFile(null);
+      await loadData();
+    } catch (requestError) {
+      console.error('Unable to import curriculum workbook:', requestError);
+      setError(
+        requestError.response?.data?.detail ||
+          'Unable to import the curriculum workbook.',
+      );
+    } finally {
+      setImportingCourses(false);
+    }
+  };
+
   const createAllocation = async (event) => {
     event.preventDefault();
     setSavingAllocation(true);
@@ -222,6 +239,8 @@ export default function AdminAcademics() {
       const response = await api.post('auth/admin-academic/allocations/', {
         lecturer_id: selectedLecturerId,
         course_id: selectedCourseId,
+        department_id: selectedDepartmentId,
+        programme: selectedProgramme,
       });
       setSuccess(response.data.detail);
       setSelectedCourseId('');
@@ -277,7 +296,7 @@ export default function AdminAcademics() {
           </h1>
           <p className="text-on-surface-variant mt-2">
             Maintain curriculum records, view lecturers, and allocate
-            semester-specific courses.
+            courses to lecturers by programme.
           </p>
         </div>
 
@@ -356,6 +375,10 @@ export default function AdminAcademics() {
                   form={courseForm}
                   onFormChange={updateForm}
                   onFileChange={setCourseFile}
+                  importFile={importFile}
+                  onImportFileChange={setImportFile}
+                  onImport={importCourses}
+                  importing={importingCourses}
                   onSubmit={saveCourse}
                   onReset={resetCourseForm}
                   onEdit={startEditingCourse}
@@ -382,24 +405,24 @@ export default function AdminAcademics() {
                 aria-labelledby="academic-tab-allocation"
               >
                 <CourseAllocation
-                  departments={departments}
-                  semesters={semesters}
-                  levels={levels}
+                  programmes={programmes}
+                  departments={assignmentDepartments}
                   lecturers={lecturers.filter((lecturer) => lecturer.is_approved)}
                   courses={allocationCourses}
-                  allocations={visibleAllocations}
-                  filters={allocationFilters}
-                  onFilterChange={(name, value) => {
-                    setAllocationFilters((current) => ({
-                      ...current,
-                      [name]: value,
-                    }));
+                  allocations={allocations}
+                  courseSearch={courseSearch}
+                  onCourseSearchChange={(value) => {
+                    setCourseSearch(value);
                     setSelectedCourseId('');
                   }}
                   selectedCourseId={selectedCourseId}
                   onCourseChange={setSelectedCourseId}
                   selectedLecturerId={selectedLecturerId}
                   onLecturerChange={setSelectedLecturerId}
+                  selectedProgramme={selectedProgramme}
+                  onProgrammeChange={setSelectedProgramme}
+                  selectedDepartmentId={selectedDepartmentId}
+                  onDepartmentChange={setSelectedDepartmentId}
                   onSubmit={createAllocation}
                   onRemove={removeAllocation}
                   saving={savingAllocation}
@@ -423,6 +446,10 @@ function CourseRepository({
   form,
   onFormChange,
   onFileChange,
+  importFile,
+  onImportFileChange,
+  onImport,
+  importing,
   onSubmit,
   onReset,
   onEdit,
@@ -440,14 +467,14 @@ function CourseRepository({
         <h2 className="text-xl font-bold text-primary">
           {editing ? 'Edit curriculum course' : 'Add course to curriculum'}
         </h2>
-        <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           <SelectField
             label="Department"
             name="department"
             value={form.department}
             options={departments}
             onChange={onFormChange}
-            required
+            placeholder="No department specified"
           />
           <SelectField
             label="Semester"
@@ -458,7 +485,7 @@ function CourseRepository({
               label: semester.name,
             }))}
             onChange={onFormChange}
-            required
+            placeholder="No specific semester"
           />
           <SelectField
             label="Level"
@@ -466,7 +493,7 @@ function CourseRepository({
             value={form.level}
             options={levels}
             onChange={onFormChange}
-            required
+            placeholder="No specific level"
           />
           <TextField
             label="Course code"
@@ -518,6 +545,38 @@ function CourseRepository({
               Cancel edit
             </button>
           )}
+        </div>
+      </form>
+
+      <form
+        onSubmit={onImport}
+        className="rounded-2xl border border-outline-variant bg-surface-container p-5"
+      >
+        <h2 className="font-bold text-primary">Import course workbook</h2>
+        <p className="mt-2 text-sm text-on-surface-variant">
+          Courses are imported as shared catalogue entries. Department and
+          lecturer lists in the workbook are not linked to individual courses.
+        </p>
+        <div className="mt-4 flex flex-wrap items-end gap-3">
+          <label className="flex min-w-64 flex-1 flex-col gap-2 text-sm text-on-surface-variant">
+            Excel workbook (.xlsx, max 10 MB)
+            <input
+              key={importFile?.name || 'empty'}
+              type="file"
+              accept=".xlsx"
+              onChange={(event) =>
+                onImportFileChange(event.target.files?.[0] || null)
+              }
+              className="rounded-xl border border-outline-variant bg-surface-container-lowest px-3 py-2"
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={!importFile || importing}
+            className="rounded-xl bg-primary px-5 py-3 font-semibold text-on-primary disabled:opacity-60"
+          >
+            {importing ? 'Importing…' : 'Import courses'}
+          </button>
         </div>
       </form>
 
@@ -578,10 +637,11 @@ function CourseRepository({
                   </strong>
                 </td>
                 <td className="px-5 py-4 text-sm text-on-surface-variant">
-                  {course.department} · {course.level} Level
+                  {course.department || 'Department not specified'}
+                  {course.level ? ` · ${course.level} Level` : ''}
                 </td>
                 <td className="px-5 py-4 text-sm text-on-surface-variant">
-                  {course.semester_name}
+                  {course.semester_name || 'Shared catalogue'}
                 </td>
                 <td className="px-5 py-4 text-sm text-on-surface-variant">
                   {course.units || '—'}
@@ -695,18 +755,21 @@ function LecturerDirectory({ lecturers }) {
 }
 
 function CourseAllocation({
+  programmes,
   departments,
-  semesters,
-  levels,
   lecturers,
   courses,
   allocations,
-  filters,
-  onFilterChange,
+  courseSearch,
+  onCourseSearchChange,
   selectedCourseId,
   onCourseChange,
   selectedLecturerId,
   onLecturerChange,
+  selectedProgramme,
+  onProgrammeChange,
+  selectedDepartmentId,
+  onDepartmentChange,
   onSubmit,
   onRemove,
   saving,
@@ -721,47 +784,41 @@ function CourseAllocation({
           Allocate courses to lecturers
         </h2>
         <p className="mt-2 text-sm text-on-surface-variant">
-          Choose a department, semester, and level to restrict the course list.
-          Only approved lecturers can be assigned courses.
+          Select a department, approved lecturer, course, and programme. The
+          assignment will appear on the lecturer’s course dashboard.
         </p>
-        <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <label className="flex flex-col gap-2 text-sm text-on-surface-variant">
+            Find a course
+            <input
+              type="search"
+              value={courseSearch}
+              onChange={(event) => onCourseSearchChange(event.target.value)}
+              placeholder="Search by code, title, or units"
+              className="rounded-xl border border-outline-variant bg-surface-container-lowest px-3 py-3 text-on-surface"
+            />
+          </label>
           <SelectField
             label="Department"
             name="department"
-            value={filters.department}
-            options={departments}
-            onChange={(event) =>
-              onFilterChange(event.target.name, event.target.value)
-            }
-          />
-          <SelectField
-            label="Semester"
-            name="semester"
-            value={filters.semester}
-            options={semesters.map((semester) => ({
-              value: String(semester.id),
-              label: semester.name,
+            value={selectedDepartmentId}
+            options={departments.map((department) => ({
+              value: String(department.value),
+              label: department.label,
             }))}
-            onChange={(event) =>
-              onFilterChange(event.target.name, event.target.value)
-            }
+            onChange={(event) => onDepartmentChange(event.target.value)}
+            required
+            disabled={departments.length === 0}
           />
           <SelectField
-            label="Level"
-            name="level"
-            value={filters.level}
-            options={levels}
-            onChange={(event) =>
-              onFilterChange(event.target.name, event.target.value)
-            }
-          />
-          <SelectField
-            label="Curriculum course"
+            label="Course"
             name="course"
             value={selectedCourseId}
             options={courses.map((course) => ({
               value: String(course.id),
-              label: `${course.course_code} · ${course.title} (${course.level} Level)`,
+              label: `${course.course_code} · ${course.title}${
+                course.units == null ? '' : ` · ${course.units} units`
+              }`,
             }))}
             onChange={(event) => onCourseChange(event.target.value)}
             required
@@ -781,11 +838,21 @@ function CourseAllocation({
             required
             disabled={lecturers.length === 0}
           />
+          <SelectField
+            label="Programme"
+            name="programme"
+            value={selectedProgramme}
+            options={programmes}
+            onChange={(event) => onProgrammeChange(event.target.value)}
+            required
+            disabled={programmes.length === 0}
+          />
         </div>
         {courses.length === 0 && (
           <p className="mt-3 text-sm text-warning">
-            There are no catalog courses matching the selected filters. Add
-            courses in the Curriculum Repository first.
+            {courseSearch
+              ? 'No courses match this search. Try another course code, title, or unit count.'
+              : 'No courses are available. Add or import courses in the Curriculum Repository first.'}
           </p>
         )}
         {lecturers.length === 0 && (
@@ -793,9 +860,20 @@ function CourseAllocation({
             No approved lecturers are available for assignment.
           </p>
         )}
+        {departments.length === 0 && (
+          <p className="mt-3 text-sm text-warning">
+            Import the workbook to populate the department list.
+          </p>
+        )}
         <button
           type="submit"
-          disabled={saving || courses.length === 0 || lecturers.length === 0}
+          disabled={
+            saving ||
+            courses.length === 0 ||
+            lecturers.length === 0 ||
+            departments.length === 0 ||
+            programmes.length === 0
+          }
           className="mt-5 rounded-xl bg-primary px-5 py-3 font-semibold text-on-primary disabled:opacity-60"
         >
           {saving ? 'Allocating…' : 'Allocate course'}
@@ -803,13 +881,14 @@ function CourseAllocation({
       </form>
 
       <div className="overflow-x-auto rounded-2xl border border-outline-variant bg-surface-container">
-        <table className="w-full min-w-[820px] text-left">
+        <table className="w-full min-w-[1040px] text-left">
           <thead className="border-b border-outline-variant text-xs uppercase tracking-wide text-on-surface-variant">
             <tr>
               <th className="px-5 py-4">Course</th>
               <th className="px-5 py-4">Department / level</th>
               <th className="px-5 py-4">Semester</th>
               <th className="px-5 py-4">Lecturer</th>
+              <th className="px-5 py-4">Programme</th>
               <th className="px-5 py-4">Action</th>
             </tr>
           </thead>
@@ -823,12 +902,14 @@ function CourseAllocation({
                   </span>
                 </td>
                 <td className="px-5 py-4 text-sm">
-                  {allocation.department} · {allocation.level} Level
+                  {allocation.department || 'Shared course'}
+                  {allocation.level ? ` · ${allocation.level} Level` : ''}
                 </td>
                 <td className="px-5 py-4 text-sm">
-                  {allocation.semester_name}
+                  {allocation.semester_name || '—'}
                 </td>
                 <td className="px-5 py-4">{allocation.lecturer_name}</td>
+                <td className="px-5 py-4">{allocation.programme_name}</td>
                 <td className="px-5 py-4">
                   <button
                     type="button"
@@ -843,10 +924,10 @@ function CourseAllocation({
             {allocations.length === 0 && (
               <tr>
                 <td
-                  colSpan="5"
+                  colSpan="6"
                   className="px-5 py-10 text-center text-on-surface-variant"
                 >
-                  No allocations match these filters.
+                  No course allocations have been made yet.
                 </td>
               </tr>
             )}
@@ -865,8 +946,10 @@ function SelectField({
   onChange,
   required = false,
   disabled = false,
+  placeholder,
 }) {
-  const placeholder = required ? 'Select...' : 'All';
+  const optionPlaceholder =
+    placeholder || (required ? 'Select...' : 'All');
   return (
     <label className="flex flex-col gap-2 text-sm text-on-surface-variant">
       {label}
@@ -878,7 +961,7 @@ function SelectField({
         disabled={disabled}
         className="rounded-xl border border-outline-variant bg-surface-container-lowest px-3 py-3 text-on-surface disabled:opacity-60"
       >
-        <option value="">{placeholder}</option>
+        <option value="">{optionPlaceholder}</option>
         {options.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}

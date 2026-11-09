@@ -440,7 +440,7 @@ export default function Payment() {
                       <div className="grid gap-3 text-sm text-on-surface">
                         <div className="rounded-2xl bg-surface-container p-4 border border-outline-variant">
                           <p className="font-semibold">Bank Name</p>
-                          <p>First Bank</p>
+                          <p>Sterling Bank</p>
                         </div>
                         <div className="rounded-2xl bg-surface-container p-4 border border-outline-variant">
                           <p className="font-semibold">Account Name</p>
@@ -448,7 +448,7 @@ export default function Payment() {
                         </div>
                         <div className="rounded-2xl bg-surface-container p-4 border border-outline-variant">
                           <p className="font-semibold">Account Number</p>
-                          <p>0123456789</p>
+                          <p>0148535902</p>
                         </div>
                         <div className="rounded-2xl bg-surface-container p-4 border border-outline-variant">
                           <p className="font-semibold">Reference</p>

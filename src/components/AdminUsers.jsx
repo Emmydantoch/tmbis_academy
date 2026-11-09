@@ -3,7 +3,6 @@ import api from '../api/axios';
 import SidebarLayout from './SidebarLayout';
 
 export default function AdminUsers() {
-  const adminBackendUrl = new URL('/admin/', api.defaults.baseURL).toString();
   const [users, setUsers] = useState([]);
   const [summary, setSummary] = useState({ total_users: 0, active_students: 0, lecturers: 0, staff: 0, admins: 0 });
   const [searchTerm, setSearchTerm] = useState('');
@@ -120,11 +119,11 @@ export default function AdminUsers() {
     >
       <div className="p-6 md:p-10 max-w-7xl mx-auto">
         <div className="mb-6 rounded-2xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-on-surface-variant">
-          Verify each application before approving. Approval sends a secure password setup link. Manage lecturers’ assigned courses and levels in the{' '}
-          <a href={adminBackendUrl} target="_blank" rel="noreferrer" className="font-semibold text-primary underline">
-            backend Django Admin
+          Verify each application before approving. Approval sends a secure password setup link. Manage lecturer course and programme assignments in{' '}
+          <a href="/admin/academics" className="font-semibold text-primary underline">
+            Academic Management
           </a>
-          {' '}under Accounts → Lecturer teaching assignments.
+          .
         </div>
         {error && (
           <div className="mb-6 rounded-2xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">

@@ -5,9 +5,11 @@ export default function LecturerCourses() {
   const [assignments, setAssignments] = useState([]);
   const [error, setError] = useState('');
   const groupedAssignments = assignments.reduce((groups, assignment) => {
-    const semester = assignment.semester_name || 'Other assignments';
-    if (!groups[semester]) groups[semester] = [];
-    groups[semester].push(assignment);
+    const group = assignment.semester_name
+      || assignment.programme_name
+      || 'Other assignments';
+    if (!groups[group]) groups[group] = [];
+    groups[group].push(assignment);
     return groups;
   }, {});
 
@@ -53,9 +55,14 @@ export default function LecturerCourses() {
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-sm text-primary font-semibold">
-                      {assignment.department ? `${assignment.department} · ` : ''}
-                      Level {assignment.level}
-                      {assignment.units ? ` · ${assignment.units} units` : ''}
+                      {[
+                        assignment.department,
+                        assignment.level ? `Level ${assignment.level}` : '',
+                        assignment.units ? `${assignment.units} units` : '',
+                      ].filter(Boolean).join(' · ') || 'Shared catalogue course'}
+                    </p>
+                    <p className="mt-1 text-xs text-on-surface-variant">
+                      {assignment.programme_name || 'Programme not specified'}
                     </p>
                     {assignment.course_code && (
                       <p className="mt-2 text-sm font-semibold text-on-surface-variant">
