@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
+import api from '../api/axios';
 
 export default function Dashboard({ userRole = "student" }) {
   const [storedUser] = useState(() => {
@@ -15,6 +16,9 @@ export default function Dashboard({ userRole = "student" }) {
       'Femi'
     : 'Femi';
   const location = useLocation();
+  const [courses, setCourses] = useState([]);
+  const [coursesLoading, setCoursesLoading] = useState(true);
+  const [coursesError, setCoursesError] = useState('');
   const [dismissedAccessDeniedKey, setDismissedAccessDeniedKey] = useState(null);
   const accessDeniedMsg =
     Boolean(location.state?.accessDenied) &&
@@ -23,6 +27,27 @@ export default function Dashboard({ userRole = "student" }) {
   const currentRole = ['lecturer', 'teacher', 'instructor'].includes(storedUser?.role)
     ? 'lecturer'
     : userRole;
+
+  useEffect(() => {
+    if (currentRole !== 'student') return undefined;
+
+    let active = true;
+    api.get('auth/student/courses/')
+      .then(({ data }) => {
+        if (active) setCourses(data.courses || []);
+      })
+      .catch((requestError) => {
+        console.error('Unable to load student courses:', requestError);
+        if (active) setCoursesError('Unable to load your courses right now.');
+      })
+      .finally(() => {
+        if (active) setCoursesLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [currentRole]);
 
   useEffect(() => {
     if (!location.state?.accessDenied) return;
@@ -72,7 +97,7 @@ export default function Dashboard({ userRole = "student" }) {
           </h2>
           <p className="text-on-surface-variant mt-1">
             {currentRole === "student"
-              ? "You have 2 upcoming assignments and 1 live session today." 
+              ? "Your courses are matched to your programme, department, level, and current semester."
               : "You have 3 classes and 47 students today."}
           </p>
         </div>
@@ -84,33 +109,71 @@ export default function Dashboard({ userRole = "student" }) {
               <h3 className="font-headline-sm text-xl text-on-surface">
                 {currentRole === "student" ? "Active Courses" : "My Active Classes"}
               </h3>
-              <a href="#" className="text-primary hover:underline">View All</a>
-            </div>
+                {currentRole === "lecturer" && (
+                  <Link to="/dashboard/my-courses" className="text-primary hover:underline">
+                    View All
+                  </Link>
+                )}
+              </div>
 
-            {/* Course Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Example Course Card */}
-              <div className="bg-surface-container-lowest rounded-2xl overflow-hidden border border-outline-variant hover:border-primary transition-all">
-                <div className="h-40 bg-cover bg-center" 
-                    style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/...')" }}>
-                </div>
-                <div className="p-5">
-                  <span className="text-xs font-medium bg-primary/10 text-primary px-3 py-1 rounded-full">
-                    {currentRole === "student" ? "Design" : "Teaching Assignment"}
-                  </span>
-                  <h4 className="mt-3 font-semibold text-on-surface">
-                    {currentRole === "student" ? "Introduction to UX Design" : "My Teaching Workspace"}
-                  </h4>
-                  <p className="text-sm text-on-surface-variant mt-1">
-                    {currentRole === "student" ? "Module 3 • 45% Complete" : "Manage classes, sessions, and grades"}
+              {currentRole === 'student' ? (
+                coursesLoading ? (
+                  <p className="text-on-surface-variant">Loading your courses…</p>
+                ) : coursesError ? (
+                  <p role="alert" className="rounded-xl bg-error/10 px-4 py-3 text-error">
+                    {coursesError}
                   </p>
-                  <div className="mt-4 h-2 bg-surface-container-high rounded-full overflow-hidden">
-                    <div className="h-full w-[45%] bg-primary rounded-full"></div>
+                ) : courses.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-outline-variant p-8 text-center text-on-surface-variant">
+                    No courses are assigned for your programme, department, level, and current semester yet.
+                    Check that your profile details are correct or contact the administration.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {courses.map((course) => (
+                      <article
+                        key={course.id}
+                        className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 hover:border-primary transition-all"
+                      >
+                        <p className="text-sm font-semibold text-primary">
+                          {course.course_code}
+                        </p>
+                        <h4 className="mt-2 text-lg font-semibold text-on-surface">
+                          {course.title}
+                        </h4>
+                        <p className="mt-2 text-sm text-on-surface-variant">
+                          {[course.department, `Level ${course.level}`, course.units ? `${course.units} units` : '']
+                            .filter(Boolean)
+                            .join(' · ')}
+                        </p>
+                        {course.semester_name && (
+                          <p className="mt-1 text-sm text-on-surface-variant">
+                            {course.semester_name}
+                          </p>
+                        )}
+                      </article>
+                    ))}
+                  </div>
+                )
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-6">
+                    <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                      Teaching Assignment
+                    </span>
+                    <h4 className="mt-3 font-semibold text-on-surface">
+                      My Teaching Workspace
+                    </h4>
+                    <p className="mt-1 text-sm text-on-surface-variant">
+                      Manage classes, sessions, and grades.
+                    </p>
+                    <Link to="/dashboard/my-courses" className="mt-4 inline-block text-primary hover:underline">
+                      View my courses
+                    </Link>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
-          </div>
 
           {/* Sidebar Widgets */}
           <div className="lg:col-span-4 space-y-6">
