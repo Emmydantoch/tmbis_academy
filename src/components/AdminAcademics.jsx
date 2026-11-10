@@ -41,6 +41,7 @@ export default function AdminAcademics() {
   const [courseForm, setCourseForm] = useState(emptyCatalogForm);
   const [courseFile, setCourseFile] = useState(null);
   const [importFile, setImportFile] = useState(null);
+  const [importSemesterId, setImportSemesterId] = useState('');
   const [editingCourseId, setEditingCourseId] = useState(null);
   const [selectedCourseId, setSelectedCourseId] = useState('');
   const [selectedLecturerId, setSelectedLecturerId] = useState('');
@@ -210,6 +211,7 @@ export default function AdminAcademics() {
     setSuccess('');
     const payload = new FormData();
     payload.append('workbook', importFile);
+    if (importSemesterId) payload.append('semester', importSemesterId);
     try {
       const response = await api.post(
         'auth/admin-academic/courses/import/',
@@ -218,6 +220,7 @@ export default function AdminAcademics() {
       );
       setSuccess(response.data.detail);
       setImportFile(null);
+      setImportSemesterId('');
       await loadData();
     } catch (requestError) {
       console.error('Unable to import curriculum workbook:', requestError);
@@ -376,6 +379,8 @@ export default function AdminAcademics() {
                   onFormChange={updateForm}
                   onFileChange={setCourseFile}
                   importFile={importFile}
+                  importSemesterId={importSemesterId}
+                  onImportSemesterChange={setImportSemesterId}
                   onImportFileChange={setImportFile}
                   onImport={importCourses}
                   importing={importingCourses}
@@ -447,6 +452,8 @@ function CourseRepository({
   onFormChange,
   onFileChange,
   importFile,
+  importSemesterId,
+  onImportSemesterChange,
   onImportFileChange,
   onImport,
   importing,
@@ -554,8 +561,8 @@ function CourseRepository({
       >
         <h2 className="font-bold text-primary">Import course workbook</h2>
         <p className="mt-2 text-sm text-on-surface-variant">
-          Courses are imported as shared catalogue entries. Department and
-          lecturer lists in the workbook are not linked to individual courses.
+          Allocation workbooks import courses by department and level. Select
+          their semester below; lecturer names are not assigned automatically.
         </p>
         <div className="mt-4 flex flex-wrap items-end gap-3">
           <label className="flex min-w-64 flex-1 flex-col gap-2 text-sm text-on-surface-variant">
@@ -570,6 +577,17 @@ function CourseRepository({
               className="rounded-xl border border-outline-variant bg-surface-container-lowest px-3 py-2"
             />
           </label>
+          <SelectField
+            label="Semester (for allocation workbooks)"
+            name="importSemester"
+            value={importSemesterId}
+            options={semesters.map((semester) => ({
+              value: String(semester.id),
+              label: semester.name,
+            }))}
+            onChange={(event) => onImportSemesterChange(event.target.value)}
+            placeholder="Select semester"
+          />
           <button
             type="submit"
             disabled={!importFile || importing}
