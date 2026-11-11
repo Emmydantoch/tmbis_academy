@@ -97,7 +97,7 @@ export default function Dashboard({ userRole = "student" }) {
           </h2>
           <p className="text-on-surface-variant mt-1">
             {currentRole === "student"
-              ? "Your courses are matched to your programme, department, level, and current semester."
+              ? "Your courses are matched to your department, level, and current semester. When your programme is set, courses are matched to it too."
               : "You have 3 classes and 47 students today."}
           </p>
         </div>
@@ -125,7 +125,7 @@ export default function Dashboard({ userRole = "student" }) {
                   </p>
                 ) : courses.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-outline-variant p-8 text-center text-on-surface-variant">
-                    No courses are assigned for your programme, department, level, and current semester yet.
+                    No courses are assigned for your department, level, and current semester yet.
                     Check that your profile details are correct or contact the administration.
                   </div>
                 ) : (
@@ -169,6 +169,9 @@ export default function Dashboard({ userRole = "student" }) {
                     </p>
                     <Link to="/dashboard/my-courses" className="mt-4 inline-block text-primary hover:underline">
                       View my courses
+                    </Link>
+                    <Link to="/dashboard/live-session" className="mt-4 ml-5 inline-block text-primary hover:underline">
+                      Schedule a live session
                     </Link>
                   </div>
                 </div>

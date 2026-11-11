@@ -6,6 +6,15 @@ export default function LiveSessions() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [scheduling, setScheduling] = useState(false);
+  const [scheduleForm, setScheduleForm] = useState({
+    title: '',
+    description: '',
+    meeting_link: '',
+    target_level: '',
+    start_time: '',
+    end_time: '',
+  });
   const [isLecturer] = useState(() => {
     try {
       const user = JSON.parse(localStorage.getItem('user') || 'null');
@@ -18,7 +27,6 @@ export default function LiveSessions() {
       return false;
     }
   });
-
   const [recordingSessionId, setRecordingSessionId] = useState(null);
   const [uploading, setUploading] = useState(false);
 
@@ -38,6 +46,46 @@ export default function LiveSessions() {
       setLoading(false);
     }
   }, []);
+
+  const handleScheduleChange = (event) => {
+    const { name, value } = event.target;
+    setScheduleForm((current) => ({ ...current, [name]: value }));
+  };
+
+  const scheduleSession = async (event) => {
+    event.preventDefault();
+    setError('');
+    setMessage('');
+    setScheduling(true);
+    try {
+      await api.post('live-sessions/', {
+        ...scheduleForm,
+        start_time: new Date(scheduleForm.start_time).toISOString(),
+        end_time: new Date(scheduleForm.end_time).toISOString(),
+      });
+      setScheduleForm({
+        title: '',
+        description: '',
+        meeting_link: '',
+        target_level: '',
+        start_time: '',
+        end_time: '',
+      });
+      setMessage('Live session scheduled. Students in the selected level have been notified.');
+      await fetchSessions();
+    } catch (requestError) {
+      console.error('Unable to schedule live session:', requestError);
+      const responseData = requestError.response?.data;
+      const fieldError = responseData?.target_level || responseData?.end_time;
+      setError(
+        responseData?.detail ||
+        (Array.isArray(fieldError) ? fieldError[0] : fieldError) ||
+        'Could not schedule the live session. Check the details and try again.'
+      );
+    } finally {
+      setScheduling(false);
+    }
+  };
 
   useEffect(() => {
     const initialFetch = setTimeout(fetchSessions, 0);
@@ -197,9 +245,102 @@ export default function LiveSessions() {
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-primary">Live Sessions</h2>
         <p className="text-on-surface-variant mt-1">
-          Join live classes and catch up on recordings.
+          {isLecturer
+            ? 'Schedule level-specific classes, manage sessions, and upload recordings.'
+            : 'Join live classes and catch up on recordings.'}
         </p>
       </div>
+
+      {isLecturer && (
+        <form
+          onSubmit={scheduleSession}
+          className="mb-8 rounded-2xl border border-outline-variant bg-surface-container p-6"
+        >
+          <h3 className="text-xl font-bold text-on-surface">Schedule a live session</h3>
+          <p className="mt-1 text-sm text-on-surface-variant">
+            Only students in the selected level will see the session or its join link.
+          </p>
+          <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+            <label className="text-sm font-medium text-on-surface">
+              Session title
+              <input
+                required
+                name="title"
+                value={scheduleForm.title}
+                onChange={handleScheduleChange}
+                maxLength={200}
+                className="mt-1 w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3"
+              />
+            </label>
+            <label className="text-sm font-medium text-on-surface">
+              Student level
+              <select
+                required
+                name="target_level"
+                value={scheduleForm.target_level}
+                onChange={handleScheduleChange}
+                className="mt-1 w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3"
+              >
+                <option value="">Select a level</option>
+                {['100', '200', '300', '400', '500', '600'].map((level) => (
+                  <option key={level} value={level}>{level} Level</option>
+                ))}
+              </select>
+            </label>
+            <label className="text-sm font-medium text-on-surface md:col-span-2">
+              Meeting link
+              <input
+                required
+                type="url"
+                name="meeting_link"
+                value={scheduleForm.meeting_link}
+                onChange={handleScheduleChange}
+                placeholder="https://..."
+                className="mt-1 w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3"
+              />
+            </label>
+            <label className="text-sm font-medium text-on-surface">
+              Starts
+              <input
+                required
+                type="datetime-local"
+                name="start_time"
+                value={scheduleForm.start_time}
+                onChange={handleScheduleChange}
+                className="mt-1 w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3"
+              />
+            </label>
+            <label className="text-sm font-medium text-on-surface">
+              Ends
+              <input
+                required
+                type="datetime-local"
+                name="end_time"
+                value={scheduleForm.end_time}
+                onChange={handleScheduleChange}
+                className="mt-1 w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3"
+              />
+            </label>
+            <label className="text-sm font-medium text-on-surface md:col-span-2">
+              Description (optional)
+              <textarea
+                name="description"
+                value={scheduleForm.description}
+                onChange={handleScheduleChange}
+                rows={3}
+                className="mt-1 w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3"
+              />
+            </label>
+          </div>
+          <button
+            type="submit"
+            disabled={scheduling}
+            className="mt-5 rounded-xl bg-primary px-5 py-3 font-semibold text-on-primary disabled:opacity-60"
+          >
+            {scheduling ? 'Scheduling…' : 'Schedule session'}
+          </button>
+        </form>
+      )}
 
       {message && (
         <div className="mb-6 rounded-xl bg-primary/10 border border-primary/30 px-4 py-3 text-sm text-primary">
@@ -250,6 +391,11 @@ export default function LiveSessions() {
 
                 <h2 className="text-xl font-bold text-primary mb-1">{session.title}</h2>
                 <p className="text-on-surface-variant mb-1">with {session.lecturer_name}</p>
+                {session.target_level && (
+                  <p className="text-sm font-medium text-primary mb-1">
+                    Level {session.target_level}
+                  </p>
+                )}
                 <p className="text-sm text-on-surface-variant">
                   {new Date(session.start_time).toLocaleString()} –{' '}
                   {new Date(session.end_time).toLocaleTimeString()}
