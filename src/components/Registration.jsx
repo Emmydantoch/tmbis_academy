@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import api from '../api/axios';
 import { DEPARTMENTS } from '../constants/departments';
 import { STUDY_CENTERS } from '../constants/studyCenters';
+import { PROGRAMME_TYPES } from '../constants/programmeFees';
 
 const inputClassName = 'w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3 text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20';
 
@@ -20,6 +21,7 @@ function Field({ label, htmlFor, children, className = '' }) {
 export default function Registration() {
   const [activeTab, setActiveTab] = useState('student');
   const [form, setForm] = useState({
+    student_type: 'new',
     email: '',
     full_name: '',
     contact_address: '',
@@ -78,16 +80,27 @@ export default function Registration() {
       Object.entries(form).forEach(([key, value]) => formData.append(key, value));
       if (profilePicture) formData.append('profile_picture', profilePicture);
 
-      await api.post('auth/register/', formData, {
+      const response = await api.post('auth/register/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      setSuccess('student');
-      setTimeout(() => navigate('/payment', {
-        state: {
-          email: form.email,
-          mode_of_entry: form.mode_of_entry,
-        },
-      }), 1500);
+      if (response.data.student_type === 'returning') {
+        const programme = PROGRAMME_TYPES.find(
+          (item) => item.value === form.mode_of_entry
+        );
+        setSuccess({
+          type: 'returning-student',
+          department: form.department,
+          programme: programme?.label || form.mode_of_entry,
+        });
+      } else {
+        setSuccess({ type: 'student' });
+        setTimeout(() => navigate('/payment', {
+          state: {
+            email: form.email,
+            mode_of_entry: form.mode_of_entry,
+          },
+        }), 1500);
+      }
     } catch (requestError) {
       console.error(requestError);
       setError(requestError.response?.data || 'Registration failed');
@@ -102,7 +115,7 @@ export default function Registration() {
     setSubmitting(true);
     try {
       await api.post('auth/register/lecturer/', lecturerForm);
-      setSuccess('lecturer');
+      setSuccess({ type: 'lecturer' });
     } catch (requestError) {
       console.error(requestError);
       const data = requestError.response?.data;
@@ -183,12 +196,37 @@ export default function Registration() {
 
         {success ? (
           <div className="rounded-xl border border-primary/30 bg-primary/10 p-5 font-medium text-primary">
-            {success === 'student'
-              ? 'Details saved! Redirecting you to make payment...'
-              : 'Your lecturer application has been submitted. An administrator will review it and email you a secure password setup link if approved.'}
+            {success.type === 'returning-student'
+              ? `Congratulations! Your registration for ${success.department} (${success.programme}) has been received. Your account is awaiting administrator approval. Approval usually takes 24 hours to 7 working days. If approved, we will email you a secure link to set your password.`
+              : success.type === 'student'
+                ? 'Details saved! Redirecting you to make payment...'
+                : 'Your lecturer application has been submitted. An administrator will review it and email you a secure password setup link if approved.'}
           </div>
         ) : activeTab === 'student' ? (
           <form onSubmit={handleStudentSubmit} className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
+            <Field label="Student type *" htmlFor="student-type">
+              <select
+                id="student-type"
+                name="student_type"
+                value={form.student_type}
+                onChange={updateField}
+                required
+                className={inputClassName}
+              >
+                <option value="new">New student</option>
+                <option value="returning">Returning TMBIS student</option>
+              </select>
+            </Field>
+            <Field label={`Matric number${form.student_type === 'returning' ? ' *' : ' (if available)'}`} htmlFor="matric-no">
+              <input
+                id="matric-no"
+                name="matric_no"
+                value={form.matric_no}
+                onChange={updateField}
+                required={form.student_type === 'returning'}
+                className={inputClassName}
+              />
+            </Field>
             <Field label="Full name (surname first) *" htmlFor="full-name">
               <input
                 id="full-name"
@@ -363,15 +401,6 @@ export default function Registration() {
                   Additional details (optional)
                 </summary>
                 <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
-                  <Field label="Matric number" htmlFor="matric-no">
-                    <input
-                      id="matric-no"
-                      name="matric_no"
-                      value={form.matric_no}
-                      onChange={updateField}
-                      className={inputClassName}
-                    />
-                  </Field>
                   <Field label="Profile photo (optional)" htmlFor="profile-picture" className="md:col-span-2">
                     <input
                       id="profile-picture"
