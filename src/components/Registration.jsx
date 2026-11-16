@@ -3,7 +3,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import api from '../api/axios';
 import { DEPARTMENTS } from '../constants/departments';
 import { STUDY_CENTERS } from '../constants/studyCenters';
-import { PROGRAMME_TYPES } from '../constants/programmeFees';
 
 const inputClassName = 'w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3 text-on-surface placeholder:text-on-surface-variant focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20';
 
@@ -84,14 +83,7 @@ export default function Registration() {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       if (response.data.student_type === 'old') {
-        const programme = PROGRAMME_TYPES.find(
-          (item) => item.value === form.mode_of_entry
-        );
-        setSuccess({
-          type: 'old-student',
-          department: form.department,
-          programme: programme?.label || form.mode_of_entry,
-        });
+        setSuccess({ type: 'old-student' });
       } else {
         setSuccess({ type: 'student' });
         setTimeout(() => navigate('/payment', {
@@ -197,7 +189,7 @@ export default function Registration() {
         {success ? (
           <div className="rounded-xl border border-primary/30 bg-primary/10 p-5 font-medium text-primary">
             {success.type === 'old-student'
-              ? `Congratulations! Your registration for ${success.department} (${success.programme}) has been received. Your account is awaiting administrator approval. Approval usually takes 24 hours to 7 working days. If approved, we will email you a secure link to set your password.`
+              ? 'Registration received. Please check your email for further information.'
               : success.type === 'student'
                 ? 'Details saved! Redirecting you to make payment...'
                 : 'Your lecturer application has been submitted. An administrator will review it and email you a secure password setup link if approved.'}
