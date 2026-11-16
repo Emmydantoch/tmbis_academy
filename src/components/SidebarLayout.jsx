@@ -3,14 +3,15 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import NotificationBell from './NotificationBell';
 import NavigationIcon from './NavigationIcon';
 import ProfileAvatarMenu from './ProfileAvatarMenu';
+import { EKSU_LOGO_URL } from '../constants/branding';
 
 export default function SidebarLayout({
-    title = 'TMBIS Academy',
+    title = 'EKSU Part Time',
     subtitle = 'Learning Portal',
     navItems = [],
     footerItems = [],
     headerTitle = 'Dashboard',
-    logo = localStorage.getItem('tmbis-institution-logo') || '',
+    logo = localStorage.getItem('tmbis-institution-logo') || EKSU_LOGO_URL,
     children,
     headerActions = null,
     showSearch = false,

@@ -224,7 +224,7 @@ export default function Contact() {
                   <br />
                   Ekiti, Nigeria
                 </p>
-                <p className="mt-4 text-primary font-medium">+234 (8163) 7650-59</p>
+                <p className="mt-4 text-primary font-medium">+234 (8061) 5859-17 </p>
               </div>
             </div>
 
@@ -246,7 +246,7 @@ export default function Contact() {
                   <br />
                   Ekiti, Nigeria
                 </p>
-                <p className="mt-4 text-primary font-medium">tmbepartners@gmail.com</p>
+                <p className="mt-4 text-primary font-medium">eksu.dptp@eksu.edu.ng</p>
               </div>
             </div>
           </div>

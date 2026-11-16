@@ -254,7 +254,7 @@ export default function DashboardLayout() {
               <span className="material-symbols-outlined">menu</span>
             </button>
             <h1 className="font-headline-md text-headline-md font-bold text-primary">
-              TMBIS Academy
+              EKSU  Part Time Dashboard
             </h1>
           </div>
 

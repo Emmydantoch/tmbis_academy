@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../api/axios';
 import SidebarLayout from './SidebarLayout';
+import { EKSU_LOGO_URL } from '../constants/branding';
 
 const defaultSummary = {
     total_revenue: 0,
@@ -11,7 +12,7 @@ const defaultSummary = {
 const defaultPlatformSettings = {
     platform_name: 'TMBIS Academy',
     strict_password_policy: true,
-    logo: '',
+    logo: EKSU_LOGO_URL,
 };
 
 export default function AdminSettings() {
@@ -66,12 +67,14 @@ export default function AdminSettings() {
         const fetchPlatformSettings = async () => {
             try {
                 const response = await api.get('auth/admin-settings/');
+                const logo = response.data.logo || EKSU_LOGO_URL;
                 setPlatformSettings({
                     ...defaultPlatformSettings,
                     ...response.data,
+                    logo,
                 });
                 localStorage.setItem('tmbis-platform-name', response.data.platform_name);
-                localStorage.setItem('tmbis-institution-logo', response.data.logo || '');
+                localStorage.setItem('tmbis-institution-logo', logo);
                 setSettingsError('');
             } catch (err) {
                 console.error('Failed to load admin platform settings:', err);
@@ -141,9 +144,10 @@ export default function AdminSettings() {
                 platform_name: platformSettings.platform_name,
                 strict_password_policy: platformSettings.strict_password_policy,
             });
-            setPlatformSettings((current) => ({ ...current, ...response.data }));
+            const logo = response.data.logo || platformSettings.logo || EKSU_LOGO_URL;
+            setPlatformSettings((current) => ({ ...current, ...response.data, logo }));
             localStorage.setItem('tmbis-platform-name', response.data.platform_name);
-            localStorage.setItem('tmbis-institution-logo', response.data.logo || '');
+            localStorage.setItem('tmbis-institution-logo', logo);
             setSaveMessage('Settings saved successfully.');
         } catch (err) {
             console.error('Failed to save admin platform settings:', err);
@@ -174,8 +178,9 @@ export default function AdminSettings() {
             const response = await api.patch('auth/admin-settings/', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
-            setPlatformSettings((current) => ({ ...current, ...response.data }));
-            localStorage.setItem('tmbis-institution-logo', response.data.logo || '');
+            const logo = response.data.logo || EKSU_LOGO_URL;
+            setPlatformSettings((current) => ({ ...current, ...response.data, logo }));
+            localStorage.setItem('tmbis-institution-logo', logo);
             setLogoFile(null);
             setLogoMessage('Institution logo uploaded successfully.');
         } catch (err) {
@@ -202,7 +207,7 @@ export default function AdminSettings() {
     return (
         <SidebarLayout
             title={platformSettings.platform_name}
-            logo={platformSettings.logo}
+            logo={platformSettings.logo || EKSU_LOGO_URL}
             subtitle="Admin Portal"
             headerTitle="Admin Settings"
             navItems={navItems}

@@ -192,7 +192,7 @@ export default function Registration() {
               ? 'Registration received. Please check your email for further information.'
               : success.type === 'student'
                 ? 'Details saved! Redirecting you to make payment...'
-                : 'Your lecturer application has been submitted. An administrator will review it and email you a secure password setup link if approved.'}
+                : 'Your lecturer application has been submitted. If approved, you will receive an email with a secure password setup link. Choose at least 12 characters with one letter, one number, and one special character, then proceed to log in.'}
           </div>
         ) : activeTab === 'student' ? (
           <form onSubmit={handleStudentSubmit} className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">

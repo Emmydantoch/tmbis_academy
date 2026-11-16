@@ -24,8 +24,8 @@ export default function ResetPassword() {
       setError('Passwords do not match.');
       return;
     }
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters.');
+    if (password.length < 12) {
+      setError('Password must be at least 12 characters.');
       return;
     }
     if (!uid || !token) {
@@ -46,6 +46,7 @@ export default function ResetPassword() {
     } catch (err) {
       setError(
         err.response?.data?.detail ||
+        err.response?.data?.password?.join(' ') ||
         'Reset failed. The link may have expired.'
       );
     } finally {
@@ -62,7 +63,8 @@ export default function ResetPassword() {
           </div>
           <h1 className="text-2xl font-bold text-primary">Set New Password</h1>
           <p className="mt-2 text-on-surface-variant text-sm">
-            Choose a strong password for your TMBIS account.
+            Use at least 12 characters, including one letter, one number, and
+            one special character. After setting it, proceed to log in.
           </p>
         </div>
 
@@ -85,7 +87,7 @@ export default function ResetPassword() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              minLength={8}
+              minLength={12}
               className="mt-2 w-full rounded-xl border border-outline bg-surface-container px-4 py-4 text-on-surface focus:border-primary focus:outline-none"
             />
           </div>
@@ -96,7 +98,7 @@ export default function ResetPassword() {
               value={password2}
               onChange={(e) => setPassword2(e.target.value)}
               required
-              minLength={8}
+              minLength={12}
               className="mt-2 w-full rounded-xl border border-outline bg-surface-container px-4 py-4 text-on-surface focus:border-primary focus:outline-none"
             />
           </div>

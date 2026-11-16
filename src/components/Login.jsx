@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import { EKSU_LOGO_URL } from '../constants/branding';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -86,12 +87,12 @@ export default function Login() {
         <nav className="mx-auto flex h-20 max-w-7xl items-center justify-between px-margin-desktop">
           <div className="flex items-center gap-base">
             <img
-              src="https://res.cloudinary.com/o68u6tlz/image/upload/v1786642649/TMBIS_Logio_hw0vzu1_kphx76.png"
-              alt="TMBIS Academy logo"
+              src={EKSU_LOGO_URL}
+              alt="EKSU Part Time logo"
               className="h-10 w-10 rounded-full object-cover"
             />
             <span className="font-headline-lg text-headline-lg font-bold text-primary">
-              TMBIS Academy
+              EKSU Part Time
             </span>
           </div>
 

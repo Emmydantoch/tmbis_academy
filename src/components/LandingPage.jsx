@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { EKSU_LOGO_URL } from '../constants/branding';
 
 function getStoredUser() {
   try {
@@ -67,12 +68,12 @@ export default function LandingPage() {
         <nav className="mx-auto flex h-20 max-w-7xl items-center justify-between px-margin-desktop">
           <div className="flex items-center gap-base">
             <img
-              src="https://res.cloudinary.com/o68u6tlz/image/upload/v1786642649/TMBIS_Logio_hw0vzu1_kphx76.png"
-              alt="TMBIS Academy logo"
-              className="h-10 w-10 rounded-full object-cover"
+              src={EKSU_LOGO_URL}
+              alt="TMBIS logo"
+              className="h-12 w-14 rounded-lg bg-white object-contain p-1 shadow-sm"
             />
             <span className="font-headline-lg text-headline-lg font-bold text-primary">
-              TMBIS Academy
+              EKSU  Part Time
             </span>
           </div>
 
@@ -111,7 +112,7 @@ export default function LandingPage() {
           <div className="absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
             <iframe
               src="https://player.cloudinary.com/embed/?cloud_name=o68u6tlz&public_id=compressedPro_hjjfur&fluid=true&controls=false&autoplay=true&loop=true&muted=true"
-              title="TMBIS Academy introduction"
+              title="EKSU  Part Time introduction"
               className="pointer-events-none absolute left-1/2 top-1/2 h-[56.25vw] min-h-full w-[177.78vh] min-w-full -translate-x-1/2 -translate-y-1/2 border-0"
               allow="autoplay; fullscreen"
               loading="eager"
@@ -121,6 +122,24 @@ export default function LandingPage() {
           </div>
 
           <div className="relative z-10 max-w-4xl px-margin-desktop text-center">
+            <div
+              className="hero-marquee mb-xl"
+              role="img"
+              aria-label="EKSU PART TIME PROGRAMME"
+            >
+              <div className="hero-marquee-track" aria-hidden="true">
+                {[0, 1].map((group) => (
+                  <div className="hero-marquee-group" key={group}>
+                    {[0, 1, 2].map((item) => (
+                      <span className="hero-marquee-item" key={item}>
+                        EKSU PART TIME PROGRAMME
+                        <span className="hero-marquee-star">✦</span>
+                      </span>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
             <div className="mb-md inline-flex items-center gap-xs rounded-full border border-outline-variant/20 bg-surface-container-highest px-sm py-1">
               <span className="material-symbols-outlined text-sm text-primary-fixed">terminal</span>
               <span className="font-label-md text-label-md uppercase tracking-widest text-primary-fixed">
@@ -131,7 +150,7 @@ export default function LandingPage() {
               Deep Dive into Excellence
             </h1>
             <p className="mx-auto mb-xl max-w-2xl font-body-md text-body-md leading-relaxed text-on-surface-variant text-lg">
-              TMBIS Academy of Research is dedicated to technical mastery and intellectual immersion.
+              EKSU  Part Time is dedicated to technical mastery and intellectual immersion.
               Empowering the next generation of researchers with precision-driven academic frameworks.
             </p>
             <div className="flex flex-col items-center justify-center gap-md md:flex-row">
@@ -172,13 +191,13 @@ export default function LandingPage() {
               </div>
 
               <div className="flex flex-col gap-md reveal-on-scroll reveal-slide-right">
-                <span className="font-label-md text-primary-fixed uppercase tracking-widest">About TMBIS Academy</span>
+                <span className="font-label-md text-primary-fixed uppercase tracking-widest">About EKSU  Academy</span>
                 <h2 className="font-headline-lg text-headline-lg text-primary">
                   Where Technical Precision Meets Vast Potential
                 </h2>
                 <p className="font-body-md text-body-md leading-relaxed text-on-surface-variant">
                   Established with the vision of deep technical research and high-level academic excellence,
-                  TMBIS Academy provides an environment for unparalleled focus. Our curriculum is built on
+                  EKSU  Academy provides an environment for unparalleled focus. Our curriculum is built on
                   empirical data, professional rigor, and real-world application.
                 </p>
                 <p className="font-body-md text-body-md leading-relaxed text-on-surface-variant">
@@ -430,7 +449,7 @@ export default function LandingPage() {
               {
                 label: 'HONOR',
                 title: 'Global Research Excellence Award',
-                text: 'TMBIS Academy has been ranked #1 for Technical Sustainability in higher education.',
+                text: 'EKSU  Part Time has been ranked #1 for Technical Sustainability in higher education.',
                 date: 'Awarded 2026',
                 icon: 'workspace_premium',
               },
@@ -483,7 +502,7 @@ export default function LandingPage() {
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-gutter px-margin-desktop py-xl md:grid-cols-4">
           <div className="md:col-span-1">
             <span className="mb-md block font-headline-lg text-headline-lg font-semibold text-primary">
-              TMBIS Academy
+              EKSU  Part Time
             </span>
             <p className="mb-md font-body-sm text-body-sm leading-relaxed text-secondary opacity-80">
               Leading global research through immersion and technical innovation.
@@ -512,17 +531,17 @@ export default function LandingPage() {
           <div>
             <h4 className="mb-md font-label-md text-primary">CONTACT</h4>
             <p className="font-body-sm text-body-sm text-secondary opacity-80">
-              admissions@tmbis.academy
+              eksu.dptp@eksu.edu.ng
             </p>
             <p className="mt-2 font-body-sm text-body-sm text-primary-fixed">
-              +234 (814) 136-1935
+              +234 (806) 158-5917 or +234 (806) 265-5555
             </p>
           </div>
         </div>
 
         <div className="border-t border-outline-variant/10 px-margin-desktop py-md text-center">
           <p className="font-body-sm text-body-sm text-on-surface-variant">
-            © 2026 TMBIS Academy of Research. All rights reserved.
+            © 2026 EKSU  Part Time Research Powered by TMBIS. All rights reserved. (+234) 816-376-5059 
           </p>
         </div>
       </footer>

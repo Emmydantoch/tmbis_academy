@@ -166,6 +166,61 @@ html[data-theme='orbit-admin'] .min-h-screen > nav button:hover {
   background: rgba(17, 34, 64, 0.8);
 }
 
+.hero-marquee {
+  overflow: hidden;
+  border: 1px solid rgba(100, 255, 218, 0.45);
+  border-radius: 9999px;
+  background: rgba(7, 18, 42, 0.78);
+  box-shadow: 0 0 32px rgba(100, 255, 218, 0.14);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+}
+
+.hero-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: hero-marquee-scroll 26s linear infinite;
+}
+
+.hero-marquee:hover .hero-marquee-track {
+  animation-play-state: paused;
+}
+
+.hero-marquee-group {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+.hero-marquee-item {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.85rem 1.75rem;
+  color: #64ffda;
+  font-size: clamp(1rem, 3vw, 1.65rem);
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
+  text-shadow: 0 0 18px rgba(100, 255, 218, 0.38);
+  white-space: nowrap;
+}
+
+.hero-marquee-star {
+  color: #f5ce70;
+  font-size: 1.2em;
+}
+
+@keyframes hero-marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 .reveal-on-scroll {
   opacity: 0;
   --reveal-delay: 0ms;
@@ -196,6 +251,14 @@ html[data-theme='orbit-admin'] .min-h-screen > nav button:hover {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .hero-marquee-track {
+    animation: none;
+  }
+
+  .hero-marquee-group:nth-child(2) {
+    display: none;
+  }
+
   .reveal-on-scroll {
     opacity: 1;
     transform: none;
