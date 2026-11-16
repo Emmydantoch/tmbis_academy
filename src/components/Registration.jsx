@@ -83,12 +83,12 @@ export default function Registration() {
       const response = await api.post('auth/register/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      if (response.data.student_type === 'returning') {
+      if (response.data.student_type === 'old') {
         const programme = PROGRAMME_TYPES.find(
           (item) => item.value === form.mode_of_entry
         );
         setSuccess({
-          type: 'returning-student',
+          type: 'old-student',
           department: form.department,
           programme: programme?.label || form.mode_of_entry,
         });
@@ -196,7 +196,7 @@ export default function Registration() {
 
         {success ? (
           <div className="rounded-xl border border-primary/30 bg-primary/10 p-5 font-medium text-primary">
-            {success.type === 'returning-student'
+            {success.type === 'old-student'
               ? `Congratulations! Your registration for ${success.department} (${success.programme}) has been received. Your account is awaiting administrator approval. Approval usually takes 24 hours to 7 working days. If approved, we will email you a secure link to set your password.`
               : success.type === 'student'
                 ? 'Details saved! Redirecting you to make payment...'
@@ -214,16 +214,16 @@ export default function Registration() {
                 className={inputClassName}
               >
                 <option value="new">New student</option>
-                <option value="returning">Returning TMBIS student</option>
+                <option value="old">Old TMBIS student</option>
               </select>
             </Field>
-            <Field label={`Matric number${form.student_type === 'returning' ? ' *' : ' (if available)'}`} htmlFor="matric-no">
+            <Field label={`Matric number${form.student_type === 'old' ? ' *' : ' (if available)'}`} htmlFor="matric-no">
               <input
                 id="matric-no"
                 name="matric_no"
                 value={form.matric_no}
                 onChange={updateField}
-                required={form.student_type === 'returning'}
+                required={form.student_type === 'old'}
                 className={inputClassName}
               />
             </Field>

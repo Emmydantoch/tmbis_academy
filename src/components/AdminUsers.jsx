@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import api from '../api/axios';
 import SidebarLayout from './SidebarLayout';
 
-export default function AdminUsers() {
+export default function AdminUsers({
+  pendingOldStudentRegistrationsOnly = false,
+}) {
   const [users, setUsers] = useState([]);
   const [summary, setSummary] = useState({ total_users: 0, active_students: 0, lecturers: 0, staff: 0, admins: 0 });
   const [searchTerm, setSearchTerm] = useState('');
@@ -74,22 +76,37 @@ export default function AdminUsers() {
     }
   };
 
-  const filteredUsers = users.filter((user) =>
-    [
+  const isPendingOldStudentRegistration = (user) => (
+    user.role === 'student'
+    && user.registration_type === 'old'
+    && !user.is_activated
+    && !user.email?.endsWith('@students.tmbis.invalid')
+  );
+  const pendingOldStudentCount = users.filter(isPendingOldStudentRegistration).length;
+  const filteredUsers = users.filter((user) => {
+    if (
+      pendingOldStudentRegistrationsOnly
+      && !isPendingOldStudentRegistration(user)
+    ) {
+      return false;
+    }
+    return [
       user.name,
       user.email,
       user.role,
+      user.registration_type,
       user.matric_no,
       user.department,
       user.level,
       user.study_center,
-    ].some((value) => value?.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+    ].some((value) => value?.toLowerCase().includes(searchTerm.toLowerCase()));
+  });
 
   const navItems = [
     { icon: 'home', label: 'Home', to: '/' },
     { icon: 'dashboard', label: 'Dashboard', to: '/admin/dashboard' },
-    { icon: 'people', label: 'Users', to: '/admin/users', active: true },
+    { icon: 'people', label: 'Users', to: '/admin/users', active: !pendingOldStudentRegistrationsOnly },
+    { icon: 'how_to_reg', label: 'Old Student Registrations', to: '/admin/registrations', active: pendingOldStudentRegistrationsOnly },
     { icon: 'school', label: 'Courses', to: '/admin/courses' },
     { icon: 'library_books', label: 'Academic Management', to: '/admin/academics' },
     { icon: 'account_balance_wallet', label: 'Payments', to: '/admin/payments' },
@@ -100,7 +117,7 @@ export default function AdminUsers() {
     <SidebarLayout
       title="TMBIS Academy"
       subtitle="Admin Portal"
-      headerTitle="Users"
+      headerTitle={pendingOldStudentRegistrationsOnly ? 'Old Student Registrations' : 'Users'}
       navItems={navItems}
       // showSearch
       // searchPlaceholder="Search users, roles, or email..."
@@ -118,6 +135,12 @@ export default function AdminUsers() {
       }
     >
       <div className="p-6 md:p-10 max-w-7xl mx-auto">
+        {pendingOldStudentRegistrationsOnly && (
+          <div className="mb-6 rounded-2xl border border-primary/30 bg-primary/10 px-4 py-3 text-sm text-on-surface-variant">
+            {pendingOldStudentCount} old student registration(s) are awaiting
+            approval. Approving a student sends their secure password setup link.
+          </div>
+        )}
         <div className="mb-6 rounded-2xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-on-surface-variant">
           Verify each application before approving. Approval sends a secure password setup link. Manage lecturer course and programme assignments in{' '}
           <a href="/admin/academics" className="font-semibold text-primary underline">
@@ -158,6 +181,7 @@ export default function AdminUsers() {
                 <th className="text-left px-6 py-5 text-xs uppercase tracking-widest text-on-surface-variant">Level</th>
                 <th className="text-left px-6 py-5 text-xs uppercase tracking-widest text-on-surface-variant">Study Center</th>
                 <th className="text-left px-6 py-5 text-xs uppercase tracking-widest text-on-surface-variant">Role</th>
+                <th className="text-left px-6 py-5 text-xs uppercase tracking-widest text-on-surface-variant">Registration Type</th>
                 <th className="text-left px-6 py-5 text-xs uppercase tracking-widest text-on-surface-variant">Status</th>
                 <th className="text-left px-6 py-5 text-xs uppercase tracking-widest text-on-surface-variant">Semester</th>
                 <th className="text-left px-6 py-5 text-xs uppercase tracking-widest text-on-surface-variant">Joined</th>
@@ -165,6 +189,17 @@ export default function AdminUsers() {
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/10">
+              {filteredUsers.length === 0 && (
+                <tr>
+                  <td colSpan={14} className="px-6 py-8 text-center text-on-surface-variant">
+                    {loading
+                      ? 'Loading registrations...'
+                      : pendingOldStudentRegistrationsOnly
+                        ? 'No pending old-student registrations.'
+                        : 'No users match your search.'}
+                  </td>
+                </tr>
+              )}
               {filteredUsers.map((user) => (
                 <tr key={user.id} className="hover:bg-surface-container-high transition-colors">
                   <td className="px-6 py-5 font-medium text-on-surface">{user.name}</td>
@@ -191,6 +226,11 @@ export default function AdminUsers() {
                         user.role
                       )}
                     </span>
+                  </td>
+                  <td className="px-6 py-5 text-on-surface-variant">
+                    {user.registration_type === 'old'
+                      ? 'Old student'
+                      : 'New student'}
                   </td>
                   <td className="px-6 py-5">
                     {user.is_activated && !user.has_usable_password ? (

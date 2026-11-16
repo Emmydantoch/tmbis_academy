@@ -92,6 +92,7 @@ export default function AdminDashboard() {
     { icon: 'home', label: 'Home', to: '/' },
     { icon: 'dashboard', label: 'Overview', to: '/admin/dashboard' },
     { icon: 'people', label: 'Users', to: '/admin/users' },
+    { icon: 'how_to_reg', label: 'Old Student Registrations', to: '/admin/registrations' },
     { icon: 'school', label: 'Courses', to: '/admin/courses' },
     { icon: 'library_books', label: 'Academic Management', to: '/admin/academics' },
     { icon: 'account_balance_wallet', label: 'Finances', to: '/admin/payments' },

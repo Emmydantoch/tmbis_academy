@@ -77,6 +77,7 @@ function App() {
         {/* Admin Routes */}
         <Route path="/admin/dashboard" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>} />
         <Route path="/admin/users" element={<ProtectedAdminRoute><AdminUsers /></ProtectedAdminRoute>} />
+        <Route path="/admin/registrations" element={<ProtectedAdminRoute><AdminUsers pendingOldStudentRegistrationsOnly /></ProtectedAdminRoute>} />
         <Route path="/admin/courses" element={<ProtectedAdminRoute><AdminCourses /></ProtectedAdminRoute>} />
         <Route path="/admin/academics" element={<ProtectedAdminRoute><AdminAcademics /></ProtectedAdminRoute>} />
         <Route path="/admin/payments" element={<ProtectedAdminRoute><AdminPayments /></ProtectedAdminRoute>} />
