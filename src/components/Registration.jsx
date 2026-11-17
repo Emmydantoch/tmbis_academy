@@ -206,7 +206,7 @@ export default function Registration() {
                 className={inputClassName}
               >
                 <option value="new">New student</option>
-                <option value="old">Old TMBIS student</option>
+                <option value="old">Old EKSU students</option>
               </select>
             </Field>
             <Field label={`Matric number${form.student_type === 'old' ? ' *' : ' (if available)'}`} htmlFor="matric-no">

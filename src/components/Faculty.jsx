@@ -19,7 +19,7 @@ export default function Faculty() {
       <header className="mb-10">
         <h1 className="text-3xl font-bold text-primary">Principal Officers</h1>
         <p className="text-on-surface-variant mt-2">
-          Meet the principal officers serving TMBIS Academy.
+          Meet the principal officers serving EKSU.
         </p>
       </header>
 

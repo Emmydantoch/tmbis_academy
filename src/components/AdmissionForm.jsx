@@ -70,7 +70,7 @@ export default function AdmissionForm() {
             </div>
             <h2 className="text-3xl font-bold text-primary mb-4">Application Submitted!</h2>
             <p className="text-on-surface-variant mb-8">
-            Thank you for applying to TMBIS Academy. Our admissions team will review your application and contact you within 5–7 business days.
+            Thank you for applying to EKSU Part-Time. Our admissions team will review your application and contact you within 5–7 business days.
             </p>
             <p className="text-sm text-on-surface-variant mb-6">
             Redirecting to home page in a few seconds...
@@ -91,7 +91,7 @@ export default function AdmissionForm() {
         {/* Sidebar */}
         <nav className="hidden md:flex w-64 flex-col h-screen bg-surface-container-low border-r border-outline-variant fixed left-0 top-0 z-20 p-4">
         <div className="mb-8 px-2">
-            <h1 className="font-headline-lg font-bold text-primary">TMBIS Academy</h1>
+            <h1 className="font-headline-lg font-bold text-primary">EKSU Portal</h1>
             <p className="text-on-surface-variant text-sm">Student Portal</p>
         </div>
 
@@ -124,7 +124,7 @@ export default function AdmissionForm() {
             <div className="mb-10">
             <h2 className="text-3xl font-bold text-primary mb-3">Apply for Admission</h2>
             <p className="text-on-surface-variant text-lg">
-                Complete the form below to begin your journey at TMBIS Academy. All fields marked with * are required.
+                Complete the form below to begin your journey at EKSU. All fields marked with * are required.
             </p>
             </div>
 
@@ -302,7 +302,7 @@ export default function AdmissionForm() {
 
                 <div>
                 <label className="block text-sm text-on-surface-variant mb-2">
-                    Why do you want to join TMBIS Academy? *
+                    Why do you want to join EKSU ? *
                 </label>
                 <textarea
                     name="motivation"
@@ -330,7 +330,7 @@ export default function AdmissionForm() {
                 I confirm that the information provided is accurate and I agree to the 
                 <a href="#" className="text-primary hover:underline mx-1">Terms of Service</a> 
                 and 
-                <a href="#" className="text-primary hover:underline mx-1">Privacy Policy</a> of TMBIS Academy.
+                <a href="#" className="text-primary hover:underline mx-1">Privacy Policy</a> of EKSU Part-time.
                 </label>
             </div>
 

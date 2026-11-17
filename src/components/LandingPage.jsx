@@ -69,7 +69,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-base">
             <img
               src={EKSU_LOGO_URL}
-              alt="TMBIS logo"
+              alt="EKSU logo"
               className="h-12 w-14 rounded-lg bg-white object-contain p-1 shadow-sm"
             />
             <span className="font-headline-lg text-headline-lg font-bold text-primary">
@@ -541,7 +541,7 @@ export default function LandingPage() {
 
         <div className="border-t border-outline-variant/10 px-margin-desktop py-md text-center">
           <p className="font-body-sm text-body-sm text-on-surface-variant">
-            © 2026 EKSU  Part Time Research Powered by TMBIS. All rights reserved. (+234) 816-376-5059 
+            © 2026 EKSU  Part Time Research Powered by TMBIS. All rights reserved. For enquires (+234) 816-376-5059 
           </p>
         </div>
       </footer>

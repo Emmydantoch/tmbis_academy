@@ -105,7 +105,7 @@ export default function AdminDashboard() {
 
   return (
     <SidebarLayout
-      title="TMBIS Academy"
+      title="EKSU Admin Dashboard"
       subtitle="Admin Control Center"
       headerTitle="Admin Control Center"
       navItems={navItems}

@@ -122,7 +122,7 @@ export default function Payment() {
       {/* Sidebar */}
       <nav className="hidden md:flex w-64 flex-col h-screen bg-surface-container-low border-r border-outline-variant fixed left-0 top-0 z-20 p-4">
         <div className="mb-8 px-2">
-          <h1 className="font-headline-lg font-bold text-primary">TMBIS Academy</h1>
+          <h1 className="font-headline-lg font-bold text-primary">EKSU Portal</h1>
           <p className="text-on-surface-variant text-sm">Student Portal</p>
         </div>
 
@@ -269,7 +269,7 @@ export default function Payment() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      placeholder="student@tmbis.edu"
+                      placeholder="eksu.dptp@eksu.edu.ng"
                       className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl px-4 py-4 focus:border-primary outline-none"
                     />
                   </div>
@@ -444,7 +444,7 @@ export default function Payment() {
                         </div>
                         <div className="rounded-2xl bg-surface-container p-4 border border-outline-variant">
                           <p className="font-semibold">Account Name</p>
-                          <p>TMBIS Academy</p>
+                          <p>TMB INTERNATIONAL LTD</p>
                         </div>
                         <div className="rounded-2xl bg-surface-container p-4 border border-outline-variant">
                           <p className="font-semibold">Account Number</p>

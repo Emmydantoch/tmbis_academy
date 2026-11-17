@@ -215,14 +215,14 @@ export default function Contact() {
                 </div>
                 <div className="absolute bottom-4 right-4 text-white text-right">
                   <p className="font-bold">Nigeria</p>
-                  <p className="text-xs opacity-75">Ado Academic Collage</p>
+                  <p className="text-xs opacity-75">EKSU</p>
                 </div>
               </div>
               <div className="p-6">
                 <p className="text-on-surface-variant">
-                  Ikere, International School
+                  ADEBETH (ABUJA)
                   <br />
-                  Ekiti, Nigeria
+                  ABUJA, Nigeria
                 </p>
                 <p className="mt-4 text-primary font-medium">+234 (8061) 5859-17 </p>
               </div>
@@ -233,18 +233,18 @@ export default function Contact() {
               <div className="h-48 bg-gradient-to-br from-indigo-950 to-blue-950 relative">
                 <div className="absolute inset-0 bg-[radial-gradient(#64ffda_1px,transparent_1px)] [background-size:20px_20px] opacity-10"></div>
                 <div className="absolute top-4 left-4 bg-black/60 text-white text-xs px-3 py-1 rounded-full">
-                  AFRICAN HUB
+                  IBADAN ACADEMY (IBADAN)
                 </div>
                 <div className="absolute bottom-4 right-4 text-white text-right">
-                  <p className="font-bold">Ado-Ekiti</p>
-                  <p className="text-xs opacity-75">Ado Academic Collage</p>
+                  <p className="font-bold">LAGOS</p>
+                  <p className="text-xs opacity-75">GATE OF KNOWLEDGE(OTTA)</p>
                 </div>
               </div>
               <div className="p-6">
                 <p className="text-on-surface-variant">
-                  Ilawe International, Secondary School 
+                  NIZADE (ONDO) 
                   <br />
-                  Ekiti, Nigeria
+                  ONDO, Nigeria
                 </p>
                 <p className="mt-4 text-primary font-medium">eksu.dptp@eksu.edu.ng</p>
               </div>

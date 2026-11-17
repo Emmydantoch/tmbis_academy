@@ -115,7 +115,7 @@ export default function AdminUsers({
 
   return (
     <SidebarLayout
-      title="TMBIS Academy"
+      title="EKSU Admin Portal"
       subtitle="Admin Portal"
       headerTitle={pendingOldStudentRegistrationsOnly ? 'Old Student Registrations' : 'Users'}
       navItems={navItems}

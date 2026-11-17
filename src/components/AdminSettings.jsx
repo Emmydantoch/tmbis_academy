@@ -10,7 +10,7 @@ const defaultSummary = {
     completion_rate: 0,
 };
 const defaultPlatformSettings = {
-    platform_name: 'TMBIS Academy',
+    platform_name: 'EKSU Portal',
     strict_password_policy: true,
     logo: EKSU_LOGO_URL,
 };

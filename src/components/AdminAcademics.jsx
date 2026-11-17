@@ -285,7 +285,7 @@ export default function AdminAcademics() {
 
   return (
     <SidebarLayout
-      title="TMBIS Academy"
+      title="EKSU Admin Portal"
       subtitle="Admin Portal"
       headerTitle="Academic Management"
       navItems={navItems}

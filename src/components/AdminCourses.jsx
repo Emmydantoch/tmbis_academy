@@ -40,7 +40,7 @@ export default function AdminCourses() {
 
   return (
     <SidebarLayout
-      title="TMBIS Academy"
+      title="EKSU Admin Portal"
       subtitle="Admin Portal"
       headerTitle="Courses"
       navItems={navItems}

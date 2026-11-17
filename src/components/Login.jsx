@@ -227,7 +227,7 @@ export default function Login() {
             </div> */}
 
             <p className="mt-8 text-center font-body-md text-body-md text-on-surface-variant">
-              New to TMBIS Academy?{' '}
+              New to EKSU Portal?{' '}
               <Link to="/apply" className="text-primary hover:underline font-medium">
                 Enroll Now
               </Link>
@@ -235,7 +235,7 @@ export default function Login() {
           </div>
 
           <p className="mt-8 text-center text-sm text-on-surface-variant/70">
-            © 2026 TMBIS Academy of Research. All rights reserved.
+            © 2026 EKSU Part Time Research Powered by TMBIS. All rights reserved. For enquires (+234) 816-376-5059.
           </p>
         </div>
       </main>

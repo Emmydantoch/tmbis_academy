@@ -50,7 +50,7 @@ export default function AdminPayments() {
 
     return (
     <SidebarLayout
-        title="TMBIS Academy"
+        title="EKSU Admin Portal"
         subtitle="Admin Portal"
         headerTitle="Payment History"
         navItems={navItems}

@@ -96,7 +96,7 @@ export default function ChangePassword() {
           <div>
             <h3 className="font-semibold text-on-surface">Set Your Password</h3>
             <p className="text-sm text-on-surface-variant mt-1">
-              You logged in with an activation token. Please set a permanent password so you can log in easily next time.
+              You logged in with an activation token. Please set a permanent password so you can log in easily next time, make sure your password is not less than 8 characters, it should contain at least one uppercase letter, one lowercase letter, one number, and one special character. 
             </p>
           </div>
         </div>

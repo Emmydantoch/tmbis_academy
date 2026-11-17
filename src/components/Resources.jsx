@@ -44,7 +44,7 @@ export default function Resources() {
       <div className="mb-12">
         <h2 className="font-headline-xl text-headline-xl text-primary mb-3">Academic Insights</h2>
         <p className="text-on-surface-variant max-w-2xl text-lg">
-          The latest from TMBIS Academy: Student successes, pedagogical shifts, and platform evolution designed for the deep-focus technical professional.
+          The latest from EKSU: Student successes, pedagogical shifts, and platform evolution designed for the deep-focus technical professional.
         </p>
       </div>
 
