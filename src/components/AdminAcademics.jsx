@@ -465,108 +465,48 @@ function CourseRepository({
   editing,
   saving,
 }) {
+  const [showSingleCourseForm, setShowSingleCourseForm] = useState(false);
+
   return (
     <div className="space-y-8">
-      <form
-        onSubmit={onSubmit}
-        className="rounded-2xl border border-outline-variant bg-surface-container p-6"
-      >
-        <h2 className="text-xl font-bold text-primary">
-          {editing ? 'Edit curriculum course' : 'Add course to curriculum'}
-        </h2>
-        <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <SelectField
-            label="Department"
-            name="department"
-            value={form.department}
-            options={departments}
-            onChange={onFormChange}
-            placeholder="No department specified"
-          />
-          <SelectField
-            label="Semester"
-            name="semester"
-            value={form.semester}
-            options={semesters.map((semester) => ({
-              value: String(semester.id),
-              label: semester.name,
-            }))}
-            onChange={onFormChange}
-            placeholder="No specific semester"
-          />
-          <SelectField
-            label="Level"
-            name="level"
-            value={form.level}
-            options={levels}
-            onChange={onFormChange}
-            placeholder="No specific level"
-          />
-          <TextField
-            label="Course code"
-            name="course_code"
-            value={form.course_code}
-            onChange={onFormChange}
-            required
-          />
-          <TextField
-            label="Course title"
-            name="title"
-            value={form.title}
-            onChange={onFormChange}
-            required
-          />
-          <TextField
-            label="Units (optional)"
-            name="units"
-            type="number"
-            min="1"
-            value={form.units}
-            onChange={onFormChange}
-          />
-          <label className="flex flex-col gap-2 text-sm text-on-surface-variant md:col-span-3">
-            Curriculum document (PDF, DOC, or DOCX; max 20 MB)
-            <input
-              type="file"
-              accept=".pdf,.doc,.docx"
-              onChange={(event) => onFileChange(event.target.files?.[0] || null)}
-              className="rounded-xl border border-outline-variant bg-surface-container-lowest px-3 py-2"
-            />
-            {file && <span>Selected: {file.name}</span>}
-          </label>
-        </div>
-        <div className="mt-5 flex flex-wrap gap-3">
-          <button
-            type="submit"
-            disabled={saving}
-            className="rounded-xl bg-primary px-5 py-3 font-semibold text-on-primary disabled:opacity-60"
-          >
-            {saving ? 'Saving…' : editing ? 'Save changes' : 'Add course'}
-          </button>
-          {editing && (
-            <button
-              type="button"
-              onClick={onReset}
-              className="rounded-xl border border-outline-variant px-5 py-3"
-            >
-              Cancel edit
-            </button>
-          )}
-        </div>
-      </form>
-
+      {/* Bulk Import Section - Primary Method */}
       <form
         onSubmit={onImport}
-        className="rounded-2xl border border-outline-variant bg-surface-container p-5"
+        className="rounded-2xl border-2 border-primary/30 bg-primary/5 p-6"
       >
-        <h2 className="font-bold text-primary">Import course workbook</h2>
-        <p className="mt-2 text-sm text-on-surface-variant">
-          Allocation workbooks import courses by department and level. Select
-          their semester below; lecturer names are not assigned automatically.
-        </p>
-        <div className="mt-4 flex flex-wrap items-end gap-3">
-          <label className="flex min-w-64 flex-1 flex-col gap-2 text-sm text-on-surface-variant">
-            Excel workbook (.xlsx, max 10 MB)
+        <div className="flex items-start gap-4">
+          <span className="material-symbols-outlined text-4xl text-primary">upload_file</span>
+          <div className="flex-1">
+            <h2 className="text-xl font-bold text-primary">
+              Import Department Curriculum (Bulk Upload)
+            </h2>
+            <p className="mt-2 text-sm text-on-surface-variant">
+              Upload an Excel file (.xlsx) with all courses for a department. This is the recommended method for adding department curricula.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-6 rounded-xl bg-surface-container p-4">
+          <h3 className="font-semibold text-on-surface mb-3">Excel File Format:</h3>
+          <div className="space-y-2 text-sm text-on-surface-variant">
+            <p><strong>Required columns:</strong> Course Code, Course Title, Unit</p>
+            <p><strong>Optional columns:</strong> Departments, Level</p>
+            <p><strong>Example:</strong></p>
+            <div className="rounded-lg bg-surface-container-lowest p-3 font-mono text-xs">
+              Course Code | Course Title | Unit | Level | Departments<br/>
+              ACC101 | Introduction to Accounting | 3 | 100 | Accounting<br/>
+              ACC102 | Financial Accounting I | 3 | 100 | Accounting<br/>
+              ACC201 | Cost Accounting | 3 | 200 | Accounting
+            </div>
+            <p className="mt-2 text-primary underline cursor-pointer" onClick={() => window.open('https://docs.google.com/spreadsheets/d/1example', '_blank')}>
+              Download sample template →
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+          <label className="flex flex-col gap-2 text-sm text-on-surface-variant">
+            <span className="font-semibold">Excel workbook (.xlsx, max 10 MB)</span>
             <input
               key={importFile?.name || 'empty'}
               type="file"
@@ -574,11 +514,12 @@ function CourseRepository({
               onChange={(event) =>
                 onImportFileChange(event.target.files?.[0] || null)
               }
-              className="rounded-xl border border-outline-variant bg-surface-container-lowest px-3 py-2"
+              className="rounded-xl border border-outline-variant bg-surface-container-lowest px-3 py-3"
             />
+            {importFile && <span className="text-primary text-sm">Selected: {importFile.name}</span>}
           </label>
           <SelectField
-            label="Semester (for allocation workbooks)"
+            label="Semester (required for level-specific courses)"
             name="importSemester"
             value={importSemesterId}
             options={semesters.map((semester) => ({
@@ -588,15 +529,121 @@ function CourseRepository({
             onChange={(event) => onImportSemesterChange(event.target.value)}
             placeholder="Select semester"
           />
-          <button
-            type="submit"
-            disabled={!importFile || importing}
-            className="rounded-xl bg-primary px-5 py-3 font-semibold text-on-primary disabled:opacity-60"
-          >
-            {importing ? 'Importing…' : 'Import courses'}
-          </button>
         </div>
+
+        <button
+          type="submit"
+          disabled={!importFile || importing}
+          className="mt-6 rounded-xl bg-primary px-6 py-3 font-semibold text-on-primary disabled:opacity-60"
+        >
+          {importing ? 'Importing…' : 'Import Curriculum'}
+        </button>
       </form>
+
+      {/* Single Course Form - Secondary Method */}
+      <div className="rounded-2xl border border-outline-variant bg-surface-container">
+        <button
+          type="button"
+          onClick={() => setShowSingleCourseForm(!showSingleCourseForm)}
+          className="w-full px-6 py-4 flex items-center justify-between text-left"
+        >
+          <div>
+            <h2 className="font-bold text-primary">
+              {editing ? 'Edit curriculum course' : 'Add single course (manual entry)'}
+            </h2>
+            <p className="mt-1 text-sm text-on-surface-variant">
+              Use this for adding individual courses. For bulk upload, use the Import Curriculum section above.
+            </p>
+          </div>
+          <span className="material-symbols-outlined text-on-surface-variant">
+            {showSingleCourseForm || editing ? 'expand_less' : 'expand_more'}
+          </span>
+        </button>
+
+        {(showSingleCourseForm || editing) && (
+          <form onSubmit={onSubmit} className="px-6 pb-6 pt-2">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <SelectField
+                label="Department"
+                name="department"
+                value={form.department}
+                options={departments}
+                onChange={onFormChange}
+                placeholder="No department specified"
+              />
+              <SelectField
+                label="Semester"
+                name="semester"
+                value={form.semester}
+                options={semesters.map((semester) => ({
+                  value: String(semester.id),
+                  label: semester.name,
+                }))}
+                onChange={onFormChange}
+                placeholder="No specific semester"
+              />
+              <SelectField
+                label="Level"
+                name="level"
+                value={form.level}
+                options={levels}
+                onChange={onFormChange}
+                placeholder="No specific level"
+              />
+              <TextField
+                label="Course code"
+                name="course_code"
+                value={form.course_code}
+                onChange={onFormChange}
+                required
+              />
+              <TextField
+                label="Course title"
+                name="title"
+                value={form.title}
+                onChange={onFormChange}
+                required
+              />
+              <TextField
+                label="Units (optional)"
+                name="units"
+                type="number"
+                min="1"
+                value={form.units}
+                onChange={onFormChange}
+              />
+              <label className="flex flex-col gap-2 text-sm text-on-surface-variant md:col-span-3">
+                Curriculum document (PDF, DOC, or DOCX; max 20 MB)
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  onChange={(event) => onFileChange(event.target.files?.[0] || null)}
+                  className="rounded-xl border border-outline-variant bg-surface-container-lowest px-3 py-2"
+                />
+                {file && <span>Selected: {file.name}</span>}
+              </label>
+            </div>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <button
+                type="submit"
+                disabled={saving}
+                className="rounded-xl bg-primary px-5 py-3 font-semibold text-on-primary disabled:opacity-60"
+              >
+                {saving ? 'Saving…' : editing ? 'Save changes' : 'Add course'}
+              </button>
+              {editing && (
+                <button
+                  type="button"
+                  onClick={onReset}
+                  className="rounded-xl border border-outline-variant px-5 py-3"
+                >
+                  Cancel edit
+                </button>
+              )}
+            </div>
+          </form>
+        )}
+      </div>
 
       <div className="rounded-2xl border border-outline-variant bg-surface-container p-5">
         <h2 className="font-bold text-primary">Find curriculum courses</h2>

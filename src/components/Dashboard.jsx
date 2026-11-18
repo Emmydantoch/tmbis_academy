@@ -125,8 +125,11 @@ export default function Dashboard({ userRole = "student" }) {
                   </p>
                 ) : courses.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-outline-variant p-8 text-center text-on-surface-variant">
-                    No courses are assigned for your department, level, and current semester yet.
-                    Check that your profile details are correct or contact the administration.
+                    <p className="font-semibold mb-2">No courses are assigned yet</p>
+                    <p className="text-sm">
+                      Courses are matched to your department, level, and current semester.
+                      Check that your profile details are correct or contact the administration to import the curriculum.
+                    </p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
