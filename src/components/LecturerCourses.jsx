@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 
 export default function LecturerCourses() {
+  const navigate = useNavigate();
   const [assignments, setAssignments] = useState([]);
   const [error, setError] = useState('');
   const groupedAssignments = assignments.reduce((groups, assignment) => {
@@ -50,10 +52,10 @@ export default function LecturerCourses() {
             {semesterAssignments.map((assignment) => (
               <article
                 key={`${assignment.course_code || 'legacy'}-${assignment.id}`}
-                className="bg-surface-container-lowest rounded-2xl border border-outline-variant p-6"
+                className="bg-surface-container-lowest rounded-2xl border border-outline-variant p-6 hover:border-primary transition-all"
               >
                 <div className="flex items-start justify-between gap-4">
-                  <div>
+                  <div className="flex-1">
                     <p className="text-sm text-primary font-semibold">
                       {[
                         assignment.department,
@@ -74,6 +76,25 @@ export default function LecturerCourses() {
                     </h3>
                   </div>
                   <span className="material-symbols-outlined text-primary">school</span>
+                </div>
+                <div className="mt-4 pt-4 border-t border-outline-variant/30">
+                  <button
+                    onClick={() => navigate('/dashboard/live-session', {
+                      state: {
+                        courseDetails: {
+                          courseCode: assignment.course_code,
+                          courseName: assignment.course_name,
+                          level: assignment.level,
+                          department: assignment.department,
+                          units: assignment.units,
+                        }
+                      }
+                    })}
+                    className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-on-primary px-4 py-2 rounded-xl font-medium transition-all text-sm"
+                  >
+                    <span className="material-symbols-outlined text-lg">videocam</span>
+                    Schedule Live Session
+                  </button>
                 </div>
               </article>
             ))}

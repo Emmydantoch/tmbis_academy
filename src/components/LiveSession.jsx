@@ -1,17 +1,21 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import api from '../api/axios';
 
 export default function LiveSessions() {
+  const location = useLocation();
+  const courseDetails = location.state?.courseDetails || null;
+
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [scheduling, setScheduling] = useState(false);
   const [scheduleForm, setScheduleForm] = useState({
-    title: '',
-    description: '',
+    title: courseDetails?.courseName || '',
+    description: courseDetails ? `Live session for ${courseDetails.courseName} (${courseDetails.courseCode})` : '',
     meeting_link: '',
-    target_level: '',
+    target_level: courseDetails?.level || '',
     start_time: '',
     end_time: '',
   });
@@ -95,6 +99,8 @@ export default function LiveSessions() {
       clearInterval(interval);
     };
   }, [fetchSessions]);
+
+
 
   // Cleanup if user leaves page while recording
   useEffect(() => {
@@ -256,8 +262,40 @@ export default function LiveSessions() {
           onSubmit={scheduleSession}
           className="mb-8 rounded-2xl border border-outline-variant bg-surface-container p-6"
         >
-          <h3 className="text-xl font-bold text-on-surface">Schedule a live session</h3>
-          <p className="mt-1 text-sm text-on-surface-variant">
+          <h3 className="text-xl font-bold text-on-surface">
+            {courseDetails ? 'Schedule Live Session for Course' : 'Schedule a live session'}
+          </h3>
+          {courseDetails && (
+            <div className="mt-2 rounded-xl bg-primary/10 border border-primary/30 px-4 py-3 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-primary">
+                  {courseDetails.courseCode} · {courseDetails.courseName}
+                </p>
+                <p className="text-xs text-on-surface-variant mt-1">
+                  {courseDetails.department} · Level {courseDetails.level} · {courseDetails.units} units
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setScheduleForm({
+                    title: '',
+                    description: '',
+                    meeting_link: '',
+                    target_level: '',
+                    start_time: '',
+                    end_time: '',
+                  });
+                  // Clear the course details from location state
+                  window.history.replaceState({}, document.title, window.location.pathname);
+                }}
+                className="text-xs text-primary hover:underline"
+              >
+                Clear course
+              </button>
+            </div>
+          )}
+          <p className="mt-3 text-sm text-on-surface-variant">
             Only students in the selected level will see the session or its join link.
           </p>
           <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -270,6 +308,7 @@ export default function LiveSessions() {
                 onChange={handleScheduleChange}
                 maxLength={200}
                 className="mt-1 w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3"
+                placeholder={courseDetails ? `e.g., ${courseDetails.courseName} - Week 1` : 'Enter session title'}
               />
             </label>
             <label className="text-sm font-medium text-on-surface">

@@ -26,13 +26,28 @@ export default function Library() {
     }
   });
   const [uploadMode, setUploadMode] = useState('material');
+  const [targetDepartment, setTargetDepartment] = useState('');
+  const [targetLevel, setTargetLevel] = useState('');
+  const [targetSemester, setTargetSemester] = useState('');
+  const [semesters, setSemesters] = useState([]);
+  const [departments] = useState([
+    'Accounting', 'Business Administration', 'Entrepreneurship', 'Finance',
+    'Industrial Relations and Personal Management', 'Marketing', 'Mass Communication',
+    'Economics', 'Geography and Planning', 'Political Science', 'Psychology',
+    'Sociology', 'Tourism', 'Computer Science', 'SLT Biotech', 'SLT Biochem',
+    'SLT Chem', 'Statistics', 'History & International Studies', 'English and Literary Studies'
+  ]);
 
   const filters = ["All Materials", "Textbooks", "Lecture Notes", "Research Papers", "Case Studies", "Video Lectures"];
 
   const fetchMaterials = useCallback(async () => {
     try {
-      const response = await api.get('library/materials/');
-      const materials = response.data || [];
+      const [materialsResponse, semestersResponse] = await Promise.all([
+        api.get('library/materials/'),
+        api.get('auth/admin-academic/courses/'),
+      ]);
+      const materials = materialsResponse.data || [];
+      setSemesters(semestersResponse.data.semesters || []);
       setResources(materials.map((item) => ({
         ...item,
         type: inferType(item.file_type || item.file || ''),
@@ -66,6 +81,11 @@ export default function Library() {
     formData.append('file', file);
     formData.append('file_type', file.type || inferType(file.name));
     formData.append('file_size', String(file.size));
+    formData.append('department', targetDepartment);
+    formData.append('level', targetLevel);
+    if (targetSemester) {
+      formData.append('semester', targetSemester);
+    }
     if (isVideo) {
       formData.append('category', 'Video Lectures');
     }
@@ -80,6 +100,9 @@ export default function Library() {
       setDescription('');
       setCourse('');
       setFile(null);
+      setTargetDepartment('');
+      setTargetLevel('');
+      setTargetSemester('');
       event.target.reset();
       await fetchMaterials();
       setMessage('Material uploaded successfully.');
@@ -194,6 +217,50 @@ export default function Library() {
               placeholder="Short description"
               className="w-full bg-surface-container-lowest border border-outline-variant rounded-2xl px-5 py-3 min-h-24"
             />
+            
+            {/* Targeting Section */}
+            <div className="bg-surface-container-lowest rounded-2xl p-4 border border-outline-variant/50">
+              <p className="text-sm font-semibold text-on-surface mb-3">
+                <span className="material-symbols-outlined text-lg align-middle mr-1">visibility</span>
+                Target Students (Optional)
+              </p>
+              <p className="text-xs text-on-surface-variant mb-4">
+                Leave empty to make this material visible to all students. Specify to restrict access.
+              </p>
+              <div className="grid md:grid-cols-3 gap-4">
+                <select
+                  value={targetDepartment}
+                  onChange={(e) => setTargetDepartment(e.target.value)}
+                  className="w-full bg-surface-container border border-outline-variant rounded-xl px-4 py-2.5 text-sm"
+                >
+                  <option value="">All Departments</option>
+                  {departments.map(dept => (
+                    <option key={dept} value={dept}>{dept}</option>
+                  ))}
+                </select>
+                <select
+                  value={targetLevel}
+                  onChange={(e) => setTargetLevel(e.target.value)}
+                  className="w-full bg-surface-container border border-outline-variant rounded-xl px-4 py-2.5 text-sm"
+                >
+                  <option value="">All Levels</option>
+                  {['100', '200', '300', '400', '500', '600'].map(level => (
+                    <option key={level} value={level}>{level} Level</option>
+                  ))}
+                </select>
+                <select
+                  value={targetSemester}
+                  onChange={(e) => setTargetSemester(e.target.value)}
+                  className="w-full bg-surface-container border border-outline-variant rounded-xl px-4 py-2.5 text-sm"
+                >
+                  <option value="">All Semesters</option>
+                  {semesters.map(sem => (
+                    <option key={sem.id} value={sem.id}>{sem.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             <input
               type="file"
               accept={uploadMode === 'video' ? 'video/*,.mp4,.mov,.avi,.mkv,.webm' : '.pdf,.doc,.docx,.ppt,.pptx,.txt,.md,.csv,.json'}
