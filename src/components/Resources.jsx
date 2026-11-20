@@ -3,8 +3,8 @@ import { useState } from 'react';
 export default function Resources() {
   const [activeCategory, setActiveCategory] = useState("All Stories");
 
-  const categories = ["All Stories", "Student Success", "Engineering Tips", "Platform Updates", "Research"];
-
+  const categories = ["All Stories"];
+// , "Student Success", "Engineering Tips", "Platform Updates", "Research"
   const posts = [
     {
       id: 1,
