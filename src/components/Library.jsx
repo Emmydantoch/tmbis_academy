@@ -42,12 +42,17 @@ export default function Library() {
 
   const fetchMaterials = useCallback(async () => {
     try {
+      const materialsPromise = api.get('library/materials/');
+      const semestersPromise = api.get('auth/admin-academic/courses/').catch(() => null);
+
       const [materialsResponse, semestersResponse] = await Promise.all([
-        api.get('library/materials/'),
-        api.get('auth/admin-academic/courses/'),
+        materialsPromise,
+        semestersPromise,
       ]);
-      const materials = materialsResponse.data || [];
-      setSemesters(semestersResponse.data.semesters || []);
+      const materials = materialsResponse?.data || [];
+      if (semestersResponse?.data?.semesters) {
+        setSemesters(semestersResponse.data.semesters);
+      }
       setResources(materials.map((item) => ({
         ...item,
         type: inferType(item.file_type || item.file || ''),
@@ -254,9 +259,18 @@ export default function Library() {
                   className="w-full bg-surface-container border border-outline-variant rounded-xl px-4 py-2.5 text-sm"
                 >
                   <option value="">All Semesters</option>
-                  {semesters.map(sem => (
-                    <option key={sem.id} value={sem.id}>{sem.name}</option>
-                  ))}
+                  <option value="First Semester">First Semester</option>
+                  <option value="Second Semester">Second Semester</option>
+                  {semesters
+                    .filter((sem) => {
+                      const name = (sem.name || '').toLowerCase().trim();
+                      return name !== 'first semester' && name !== 'second semester';
+                    })
+                    .map((sem) => (
+                      <option key={sem.id} value={sem.id}>
+                        {sem.name}
+                      </option>
+                    ))}
                 </select>
               </div>
             </div>
@@ -289,10 +303,29 @@ export default function Library() {
               </div>
               <div>
                 <h4 className="font-semibold text-on-surface group-hover:text-primary transition-colors">{resource.title}</h4>
-                <div className="flex items-center gap-4 text-sm text-on-surface-variant mt-1">
-                  <span className="bg-surface-container-high px-3 py-1 rounded-full text-xs">{resource.type}</span>
-                  <span>{resource.course}</span>
-                  <span>• {resource.size}</span>
+                <div className="flex flex-wrap items-center gap-2 text-sm text-on-surface-variant mt-1.5">
+                  <span className="bg-surface-container-high px-3 py-1 rounded-full text-xs font-medium">{resource.type}</span>
+                  {resource.course ? <span className="text-xs font-medium text-primary">• {resource.course}</span> : null}
+                  {resource.department ? (
+                    <span className="bg-surface-container-high px-2.5 py-0.5 rounded-full text-xs">
+                      {resource.department}
+                    </span>
+                  ) : null}
+                  {resource.level ? (
+                    <span className="bg-surface-container-high px-2.5 py-0.5 rounded-full text-xs">
+                      {resource.level} Level
+                    </span>
+                  ) : null}
+                  {resource.semester_name ? (
+                    <span className="bg-primary/10 text-primary px-2.5 py-0.5 rounded-full text-xs font-medium">
+                      {resource.semester_name}
+                    </span>
+                  ) : (
+                    <span className="bg-surface-container-high/60 px-2.5 py-0.5 rounded-full text-xs text-on-surface-variant">
+                      All Semesters
+                    </span>
+                  )}
+                  <span className="text-xs text-on-surface-variant">• {resource.size}</span>
                 </div>
               </div>
             </div>
