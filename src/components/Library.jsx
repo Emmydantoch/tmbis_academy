@@ -10,6 +10,7 @@ export default function Library() {
   const [course, setCourse] = useState("");
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
   const [message, setMessage] = useState("");
   const [canUpload] = useState(() => {
     try {
@@ -29,7 +30,6 @@ export default function Library() {
   const [targetDepartment, setTargetDepartment] = useState('');
   const [targetLevel, setTargetLevel] = useState('');
   const [targetSemester, setTargetSemester] = useState('');
-  const [semesters, setSemesters] = useState([]);
   const [departments] = useState([
     'Accounting', 'Business Administration', 'Entrepreneurship', 'Finance',
     'Industrial Relations and Personal Management', 'Marketing', 'Mass Communication',
@@ -42,17 +42,8 @@ export default function Library() {
 
   const fetchMaterials = useCallback(async () => {
     try {
-      const materialsPromise = api.get('library/materials/');
-      const semestersPromise = api.get('auth/admin-academic/courses/').catch(() => null);
-
-      const [materialsResponse, semestersResponse] = await Promise.all([
-        materialsPromise,
-        semestersPromise,
-      ]);
-      const materials = materialsResponse?.data || [];
-      if (semestersResponse?.data?.semesters) {
-        setSemesters(semestersResponse.data.semesters);
-      }
+      const response = await api.get('library/materials/');
+      const materials = response?.data || [];
       setResources(materials.map((item) => ({
         ...item,
         type: inferType(item.file_type || item.file || ''),
@@ -119,6 +110,28 @@ export default function Library() {
       );
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleDelete = async (materialId, materialTitle) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${materialTitle || 'this material'}"? This action cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    try {
+      setDeletingId(materialId);
+      setMessage('');
+      await api.delete(`library/materials/${materialId}/`);
+      setResources((prev) => prev.filter((r) => r.id !== materialId));
+      setMessage('Material deleted successfully.');
+    } catch (error) {
+      console.error(error);
+      setMessage(
+        error.response?.data?.detail || 'Failed to delete material. Please try again.'
+      );
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -261,16 +274,6 @@ export default function Library() {
                   <option value="">All Semesters</option>
                   <option value="First Semester">First Semester</option>
                   <option value="Second Semester">Second Semester</option>
-                  {semesters
-                    .filter((sem) => {
-                      const name = (sem.name || '').toLowerCase().trim();
-                      return name !== 'first semester' && name !== 'second semester';
-                    })
-                    .map((sem) => (
-                      <option key={sem.id} value={sem.id}>
-                        {sem.name}
-                      </option>
-                    ))}
                 </select>
               </div>
             </div>
@@ -296,9 +299,9 @@ export default function Library() {
       {/* Resources List */}
       <div className="space-y-4">
         {filteredResources.map(resource => (
-          <div key={resource.id} className="group flex items-center justify-between bg-surface-container p-6 rounded-2xl border border-outline-variant hover:border-primary transition-all">
+          <div key={resource.id} className="group flex flex-col md:flex-row md:items-center justify-between bg-surface-container p-6 rounded-2xl border border-outline-variant hover:border-primary transition-all gap-4">
             <div className="flex items-center gap-6">
-              <div className="w-14 h-14 bg-surface-container-high rounded-2xl flex items-center justify-center text-3xl text-primary">
+              <div className="w-14 h-14 bg-surface-container-high rounded-2xl flex items-center justify-center text-3xl text-primary shrink-0">
                 <span className="material-symbols-outlined">{resource.icon}</span>
               </div>
               <div>
@@ -330,13 +333,25 @@ export default function Library() {
               </div>
             </div>
 
-            <div className="flex items-center gap-6 text-sm">
+            <div className="flex items-center flex-wrap gap-3 md:gap-4 text-sm self-end md:self-center">
               <span className="text-on-surface-variant hidden md:block">Added {resource.added}</span>
+              {canUpload ? (
+                <button
+                  type="button"
+                  disabled={deletingId === resource.id}
+                  onClick={() => handleDelete(resource.id, resource.title)}
+                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-error border border-error/30 hover:bg-error-container/20 hover:border-error transition-all font-medium text-xs md:text-sm disabled:opacity-50"
+                  title="Delete material"
+                >
+                  <span className="material-symbols-outlined text-base">delete</span>
+                  <span>{deletingId === resource.id ? 'Deleting...' : 'Delete'}</span>
+                </button>
+              ) : null}
               <a
                 href={resource.file_url || '#'}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-2 bg-primary text-on-primary px-6 py-3 rounded-2xl hover:brightness-110 transition-all"
+                className="flex items-center gap-2 bg-primary text-on-primary px-6 py-3 rounded-2xl hover:brightness-110 transition-all font-semibold"
               >
                 <span className="material-symbols-outlined">download</span>
                 Download
