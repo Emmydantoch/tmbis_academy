@@ -131,7 +131,6 @@ export default function Payment() {
             to="/dashboard"
             className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-surface-container text-on-surface-variant transition-all"
           >
-            <span className="material-symbols-outlined">dashboard</span>
             <span>Dashboard</span>
           </Link>
 
@@ -139,23 +138,20 @@ export default function Payment() {
             to="/"
             className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-surface-container text-on-surface-variant transition-all"
           >
-            <span className="material-symbols-outlined">Home</span>
             <span>Home</span>
           </Link>
           <Link
             to="/dashboard/payment"
             className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-primary text-on-primary transition-all"
           >
-            <span className="material-symbols-outlined">account_balance_wallet</span>
             <span>Payments</span>
           </Link>
-          
+
 
           <Link
             to="/contact"
             className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-surface-container text-on-surface-variant transition-all"
           >
-            <span className="material-symbols-outlined">contact_support</span>
             <span>Contact Us</span>
           </Link>
         </div>
@@ -166,7 +162,6 @@ export default function Payment() {
             onClick={handleLogout}
             className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-surface-container text-on-surface-variant transition-all"
           >
-            <span className="material-symbols-outlined">logout</span>
             <span>Logout</span>
           </button>
         </div>
@@ -189,8 +184,7 @@ export default function Payment() {
                 {formatCurrency(selectedProgramme?.fee || 0)}
               </h2>
               <div className="flex items-center gap-4">
-                <div className="bg-surface-container-high text-on-surface px-4 py-2 rounded-full text-sm flex items-center gap-2">
-                  <span className="material-symbols-outlined">event_busy</span>
+                <div className="bg-surface-container-high text-on-surface px-4 py-2 rounded-full text-sm">
                   Tuition paid: {formatCurrency(Number(paymentStatus?.tuition_paid || 0))}
                 </div>
                 <p className="text-on-surface-variant">
@@ -233,10 +227,8 @@ export default function Payment() {
             <div className="xl:col-span-3 bg-surface-container p-8 rounded-2xl border border-outline-variant">
               <div className="flex justify-between items-center mb-8">
                 <h3 className="text-2xl font-bold text-primary">Make a Payment</h3>
-                <div className="flex gap-2">
-                  <div className="px-3 py-1 bg-surface-container-high rounded text-xs">VISA</div>
-                  <div className="px-3 py-1 bg-surface-container-high rounded text-xs">MC</div>
-                  <div className="px-3 py-1 bg-surface-container-high rounded text-xs">Transfer</div>
+                <div className="text-sm text-on-surface-variant">
+                  Secure payment via Paystack
                 </div>
               </div>
 

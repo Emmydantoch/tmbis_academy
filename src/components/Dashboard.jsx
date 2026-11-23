@@ -20,6 +20,9 @@ export default function Dashboard({ userRole = "student" }) {
   const [coursesLoading, setCoursesLoading] = useState(true);
   const [coursesError, setCoursesError] = useState('');
   const [dismissedAccessDeniedKey, setDismissedAccessDeniedKey] = useState(null);
+  const [lecturerAssignments, setLecturerAssignments] = useState([]);
+  const [upcomingSession, setUpcomingSession] = useState(null);
+  const [sessionsLoading, setSessionsLoading] = useState(true);
   const accessDeniedMsg =
     Boolean(location.state?.accessDenied) &&
     dismissedAccessDeniedKey !== location.key;
@@ -48,6 +51,53 @@ export default function Dashboard({ userRole = "student" }) {
       active = false;
     };
   }, [currentRole]);
+
+  // Fetch lecturer assignments
+  useEffect(() => {
+    if (currentRole !== 'lecturer') return undefined;
+
+    let active = true;
+    api.get('auth/lecturer/assignments/')
+      .then(({ data }) => {
+        if (active) setLecturerAssignments(data.assignments || []);
+      })
+      .catch((requestError) => {
+        console.error('Unable to load lecturer assignments:', requestError);
+      })
+      .finally(() => {
+        if (active) setSessionsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [currentRole]);
+
+  // Fetch upcoming live sessions
+  useEffect(() => {
+    let active = true;
+    api.get('live-sessions/')
+      .then(({ data }) => {
+        if (active) {
+          const now = new Date();
+          const upcoming = data.find(session => {
+            const startTime = new Date(session.start_time);
+            return startTime > now && startTime <= new Date(now.getTime() + 24 * 60 * 60 * 1000); // Next 24 hours
+          });
+          setUpcomingSession(upcoming || null);
+        }
+      })
+      .catch((requestError) => {
+        console.error('Unable to load live sessions:', requestError);
+      })
+      .finally(() => {
+        if (active) setSessionsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!location.state?.accessDenied) return;
@@ -98,7 +148,7 @@ export default function Dashboard({ userRole = "student" }) {
           <p className="text-on-surface-variant mt-1">
             {currentRole === "student"
               ? "Your courses are matched to your department, level, and current semester. When your programme is set, courses are matched to it too."
-              : "You have 3 classes and 47 students today."}
+              : `You have ${lecturerAssignments.length} assigned course${lecturerAssignments.length !== 1 ? 's' : ''}. Manage your teaching schedule and materials.`}
           </p>
         </div>
 
@@ -159,47 +209,122 @@ export default function Dashboard({ userRole = "student" }) {
                   </div>
                 )
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-6">
-                    <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                      Teaching Assignment
-                    </span>
-                    <h4 className="mt-3 font-semibold text-on-surface">
-                      My Teaching Workspace
-                    </h4>
-                    <p className="mt-1 text-sm text-on-surface-variant">
-                      Manage classes, sessions, and grades.
-                    </p>
-                    <Link to="/dashboard/my-courses" className="mt-4 inline-block text-primary hover:underline">
-                      View my courses
-                    </Link>
-                    <Link to="/dashboard/live-session" className="mt-4 ml-5 inline-block text-primary hover:underline">
-                      Schedule a live session
-                    </Link>
-                  </div>
-                </div>
+                <>
+                  {sessionsLoading ? (
+                    <p className="text-on-surface-variant">Loading your assignments…</p>
+                  ) : lecturerAssignments.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-outline-variant p-8 text-center text-on-surface-variant">
+                      <p className="font-semibold mb-2">No courses assigned yet</p>
+                      <p className="text-sm">
+                        You haven't been assigned any courses yet. Please check with your administrator.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {lecturerAssignments.slice(0, 4).map((assignment) => (
+                        <article
+                          key={assignment.id}
+                          className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 hover:border-primary transition-all"
+                        >
+                          <p className="text-sm text-primary font-semibold">
+                            {[
+                              assignment.department,
+                              assignment.level ? `Level ${assignment.level}` : '',
+                              assignment.units ? `${assignment.units} units` : ''
+                            ].filter(Boolean).join(' · ') || 'Shared course'}
+                          </p>
+                          {assignment.course_code && (
+                            <p className="mt-1 text-sm font-semibold text-on-surface-variant">
+                              {assignment.course_code}
+                            </p>
+                          )}
+                          <h4 className="mt-2 text-lg font-semibold text-on-surface">
+                            {assignment.course_name}
+                          </h4>
+                          <Link
+                            to="/dashboard/live-session"
+                            state={{
+                              courseDetails: {
+                                courseCode: assignment.course_code,
+                                courseName: assignment.course_name,
+                                level: assignment.level,
+                                department: assignment.department,
+                                units: assignment.units,
+                              }
+                            }}
+                            className="mt-4 inline-flex items-center gap-2 text-primary hover:underline text-sm"
+                          >
+                            <span className="material-symbols-outlined text-lg">videocam</span>
+                            Schedule Session
+                          </Link>
+                        </article>
+                      ))}
+                    </div>
+                  )}
+                  {lecturerAssignments.length > 4 && (
+                    <div className="mt-4 text-center">
+                      <Link to="/dashboard/my-courses" className="text-primary hover:underline">
+                        View all {lecturerAssignments.length} courses →
+                      </Link>
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
           {/* Sidebar Widgets */}
           <div className="lg:col-span-4 space-y-6">
             {/* Next Live Session */}
-            <div className="bg-surface-container-high border border-primary/30 rounded-2xl p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="material-symbols-outlined text-primary">videocam</span>
-                <span className="uppercase tracking-widest text-primary text-sm font-medium">Up Next</span>
+            {upcomingSession ? (
+              <div className="bg-surface-container-high border border-primary/30 rounded-2xl p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="material-symbols-outlined text-primary">videocam</span>
+                  <span className="uppercase tracking-widest text-primary text-sm font-medium">Up Next</span>
+                </div>
+                <h3 className="text-xl font-semibold">{upcomingSession.title}</h3>
+                {upcomingSession.target_level && (
+                  <p className="text-sm font-medium text-primary mt-1">Level {upcomingSession.target_level}</p>
+                )}
+                <p className="text-sm text-on-surface-variant mt-2">
+                  {new Date(upcomingSession.start_time).toLocaleString()}
+                </p>
+                <Link to="/dashboard/live-session" className="mt-6 w-full bg-primary text-on-primary py-3.5 rounded-xl font-medium flex items-center justify-center gap-2 hover:brightness-110">
+                  View Session
+                </Link>
               </div>
-              <h3 className="text-xl font-semibold">Data Structures Seminar</h3>
-              <p className="text-sm text-on-surface-variant mt-2">Starts in 15 minutes</p>
-              <Link to="/dashboard/live-session" className="mt-6 w-full bg-primary text-on-primary py-3.5 rounded-xl font-medium flex items-center justify-center gap-2 hover:brightness-110">
-                Join Live Session
-              </Link>
-            </div>
+            ) : (
+              <div className="bg-surface-container-lowest rounded-2xl p-6 border border-outline-variant">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="material-symbols-outlined text-on-surface-variant">videocam_off</span>
+                  <span className="uppercase tracking-widest text-on-surface-variant text-sm font-medium">No Upcoming Sessions</span>
+                </div>
+                <p className="text-sm text-on-surface-variant mt-2">
+                  No live sessions scheduled for the next 24 hours.
+                </p>
+                <Link to="/dashboard/live-session" className="mt-6 w-full border border-outline-variant text-on-surface py-3.5 rounded-xl font-medium flex items-center justify-center gap-2 hover:border-primary">
+                  <span className="material-symbols-outlined">add</span>
+                  Schedule Session
+                </Link>
+              </div>
+            )}
 
             {/* Recent Activity / Grades */}
             <div className="bg-surface-container-lowest rounded-2xl p-6 border border-outline-variant">
               <h3 className="font-semibold mb-5">Recent Activity</h3>
-              {/* Add recent items here */}
+              {currentRole === 'lecturer' && lecturerAssignments.length > 0 ? (
+                <div className="space-y-3">
+                  {lecturerAssignments.slice(0, 3).map((assignment) => (
+                    <div key={assignment.id} className="text-sm">
+                      <p className="font-medium text-on-surface">{assignment.course_name}</p>
+                      <p className="text-on-surface-variant text-xs">
+                        {assignment.department} · Level {assignment.level}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-on-surface-variant">No recent activity to show.</p>
+              )}
             </div>
           </div>
         </div>
