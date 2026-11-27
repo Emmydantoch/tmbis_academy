@@ -31,6 +31,7 @@ export default function DashboardLayout() {
       ? 'lecturer'
       : 'student';
   const isPaymentRestricted = paymentStatus?.restricted === true;
+  const mustChangePassword = Boolean(profile?.must_change_password);
   const allowedRestrictedPaths = [
     '/dashboard/payment',
     '/dashboard/profile',
@@ -38,6 +39,12 @@ export default function DashboardLayout() {
   ];
   const showPaymentRestriction =
     isPaymentRestricted && !allowedRestrictedPaths.includes(location.pathname);
+
+  useEffect(() => {
+    if (mustChangePassword && location.pathname !== '/dashboard/change-password') {
+      navigate('/dashboard/change-password', { replace: true });
+    }
+  }, [mustChangePassword, location.pathname, navigate]);
 
   useEffect(() => {
     // ── Auth Guard: redirect to login if no valid session exists ──
@@ -129,7 +136,9 @@ export default function DashboardLayout() {
   ];
 
   const navItems = userRole === 'lecturer' ? lecturerNavItems : studentNavItems;
-  const visibleNavItems = isPaymentRestricted
+  const visibleNavItems = mustChangePassword
+    ? [{ to: '/dashboard/change-password', icon: 'lock_reset', label: 'Set Password', exact: true }]
+    : isPaymentRestricted
     ? studentNavItems.filter((item) => item.exact || item.to === '/dashboard/payment')
     : navItems;
 

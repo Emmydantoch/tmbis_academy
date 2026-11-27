@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import api from '../api/axios';
+import { DEPARTMENTS } from '../constants/departments';
 
 export default function LiveSessions() {
   const location = useLocation();
@@ -14,8 +15,11 @@ export default function LiveSessions() {
   const [scheduleForm, setScheduleForm] = useState({
     title: courseDetails?.courseName || '',
     description: courseDetails ? `Live session for ${courseDetails.courseName} (${courseDetails.courseCode})` : '',
+    course: courseDetails ? `${courseDetails.courseCode} - ${courseDetails.courseName}` : '',
     meeting_link: '',
+    department: courseDetails?.department || '',
     target_level: courseDetails?.level || '',
+    semester: '',
     start_time: '',
     end_time: '',
   });
@@ -70,12 +74,15 @@ export default function LiveSessions() {
       setScheduleForm({
         title: '',
         description: '',
+        course: '',
         meeting_link: '',
+        department: '',
         target_level: '',
+        semester: '',
         start_time: '',
         end_time: '',
       });
-      setMessage('Live session scheduled. Students in the selected level have been notified.');
+      setMessage('Live session scheduled. Eligible students in the selected department, level, and semester will see this session.');
       await fetchSessions();
     } catch (requestError) {
       console.error('Unable to schedule live session:', requestError);
@@ -281,8 +288,11 @@ export default function LiveSessions() {
                   setScheduleForm({
                     title: '',
                     description: '',
+                    course: '',
                     meeting_link: '',
+                    department: '',
                     target_level: '',
+                    semester: '',
                     start_time: '',
                     end_time: '',
                   });
@@ -296,7 +306,7 @@ export default function LiveSessions() {
             </div>
           )}
           <p className="mt-3 text-sm text-on-surface-variant">
-            Only students in the selected level will see the session or its join link.
+            Only students matching the selected targeting criteria (department, level, semester) will see the session and its join link.
           </p>
           <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
             <label className="text-sm font-medium text-on-surface">
@@ -312,20 +322,70 @@ export default function LiveSessions() {
               />
             </label>
             <label className="text-sm font-medium text-on-surface">
-              Student level
-              <select
-                required
-                name="target_level"
-                value={scheduleForm.target_level}
+              Course code / Title (optional)
+              <input
+                name="course"
+                value={scheduleForm.course}
                 onChange={handleScheduleChange}
+                maxLength={150}
                 className="mt-1 w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3"
-              >
-                <option value="">Select a level</option>
-                {['100', '200', '300', '400', '500', '600'].map((level) => (
-                  <option key={level} value={level}>{level} Level</option>
-                ))}
-              </select>
+                placeholder="e.g., CSC 201 · Data Structures"
+              />
             </label>
+
+            {/* Target Students (Who can see & join) */}
+            <div className="bg-surface-container-lowest rounded-2xl p-4 border border-outline-variant/50 md:col-span-2">
+              <p className="text-sm font-semibold text-on-surface mb-1">
+                <span className="material-symbols-outlined text-lg align-middle mr-1 text-primary">visibility</span>
+                Target Students (Who can see & join)
+              </p>
+              <p className="text-xs text-on-surface-variant mb-4">
+                Leave empty to make this session visible to all students. Specify to restrict access.
+              </p>
+              <div className="grid md:grid-cols-3 gap-4">
+                <label className="text-xs font-medium text-on-surface">
+                  Department
+                  <select
+                    name="department"
+                    value={scheduleForm.department}
+                    onChange={handleScheduleChange}
+                    className="mt-1 w-full bg-surface-container border border-outline-variant rounded-xl px-4 py-2.5 text-sm"
+                  >
+                    <option value="">All Departments</option>
+                    {DEPARTMENTS.map((dept) => (
+                      <option key={dept} value={dept}>{dept}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-xs font-medium text-on-surface">
+                  Level
+                  <select
+                    name="target_level"
+                    value={scheduleForm.target_level}
+                    onChange={handleScheduleChange}
+                    className="mt-1 w-full bg-surface-container border border-outline-variant rounded-xl px-4 py-2.5 text-sm"
+                  >
+                    <option value="">All Levels</option>
+                    {['100', '200', '300', '400', '500', '600'].map((level) => (
+                      <option key={level} value={level}>{level} Level</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-xs font-medium text-on-surface">
+                  Semester
+                  <select
+                    name="semester"
+                    value={scheduleForm.semester}
+                    onChange={handleScheduleChange}
+                    className="mt-1 w-full bg-surface-container border border-outline-variant rounded-xl px-4 py-2.5 text-sm"
+                  >
+                    <option value="">All Semesters</option>
+                    <option value="First Semester">First Semester</option>
+                    <option value="Second Semester">Second Semester</option>
+                  </select>
+                </label>
+              </div>
+            </div>
             <label className="text-sm font-medium text-on-surface md:col-span-2">
               Meeting link
               <input
@@ -429,12 +489,39 @@ export default function LiveSessions() {
                 </div>
 
                 <h2 className="text-xl font-bold text-primary mb-1">{session.title}</h2>
-                <p className="text-on-surface-variant mb-1">with {session.lecturer_name}</p>
-                {session.target_level && (
-                  <p className="text-sm font-medium text-primary mb-1">
-                    Level {session.target_level}
-                  </p>
-                )}
+                <div className="flex flex-wrap items-center gap-2 mb-2 text-xs font-medium">
+                  <span className="text-on-surface-variant">with {session.lecturer_name}</span>
+                  {session.course && (
+                    <span className="text-primary font-semibold">• {session.course}</span>
+                  )}
+                  {session.department ? (
+                    <span className="bg-primary/10 text-primary px-2.5 py-0.5 rounded-full">
+                      {session.department}
+                    </span>
+                  ) : (
+                    <span className="bg-surface-container-high/60 text-on-surface-variant px-2.5 py-0.5 rounded-full">
+                      All Departments
+                    </span>
+                  )}
+                  {session.target_level ? (
+                    <span className="bg-primary/10 text-primary px-2.5 py-0.5 rounded-full">
+                      {session.target_level} Level
+                    </span>
+                  ) : (
+                    <span className="bg-surface-container-high/60 text-on-surface-variant px-2.5 py-0.5 rounded-full">
+                      All Levels
+                    </span>
+                  )}
+                  {session.semester_name ? (
+                    <span className="bg-primary/10 text-primary px-2.5 py-0.5 rounded-full">
+                      {session.semester_name}
+                    </span>
+                  ) : (
+                    <span className="bg-surface-container-high/60 text-on-surface-variant px-2.5 py-0.5 rounded-full">
+                      All Semesters
+                    </span>
+                  )}
+                </div>
                 <p className="text-sm text-on-surface-variant">
                   {new Date(session.start_time).toLocaleString()} –{' '}
                   {new Date(session.end_time).toLocaleTimeString()}

@@ -14,7 +14,7 @@ export default function ChangePassword() {
   const [isFirstLogin] = useState(() => {
     try {
       const user = JSON.parse(localStorage.getItem('user') || 'null');
-      return Boolean(user && !user.has_usable_password);
+      return Boolean(user && (!user.has_usable_password || user.must_change_password));
     } catch {
       return false;
     }
@@ -57,7 +57,9 @@ export default function ChangePassword() {
         if (raw) {
           const u = JSON.parse(raw);
           u.has_usable_password = true;
+          u.must_change_password = false;
           localStorage.setItem('user', JSON.stringify(u));
+          window.dispatchEvent(new CustomEvent('profile-updated', { detail: u }));
         }
       } catch (storageError) {
         console.error('Unable to update stored user details.', storageError);
@@ -94,9 +96,9 @@ export default function ChangePassword() {
         <div className="mb-6 rounded-2xl bg-primary/10 border border-primary/30 px-6 py-4 flex items-start gap-3">
           <span className="material-symbols-outlined text-primary mt-0.5">info</span>
           <div>
-            <h3 className="font-semibold text-on-surface">Set Your Password</h3>
+            <h3 className="font-semibold text-on-surface">Set Your Permanent Password</h3>
             <p className="text-sm text-on-surface-variant mt-1">
-              You logged in with an activation token. Please set a permanent password so you can log in easily next time, make sure your password is not less than 8 characters, it should contain at least one uppercase letter, one lowercase letter, one number, and one special character. 
+              You are signed in with a temporary default password or token. Please choose a new permanent password to secure your account. Once updated, you will use your matric number and your new password to sign in anytime.
             </p>
           </div>
         </div>

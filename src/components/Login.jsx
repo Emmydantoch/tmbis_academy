@@ -12,7 +12,20 @@ export default function Login() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [timeoutNotice, setTimeoutNotice] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    try {
+      const msg = sessionStorage.getItem('session_timeout_message');
+      if (msg) {
+        setTimeoutNotice(msg);
+        sessionStorage.removeItem('session_timeout_message');
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   useEffect(() => {
     const header = document.querySelector('header');
@@ -55,17 +68,35 @@ export default function Login() {
       localStorage.setItem('access_token', response.data.access);
       localStorage.setItem('refresh_token', response.data.refresh);
       localStorage.setItem('user', JSON.stringify(response.data.user));
+      localStorage.setItem('tmbis_last_active', String(Date.now()));
+
+      // Check for saved post-login redirect path
+      let savedRedirect = null;
+      try {
+        savedRedirect = sessionStorage.getItem('tmbis_post_login_redirect');
+        sessionStorage.removeItem('tmbis_post_login_redirect');
+      } catch {
+        // ignore
+      }
 
       // Redirect based on role
       const user = response.data.user;
       const justActivated = response.data.just_activated;
 
       if (user.is_staff || user.is_superuser || user.role === 'admin') {
-        navigate('/admin/dashboard');   // Admin Dashboard
+        if (savedRedirect && savedRedirect.startsWith('/admin')) {
+          navigate(savedRedirect);
+        } else {
+          navigate('/admin/dashboard');   // Admin Dashboard
+        }
       } else if (justActivated || user.must_change_password) {
         navigate('/dashboard/change-password');  // First login — set password
       } else {
-        navigate('/dashboard');         // Student or lecturer dashboard
+        if (savedRedirect && (savedRedirect.startsWith('/dashboard') || savedRedirect.startsWith('/resources') || savedRedirect.startsWith('/library'))) {
+          navigate(savedRedirect);
+        } else {
+          navigate('/dashboard');         // Student or lecturer dashboard
+        }
       }
 
     } catch (err) {
@@ -128,6 +159,13 @@ export default function Login() {
                 Login to access your student portal, only after successful Tuition Payment.
               </p>
             </div>
+
+            {timeoutNotice && (
+              <div className="mb-6 rounded-xl bg-amber-500/10 border border-amber-500/30 px-4 py-3 text-sm text-amber-600 dark:text-amber-400 flex items-start gap-3 animate-in fade-in">
+                <span className="material-symbols-outlined text-amber-500 shrink-0 text-xl">schedule</span>
+                <span className="leading-snug">{timeoutNotice}</span>
+              </div>
+            )}
 
             {error && (
               <div className="mb-6 rounded-xl bg-error/10 border border-error/30 px-4 py-3 text-sm text-error">

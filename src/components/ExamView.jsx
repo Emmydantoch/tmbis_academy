@@ -38,6 +38,20 @@ export default function ExamView() {
         setExam(res.data);
         setQuestions(res.data.questions || []);
         setTimeLeft((res.data.duration_minutes || 45) * 60);
+
+        // Restore any unsaved draft answers from local storage
+        try {
+          const savedDraft = localStorage.getItem(`exam_draft_${examId}`);
+          if (savedDraft) {
+            const parsed = JSON.parse(savedDraft);
+            if (parsed.answers && Object.keys(parsed.answers).length > 0) {
+              setStudentAnswers(parsed.answers);
+              if (parsed.lastSaved) setLastSaved(new Date(parsed.lastSaved));
+            }
+          }
+        } catch (draftErr) {
+          console.warn('Failed to restore exam draft:', draftErr);
+        }
       } catch (err) {
         console.error(err);
         setLoadError(
@@ -106,6 +120,7 @@ export default function ExamView() {
         });
         setResult(response.data);
         setSubmitSuccess(true);
+        localStorage.removeItem(`exam_draft_${examId}`);
         setTimeout(() => navigate('/dashboard'), 3000);
         return;
       }
@@ -113,6 +128,7 @@ export default function ExamView() {
       const response = await api.post(`exams/${examId}/submit/`, payload);
       setResult(response.data);
       setSubmitSuccess(true);
+      localStorage.removeItem(`exam_draft_${examId}`);
       setTimeout(() => navigate('/dashboard'), 3000);
     } catch (err) {
       console.error(err);
@@ -153,15 +169,44 @@ export default function ExamView() {
     return () => clearInterval(timer);
   }, [handleSubmit, loading, submitSuccess, timeLeft]);
 
-  // Auto-save indicator
+  // Auto-save exam answers persistently to localStorage whenever student answers change
   useEffect(() => {
-    const autoSave = setInterval(() => {
-      if (Object.keys(studentAnswers).length > 0) {
+    if (examId && Object.keys(studentAnswers).length > 0 && !submitSuccess) {
+      try {
+        localStorage.setItem(
+          `exam_draft_${examId}`,
+          JSON.stringify({
+            answers: studentAnswers,
+            lastSaved: new Date().toISOString(),
+          })
+        );
         setLastSaved(new Date());
+      } catch (err) {
+        console.warn('Could not auto-save exam draft:', err);
       }
-    }, 30000);
-    return () => clearInterval(autoSave);
-  }, [studentAnswers]);
+    }
+  }, [studentAnswers, examId, submitSuccess]);
+
+  // Listen for global session saving before auto-logout occurs
+  useEffect(() => {
+    const handleSessionSaving = () => {
+      if (examId && Object.keys(studentAnswers).length > 0 && !submitSuccess) {
+        try {
+          localStorage.setItem(
+            `exam_draft_${examId}`,
+            JSON.stringify({
+              answers: studentAnswers,
+              lastSaved: new Date().toISOString(),
+            })
+          );
+        } catch {
+          // ignore
+        }
+      }
+    };
+    window.addEventListener('tmbis-session-saving', handleSessionSaving);
+    return () => window.removeEventListener('tmbis-session-saving', handleSessionSaving);
+  }, [studentAnswers, examId, submitSuccess]);
 
   // Loading state
   if (loading) {

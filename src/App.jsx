@@ -33,10 +33,12 @@ import Journals from './components/Journals';
 import StudyStudio from './components/StudyStudio';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
+import SessionTimeoutManager from './components/SessionTimeoutManager';
 
 function App() {
   return (
     <Router>
+      <SessionTimeoutManager />
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
