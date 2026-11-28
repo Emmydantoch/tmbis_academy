@@ -12,6 +12,68 @@ export default function AdminUsers({
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
 
+  const [editingUser, setEditingUser] = useState(null);
+  const [editForm, setEditForm] = useState({
+    full_name: '',
+    matric_no: '',
+    department: '',
+    level: '',
+    study_center: '',
+    phone_number: '',
+  });
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [editError, setEditError] = useState('');
+
+  const openEditModal = (user) => {
+    setEditingUser(user);
+    setEditForm({
+      full_name: user.full_name || user.name || '',
+      matric_no: user.matric_no || '',
+      department: user.department || '',
+      level: user.level || '',
+      study_center: user.study_center || '',
+      phone_number: user.phone_number || '',
+    });
+    setEditError('');
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSaveEdit = async (e) => {
+    e.preventDefault();
+    if (!editingUser) return;
+    setSavingEdit(true);
+    setEditError('');
+    try {
+      const response = await api.patch(`auth/admin-users/${editingUser.id}/`, editForm);
+      setUsers((currentUsers) =>
+        currentUsers.map((u) =>
+          u.id === editingUser.id
+            ? {
+                ...u,
+                name: response.data.name || response.data.full_name || u.name,
+                full_name: response.data.full_name || editForm.full_name,
+                matric_no: response.data.matric_no || editForm.matric_no,
+                department: response.data.department || editForm.department,
+                level: response.data.level || editForm.level,
+                study_center: response.data.study_center || editForm.study_center,
+                phone_number: response.data.phone_number || editForm.phone_number,
+              }
+            : u
+        )
+      );
+      setNotice(response.data.detail || `Updated ${editForm.full_name} successfully.`);
+      setEditingUser(null);
+    } catch (err) {
+      setEditError(err.response?.data?.detail || 'Failed to update student profile.');
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -252,6 +314,16 @@ export default function AdminUsers({
                   <td className="px-6 py-5 text-on-surface-variant">{user.semester}</td>
                   <td className="px-6 py-5 text-on-surface-variant">{formatDate(user.joined_at)}</td>
                   <td className="px-6 py-5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openEditModal(user)}
+                        className="inline-flex items-center gap-1 rounded-lg border border-outline-variant bg-surface-container-lowest px-2.5 py-1.5 text-xs font-semibold text-on-surface hover:bg-surface-container"
+                        title="Edit student/user details"
+                      >
+                        <span className="material-symbols-outlined text-sm">edit</span>
+                        <span>Edit</span>
+                      </button>
                     {user.role === 'student' && !user.is_activated && user.email?.endsWith('@students.tmbis.invalid') && (
                       <span className="text-xs text-on-surface-variant">
                         Waiting for student to register with a working email
@@ -283,6 +355,7 @@ export default function AdminUsers({
                         Approve lecturer &amp; send setup link
                       </button>
                     )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -291,6 +364,136 @@ export default function AdminUsers({
           </div>
         </div>
       </div>
+
+      {editingUser && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+        >
+          <div className="w-full max-w-lg rounded-3xl bg-surface-container-high border border-outline-variant p-6 shadow-2xl text-on-surface">
+            <div className="flex items-center justify-between pb-4 border-b border-outline-variant">
+              <div>
+                <h3 className="text-lg font-bold text-on-surface">Edit User Details</h3>
+                <p className="text-xs text-on-surface-variant">Update official name and student academic records</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingUser(null)}
+                className="rounded-full p-1.5 text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
+              >
+                <span className="material-symbols-outlined text-xl">close</span>
+              </button>
+            </div>
+
+            {editError && (
+              <div className="mt-4 rounded-xl border border-error/40 bg-error/10 p-3 text-xs text-error">
+                {editError}
+              </div>
+            )}
+
+            <form onSubmit={handleSaveEdit} className="mt-4 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-1">
+                  Full Name (SURNAME Firstname Othername)
+                </label>
+                <input
+                  name="full_name"
+                  value={editForm.full_name}
+                  onChange={handleEditChange}
+                  required
+                  placeholder="e.g. AJAGUNJEUN Fauziyyah Obolanle"
+                  className="w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-sm text-on-surface focus:border-primary focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-1">
+                    Matric No
+                  </label>
+                  <input
+                    name="matric_no"
+                    value={editForm.matric_no}
+                    onChange={handleEditChange}
+                    placeholder="e.g. 210901001"
+                    className="w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-sm text-on-surface focus:border-primary focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-1">
+                    Level
+                  </label>
+                  <input
+                    name="level"
+                    value={editForm.level}
+                    onChange={handleEditChange}
+                    placeholder="e.g. 200, 300, 400"
+                    className="w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-sm text-on-surface focus:border-primary focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-1">
+                    Department
+                  </label>
+                  <input
+                    name="department"
+                    value={editForm.department}
+                    onChange={handleEditChange}
+                    placeholder="e.g. Computer Science, Accounting"
+                    className="w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-sm text-on-surface focus:border-primary focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-1">
+                    Study Center
+                  </label>
+                  <input
+                    name="study_center"
+                    value={editForm.study_center}
+                    onChange={handleEditChange}
+                    placeholder="e.g. Ado-Ekiti"
+                    className="w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-sm text-on-surface focus:border-primary focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-1">
+                  Phone Number
+                </label>
+                <input
+                  name="phone_number"
+                  value={editForm.phone_number}
+                  onChange={handleEditChange}
+                  placeholder="e.g. 08012345678"
+                  className="w-full rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-sm text-on-surface focus:border-primary focus:outline-none"
+                />
+              </div>
+
+              <div className="mt-6 flex items-center justify-end gap-3 pt-3 border-t border-outline-variant">
+                <button
+                  type="button"
+                  onClick={() => setEditingUser(null)}
+                  className="rounded-xl border border-outline-variant px-4 py-2 text-sm font-medium text-on-surface hover:bg-surface-container"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingEdit}
+                  className="rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-on-primary hover:opacity-90 disabled:opacity-50"
+                >
+                  {savingEdit ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </SidebarLayout>
   );
 }

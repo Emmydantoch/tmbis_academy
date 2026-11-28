@@ -3,7 +3,6 @@ import api from '../api/axios';
 import { STUDY_CENTERS } from '../constants/studyCenters';
 
 const editableFields = [
-  'full_name',
   'contact_address',
   'phone_number',
   'whatsapp_number',
@@ -112,7 +111,7 @@ export default function StudentProfile() {
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-on-surface">Personal and study details</h2>
             <p className="mt-2 text-sm text-on-surface-variant">
-              Update your contact and student information. Your email and matric number can’t be changed here.
+              Update your contact and study information. Official name, email, and matric number are protected and can only be updated by an administrator.
             </p>
           </div>
 
@@ -152,17 +151,23 @@ export default function StudentProfile() {
             </div>
           ) : profile ? (
             <form onSubmit={saveProfile} className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
-              <ProfileField label="Full name (surname first)" htmlFor="profile-full-name">
-                <input
-                  id="profile-full-name"
-                  name="full_name"
-                  value={form.full_name}
-                  onChange={updateField}
-                  autoComplete="name"
-                  required
-                  placeholder="SURNAME Firstname Othername"
-                  className={inputClassName}
-                />
+              <ProfileField label="Full name (Official - not editable)" htmlFor="profile-full-name">
+                <div className="relative">
+                  <input
+                    id="profile-full-name"
+                    name="full_name"
+                    value={profile.full_name || ''}
+                    readOnly
+                    disabled
+                    className={`${inputClassName} cursor-not-allowed bg-surface-container-low text-on-surface-variant/90 opacity-80 pl-4 pr-10`}
+                  />
+                  <span className="material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 text-sm text-on-surface-variant">
+                    lock
+                  </span>
+                </div>
+                <p className="mt-1.5 text-xs text-on-surface-variant">
+                  Official student name cannot be edited by students. Contact the administrator if you need a correction.
+                </p>
               </ProfileField>
               <ProfileField label="Email (not editable)" htmlFor="profile-email">
                 <input id="profile-email" value={profile.email || ''} readOnly className={`${inputClassName} cursor-not-allowed opacity-70`} />
